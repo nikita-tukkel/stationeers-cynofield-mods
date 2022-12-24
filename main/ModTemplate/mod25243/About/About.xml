@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModMetadata xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name>mod25243</Name>
+  <Version>0.0.1</Version>
+  <Author>cynofield</Author>
+  <Description>
+    Mod template. Insert correct name, version and fill the description.
+    ---
+    WARNING: This mod will not work, unless you install Stationeers.Addon mod loader.
+    Read how to install it here: https://github.com/Erdroy/Stationeers.Addons
+    ---
+  </Description>
+  <Tags />
+</ModMetadata>

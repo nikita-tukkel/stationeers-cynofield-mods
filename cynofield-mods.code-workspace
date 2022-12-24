@@ -1,0 +1,46 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {},
+	"tasks": {
+		"version": "2.0.0",
+		"tasks": [
+			{
+				"label": "build",
+				"command": "dotnet",
+				"type": "process",
+				"args": [
+					"build",
+					"${workspaceFolder}/${relativeFileDirname}",
+					"/property:GenerateFullPaths=true",
+					"/consoleloggerparameters:NoSummary"
+				],
+				"problemMatcher": "$msCompile"
+			}
+		]
+	},
+	"launch": {
+		"version": "0.2.0",
+		"configurations": [
+			{
+				"name": "Launch main",
+				"type": "clr",
+				"request": "launch",
+				"preLaunchTask": "build",
+				"program": "${workspaceFolder}/${relativeFileDirname}/bin/Debug/main.exe",
+				"args": [],
+				"cwd": "${workspaceFolder}/${relativeFileDirname}",
+				"stopAtEntry": false,
+				"console": "integratedTerminal"
+			},
+			{
+				"name": ".NET Core Attach",
+				"type": "clr",
+				"request": "attach"
+			}
+		]
+	}
+}
