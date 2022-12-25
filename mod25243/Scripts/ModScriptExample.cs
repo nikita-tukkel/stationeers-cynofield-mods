@@ -22,7 +22,13 @@ namespace cynofield.mods
             Instance = null;
         }
 
-        public string Prefix { get { return ToString(); } }
+        public string Prefix
+        {
+            get
+            {
+                return ToString();
+            }
+        }
     }
 
     [HarmonyPatch(typeof(FiltrationMachine), nameof(FiltrationMachine.GetPassiveTooltip))]

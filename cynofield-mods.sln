@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "main", "main\main.csproj", "{849C67A0-0BB3-4933-AFDB-06027684A28B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mod25243", "mod25243\mod25243.csproj", "{849C67A0-0BB3-4933-AFDB-06027684A28B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "test", "test\test.csproj", "{C7A92783-BC25-40E5-BB3B-D57D1E8C9357}"
 EndProject

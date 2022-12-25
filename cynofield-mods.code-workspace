@@ -37,9 +37,24 @@
 				"console": "integratedTerminal"
 			},
 			{
-				"name": ".NET Core Attach",
+				"name": "rocketstation Attach",
 				"type": "clr",
-				"request": "attach"
+				"request": "attach",
+				// "symbolOptions": {
+				// 	"searchPaths": [
+				// 		"E:/games/stationeers-stuff/c#-mods/main/bin/Debug"
+				// 	],
+				// 	"searchMicrosoftSymbolServer": false,
+				// 	"searchNuGetOrgSymbolServer": false
+				// },
+				"processName": "rocketstation.exe"
+			},
+			{
+				"name": "Attach to Mono",
+				"request": "attach",
+				"type": "mono",
+				"address": "localhost",
+				"port": 55555
 			}
 		]
 	}

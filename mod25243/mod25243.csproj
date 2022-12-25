@@ -1,15 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <AssemblyName>main</AssemblyName>
-    <OutputType>Exe</OutputType>
+    <AssemblyName>mod25243</AssemblyName>
+    <OutputType>Library</OutputType>
     <TargetFramework>net48</TargetFramework>
     <PlatformTarget>x64</PlatformTarget>
     <RuntimeIdentifiers>win-x64;win7-x64</RuntimeIdentifiers>
 
     <OutputPath>bin\Debug\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <!-- <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies> -->
 
     <DebugType>portable</DebugType>
     <FileAlignment>512</FileAlignment>
@@ -24,6 +24,7 @@
   <Import Project="../Env.props" />
   <ItemGroup>
     <PackageReference Include="Lib.Harmony" Version="2.2.2" TargetFramework="net48" />
+    <PackageReference Include="Mono.Unofficial.pdb2mdb" Version="4.2.3.4" />
 
     <Reference Include="$(StationeersDllDir)\*.dll" />
     <Reference Include="$(AddonManagerDllDir)\*.dll" />
