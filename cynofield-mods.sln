@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mod25243", "mod25243\mod252
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "test", "test\test.csproj", "{C7A92783-BC25-40E5-BB3B-D57D1E8C9357}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mod1332", "mod1332\mod1332.csproj", "{83A752A7-A387-4BED-BF24-A1A544B2BE6B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{C7A92783-BC25-40E5-BB3B-D57D1E8C9357}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C7A92783-BC25-40E5-BB3B-D57D1E8C9357}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C7A92783-BC25-40E5-BB3B-D57D1E8C9357}.Release|Any CPU.Build.0 = Release|Any CPU
+		{83A752A7-A387-4BED-BF24-A1A544B2BE6B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{83A752A7-A387-4BED-BF24-A1A544B2BE6B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{83A752A7-A387-4BED-BF24-A1A544B2BE6B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{83A752A7-A387-4BED-BF24-A1A544B2BE6B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
