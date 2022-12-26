@@ -28,7 +28,7 @@ namespace cynofield.mods
 
             Instance = this;
             AugmentedDisplayRight.Create();
-            AugmentedDisplayLeft.Create();
+            AugmentedDisplayInWorld.Create();
             //InventoryManager.ParentHuman.GlassesSlot.OnOccupantChange += OnOccupantChangeHandler;
         }
 
@@ -38,7 +38,7 @@ namespace cynofield.mods
             WorldManager.OnWorldExit -= OnWorldExitHandler;
             Instance = null;
             AugmentedDisplayRight.Destroy();
-            AugmentedDisplayLeft.Destroy();
+            AugmentedDisplayInWorld.Destroy();
         }
 
         void OnWorldStartedHandler()
@@ -104,7 +104,7 @@ namespace cynofield.mods
 
             if (lookingAt != thing)
             {
-                AugmentedDisplayLeft.Instance.Show();
+                AugmentedDisplayInWorld.Instance.Show();
                 lookingAt = thing;
                 if (lookingAt != null)
                 {
@@ -170,14 +170,32 @@ $@"{t.DisplayName}
         }
     }
 
-    public class AugmentedDisplayLeft : MonoBehaviour
+    public class AugmentedDisplayInWorld : MonoBehaviour
     {
-        public static AugmentedDisplayLeft Instance;
+        public static AugmentedDisplayInWorld Instance;
 
         public static void Create()
         {
-            Instance = new GameObject("AugmentedDisplayLeftParent").AddComponent<AugmentedDisplayLeft>();
-            var canvas = Instance.gameObject.AddComponent<Canvas>();
+            Instance = new GameObject("root").AddComponent<AugmentedDisplayInWorld>();
+        }
+
+        public static void Destroy()
+        {
+            if (Instance == null)
+                return;
+            UnityEngine.Object.Destroy(Instance.obj);
+            UnityEngine.Object.Destroy(Instance.gameObject);
+            Instance = null;
+        }
+
+        GameObject obj;
+
+        void Start()
+        {
+            ConsoleWindow.Print($"AugmentedDisplayLeft Start {gameObject} {this}");
+            obj = new GameObject("0");
+            obj.transform.parent = Instance.gameObject.transform;
+            var canvas = obj.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.WorldSpace;
 
             var canvasTransform = canvas.transform;
@@ -187,14 +205,23 @@ $@"{t.DisplayName}
             //canvasTransform.rotation = Quaternion.Euler(0.1f, 1f,1f);
             //canvas.pixelPerfect
             canvasTransform.localScale = Vector3.one * 0.5f; //*5f;// Vector3.one;
-            
-            var bkgd = new GameObject("2").AddComponent<RawImage>();
+
+            var bkgd = new GameObject("1").AddComponent<RawImage>();
             bkgd.rectTransform.SetParent(canvas.transform, false);
-            bkgd.color = new Color(1f, 1f, 1f, 0.05f);
             bkgd.rectTransform.sizeDelta = new Vector2(2f, 2f);
+            bkgd.color = new Color(1f, 1f, 1f, 0.05f);
+
+            var text = new GameObject("2").AddComponent<TextMeshProUGUI>();
+            text.rectTransform.SetParent(canvas.transform, false);
+            text.rectTransform.sizeDelta =bkgd.rectTransform.sizeDelta;
+            text.alignment = TextAlignmentOptions.TopLeft;
+            text.fontSize = 0.15f;//0.15f;
+            text.alpha = 0.5f; // low alpha is used to hide font antialiasing artifacts.
+            text.color = Color.white;// new Color(1f, 1f, 1f, 0.15f);// Color.white;
+            text.richText = true;
+            text.text = "please <color=red><b>don't</b></color> play with me";
 
             // TextMeshProUGUI textMeshProUgui = gameObject.AddComponent<TextMeshProUGUI>();
-
 
             // textMeshProUgui.rectTransform.SetParent(bkgd.transform, false);
             // textMeshProUgui.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
@@ -218,6 +245,8 @@ $@"{t.DisplayName}
                 return;
             var th = Assets.Scripts.CursorManager.Instance.FoundThing;
             if (th.transform == null)
+                return;
+            if (obj == null)
                 return;
 
             // All options requires different values of:
@@ -244,18 +273,22 @@ $@"{t.DisplayName}
             // gameObject.transform.SetParent(cameraTransform, false);
             // gameObject.transform.localPosition = new Vector3(0.2f,0.1f,0.15f);
 
-            gameObject.transform.SetParent(th.transform, false);
-            gameObject.transform.position = th.transform.position + Vector3.zero;
-            gameObject.transform.localPosition = new Vector3(0.2f, 0.1f, 1f);
+            obj.transform.SetParent(th.transform, false);
+            obj.transform.position = th.transform.position + Vector3.zero;
+            //obj.transform.localPosition = new Vector3(0.2f, 0.1f, 1f);
             var tr = th.transform.rotation;
             var cr = Camera.main.transform.rotation;
             var r = cr.normalized;
 
-            // var h = CursorManager.CursorHit;
-            // r.SetLookRotation(h.normal);
-            gameObject.transform.rotation = Quaternion.Euler(0, Camera.main.transform.eulerAngles.y, 0); ;
+            // rotate vertically to the camera:
+            obj.transform.rotation = Quaternion.Euler(0, Camera.main.transform.eulerAngles.y, 0); ;
 
-            ConsoleWindow.Print($"our position {gameObject.transform.position}, parent position {th.transform.position}");
+            var pos = obj.transform.position;
+            var posPlayer = InventoryManager.ParentHuman.transform.position;
+            obj.transform.position = new Vector3(pos.x, posPlayer.y + 0.8f, pos.z);
+            obj.transform.Translate(Camera.main.transform.forward * -0.5f, Space.World);
+
+            ConsoleWindow.Print($"our position {obj.transform.position}, parent position {th.transform.position}");
 
             //th.transform.Translate(Vector3.forward);
             //th.transform.localScale = Vector3.one * 0.5f;
@@ -273,7 +306,7 @@ $@"{t.DisplayName}
             //gameObject.transform.position = new Vector3(-70f   ,-0.7f, 3);
 
 
-            var b = gameObject.GetComponentsInChildren<TextMeshProUGUI>();
+            // var b = gameObject.GetComponentsInChildren<TextMeshProUGUI>();
 
             // var pos = gameObject.transform.position;
             // pos = new Vector3(pos.x, pos.y+2, pos.z);
@@ -282,22 +315,8 @@ $@"{t.DisplayName}
             // var pos2 = b[0].transform.position;
             // b[0].transform.position = new Vector3(pos2.x, pos2.y+0.2f, pos2.z);
 
-            gameObject.SetActive(true);
+            obj.SetActive(true);
         }
-
-        void Start()
-        {
-            ConsoleWindow.Print($"AugmentedDisplayLeft Start {gameObject} {this}");
-        }
-
-        public static void Destroy()
-        {
-            if (Instance == null)
-                return;
-            UnityEngine.Object.Destroy(Instance.gameObject);
-            Instance = null;
-        }
-
     }
 
     public class AugmentedDisplayRight : MonoBehaviour
