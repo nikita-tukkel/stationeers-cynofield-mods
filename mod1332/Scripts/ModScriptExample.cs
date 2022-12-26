@@ -147,6 +147,16 @@ namespace cynofield.mods
 
     public class ThingsUi
     {
+
+        public void Render(Thing thing, Canvas canvas, TextMeshProUGUI textMesh)
+        {
+            // TODO different types of rendering complexity
+            var desc = AugmentedReality.Instance.thingsUi.Description2d(thing);
+            textMesh.text = $@"{thing.DisplayName}
+{desc}
+please <color=red><b>don't</b></color> play with me";
+        }
+
         public void RenderARFully(Thing thing, Canvas canvas)
         {
 
@@ -169,6 +179,8 @@ namespace cynofield.mods
 
         public static string Describe(Thing thing)
         {
+            if (thing == null)
+                return "nothing";
             switch (thing)
             {
                 case Cable c:
@@ -224,6 +236,7 @@ $@"{t.DisplayName}
         public class InWorldAnnotation : MonoBehaviour
         {
             GameObject obj;
+            Canvas canvas;
             TextMeshProUGUI text;
             Thing anchor;
 
@@ -236,7 +249,7 @@ $@"{t.DisplayName}
                 obj.SetActive(false);
                 //obj.transform.parent = Instance.gameObject.transform;
                 obj.transform.parent = gameObject.transform;
-                var canvas = obj.AddComponent<Canvas>();
+                canvas = obj.AddComponent<Canvas>();
                 canvas.renderMode = RenderMode.WorldSpace;
 
                 var canvasTransform = canvas.transform;
@@ -253,12 +266,12 @@ $@"{t.DisplayName}
                 text.alignment = TextAlignmentOptions.TopLeft;
                 text.fontSize = 0.08f;//0.15f;
                 text.alpha = 0.2f; // low alpha is used to hide font antialiasing artifacts.
-                text.color = new Color(0f, 0f, 0f, 0.9f);
+                text.color = new Color(0f, 0f, 0f, 1f);
                 text.richText = true;
                 text.margin = new Vector4(0.05f, 0.05f, 0.05f, 0.05f);
             }
 
-            public void ShowNear(Thing thing, string id, string desc)
+            public void ShowNear(Thing thing, string id, RaycastHit hit)
             {
                 if (thing == null)
                 {
@@ -282,20 +295,31 @@ $@"{t.DisplayName}
                     Quaternion.Euler(0, Camera.main.transform.eulerAngles.y, 0)
                     );
 
-                var pos = transform.position;
                 var posPlayer = InventoryManager.ParentHuman.transform.position;
-                transform.position = new Vector3(pos.x, posPlayer.y + 0.8f, pos.z);
+                var posHit = hit.point;
+                transform.position = new Vector3(posHit.x, posPlayer.y + 0.8f, posHit.z);
+                // var pos = transform.position;
+                // transform.position = new Vector3(pos.x, posPlayer.y + 0.8f, pos.z);
                 transform.Translate(Camera.main.transform.forward * -0.5f, Space.World);
-                text.text = $@"{thing.NetworkId} {thing.DisplayName}
-{desc}
-please <color=red><b>don't</b></color> play with me";
+                Render();
                 obj.SetActive(true);
                 gameObject.SetActive(true);
             }
 
+            public void Render()
+            {
+                AugmentedReality.Instance.thingsUi.Render(anchor, canvas, text);
+            }
+
             public void Hide()
             {
-                obj.SetActive(false);
+                anchor = null;
+                gameObject.SetActive(false);
+            }
+
+            public bool IsActive()
+            {
+                return this.isActiveAndEnabled && anchor != null;
             }
         }
 
@@ -309,8 +333,11 @@ please <color=red><b>don't</b></color> play with me";
             annotations.Enqueue(new GameObject().AddComponent<InWorldAnnotation>());
         }
 
+        private float sinceLastUpdate;
         void Update()
         {
+            sinceLastUpdate += Time.deltaTime;
+
             bool isCtrlKeyDown = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
             if (isCtrlKeyDown)
             {
@@ -319,6 +346,12 @@ please <color=red><b>don't</b></color> play with me";
                     (obj as InWorldAnnotation).gameObject.SetActive(false);
                 }
                 return;
+            }
+
+            if (sinceLastUpdate > 0.5f)
+            {
+                sinceLastUpdate = 0;
+                PeriodicUpdate();
             }
 
             if (CursorManager.Instance == null || CursorManager.CursorThing == null)
@@ -331,11 +364,24 @@ please <color=red><b>don't</b></color> play with me";
                 return;
 
             var thing = CursorManager.CursorThing;
-            var desc = AugmentedReality.Instance.thingsUi.Description2d(thing);
-            AugmentedDisplayInWorld.Instance.Show(thing, desc);
+            var hit = CursorManager.CursorHit;
+            AugmentedDisplayInWorld.Instance.Show(thing, hit);
         }
 
-        public void Show(Thing thing, string desc)
+        private void PeriodicUpdate()
+        {
+            foreach (var obj in Instance.annotations)
+            {
+                var a = (obj as InWorldAnnotation);
+                if (!a.IsActive())
+                    continue;
+
+                a.Render();
+            }
+            return;
+        }
+
+        public void Show(Thing thing, RaycastHit hit)
         {
             if (thing == null)
                 return;
@@ -345,13 +391,14 @@ please <color=red><b>don't</b></color> play with me";
             foreach (var obj in Instance.annotations)
             {
                 // return if there is already shown annotation for this thing
-                if ((obj as InWorldAnnotation).id == thingId)
+                var a = (obj as InWorldAnnotation);
+                if (a.id == thingId && a.IsActive())
                     return; // TODO update description?
             }
 
             var ann = annotations.Dequeue() as InWorldAnnotation;
             annotations.Enqueue(ann);
-            ann.ShowNear(thing, thingId, desc);
+            ann.ShowNear(thing, thingId, hit);
         }
 
         string GetId(Thing thing) { return thing.NetworkId.ToString(); }
