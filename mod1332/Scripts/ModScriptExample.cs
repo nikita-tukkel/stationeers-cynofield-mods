@@ -1,30 +1,87 @@
+using System.Globalization;
 using System;
 using Assets.Scripts;
 using Assets.Scripts.Inventory;
 using Assets.Scripts.Objects;
 using Assets.Scripts.Objects.Electrical;
+using Assets.Scripts.Objects.Items;
 using Assets.Scripts.Objects.Pipes;
 using Assets.Scripts.UI;
 using HarmonyLib;
 using Stationeers.Addons;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace cynofield.mods
 {
-    public class DeeperView : IPlugin
+    public class AugmentedReality : IPlugin
     {
-        public static DeeperView Instance;
+        public static AugmentedReality Instance;
 
         void IPlugin.OnLoad()
         {
-            Instance = this;
             ConsoleWindow.Print(ToString() + ": loaded!");
-            DeeperDisplay.Create();
-            InventoryManager.ParentHuman.GlassesSlot.OnOccupantChange += handler_OnOccupantChange;
+
+            WorldManager.OnWorldStarted += OnWorldStartedHandler;
+            WorldManager.OnWorldExit += OnWorldExitHandler;
+
+            Instance = this;
+            AugmentedDisplayRight.Create();
+            AugmentedDisplayLeft.Create();
+            //InventoryManager.ParentHuman.GlassesSlot.OnOccupantChange += OnOccupantChangeHandler;
         }
 
-        void handler_OnOccupantChange()
+        void IPlugin.OnUnload()
+        {
+            WorldManager.OnWorldStarted -= OnWorldStartedHandler;
+            WorldManager.OnWorldExit -= OnWorldExitHandler;
+            Instance = null;
+            AugmentedDisplayRight.Destroy();
+            AugmentedDisplayLeft.Destroy();
+        }
+
+        void OnWorldStartedHandler()
+        {
+        }
+
+        void OnWorldExitHandler()
+        {
+        }
+
+        public bool IsActive()
+        {
+            if (GameManager.GameState != Assets.Scripts.GridSystem.GameState.Running)
+                return false;
+            // if (WorldManager.IsGamePaused)
+            //     return false;
+            if (InventoryManager.ParentHuman == null)
+                return false;
+            if (InventoryManager.ParentHuman.GlassesSlot == null)
+                return false;
+
+            return true;
+        }
+
+        public bool IsEnabled()
+        {
+            if (!IsActive())
+                return false;
+
+            var glasses = InventoryManager.ParentHuman.GlassesSlot.Occupant;
+            if (glasses == null)
+                return false;
+
+            if (!(glasses is Assets.Scripts.Objects.Items.SensorLenses))
+                return false;
+
+            var lenses = glasses as SensorLenses;
+            // only check battery state and ignore inserted sensor:
+            var power = (lenses.Battery == null) ? 0 : lenses.Battery.PowerStored;
+            return lenses.OnOff && power > 0;
+        }
+
+        void OnOccupantChangeHandler()
         {
             var occupant = InventoryManager.ParentHuman.GlassesSlot.Occupant;
             if (occupant == null)
@@ -37,53 +94,46 @@ namespace cynofield.mods
             }
         }
 
-        void IPlugin.OnUnload()
-        {
-            Instance = null;
-            DeeperDisplay.Destroy();
-        }
-
-        public string Prefix
-        {
-            get
-            {
-                return ToString();
-            }
-        }
-
         Thing lookingAt = null;
         Thing pointingAt = null;
 
         internal void EyesOn(Thing thing)
         {
+            if (!IsEnabled())
+                return;
+
             if (lookingAt != thing)
             {
+                AugmentedDisplayLeft.Instance.Show();
                 lookingAt = thing;
                 if (lookingAt != null)
                 {
-                    DeeperDisplay.Instance.Display(
+                    AugmentedDisplayRight.Instance.Display(
                         $"<color=white><color=green><b>eyes on</b></color>: {Describe(lookingAt)}</color>");
                 }
                 else
                 {
-                    DeeperDisplay.Instance.Hide();
+                    AugmentedDisplayRight.Instance.Hide();
                 }
             }
         }
 
         internal void MouseOn(Thing thing)
         {
+            if (!IsEnabled())
+                return;
+
             if (pointingAt != thing)
             {
                 pointingAt = thing;
                 if (pointingAt != null)
                 {
-                    DeeperDisplay.Instance.Display(
+                    AugmentedDisplayRight.Instance.Display(
                         $"<color=white><color=green><b>mouse on</b></color>: {Describe(pointingAt)}</color>");
                 }
                 else
                 {
-                    DeeperDisplay.Instance.Hide();
+                    AugmentedDisplayRight.Instance.Hide();
                 }
             }
         }
@@ -120,15 +170,145 @@ $@"{t.DisplayName}
         }
     }
 
-    public class DeeperDisplay : MonoBehaviour
+    public class AugmentedDisplayLeft : MonoBehaviour
     {
-        public static DeeperDisplay Instance;
+        public static AugmentedDisplayLeft Instance;
 
         public static void Create()
         {
-            var gameObject = new GameObject("DeeperDisplay");
+            Instance = new GameObject("AugmentedDisplayLeftParent").AddComponent<AugmentedDisplayLeft>();
+            var canvas = Instance.gameObject.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.WorldSpace;
+
+            var canvasTransform = canvas.transform;
+            //canvasTransform.position = new Vector3(-1f, 3.05f, 2.5f);
+            //canvasTransform.position = new Vector3(-100f, 100f, 0f);
+            //canvasTransform.localPosition = new Vector3(0f, 0.5f, 0f);
+            //canvasTransform.rotation = Quaternion.Euler(0.1f, 1f,1f);
+            //canvas.pixelPerfect
+            canvasTransform.localScale = Vector3.one * 0.5f; //*5f;// Vector3.one;
+            
+            var bkgd = new GameObject("2").AddComponent<RawImage>();
+            bkgd.rectTransform.SetParent(canvas.transform, false);
+            bkgd.color = new Color(1f, 1f, 1f, 0.05f);
+            bkgd.rectTransform.sizeDelta = new Vector2(2f, 2f);
+
+            // TextMeshProUGUI textMeshProUgui = gameObject.AddComponent<TextMeshProUGUI>();
+
+
+            // textMeshProUgui.rectTransform.SetParent(bkgd.transform, false);
+            // textMeshProUgui.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+            // textMeshProUgui.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            // textMeshProUgui.rectTransform.sizeDelta = new Vector2(1f, 1f);
+            // textMeshProUgui.rectTransform.transform.localPosition = Vector3.zero;
+            // textMeshProUgui.rectTransform.anchoredPosition = new Vector2(0f, 0f);
+            // textMeshProUgui.transform.localPosition = new Vector3(0f, 0.3f, -0.5f);
+
+            // textMeshProUgui.richText = true;
+            // textMeshProUgui.text = "please <color=red><b>don't</b></color> play with me";
+            // textMeshProUgui.fontSize = 0.15f;//0.15f;
+            // textMeshProUgui.color = Color.white;// new Color(1f, 1f, 1f, 0.15f);// Color.white;
+            // textMeshProUgui.alignment = TextAlignmentOptions.Left;
+            // textMeshProUgui.alpha = 0.5f; // low alpha is used to hide font antialiasing artifacts.
+        }
+
+        public void Show()
+        {
+            if (CursorManager.Instance == null || CursorManager.Instance.FoundThing == null)
+                return;
+            var th = Assets.Scripts.CursorManager.Instance.FoundThing;
+            if (th.transform == null)
+                return;
+
+            // All options requires different values of:
+            // canvasTransform.localScale
+            // textMeshProUgui.fontSize
+            // textMeshProUgui.alpha 
+
+            // when relative to InventoryManager.ParentHuman.transform
+            // x - left/right, 0.2 is ok to show on the right part of the screen
+            // y - up/down, depends on human height, 1 is ok.
+            // z - how close, 0.3 is almost at the helmet glass.
+            // gameObject.transform.SetParent(InventoryManager.ParentHuman.transform, false);
+            // gameObject.transform.localPosition = new Vector3(0.2f,1,0.3f);
+
+            // when relative to InventoryManager.ParentHuman.GlassesSlot.Occupant.transform,
+            // also need to sync rotation with Camera.main.transform.rotation for better result.
+            // var glassesTransform = InventoryManager.ParentHuman.GlassesSlot.Occupant.transform;
+            // gameObject.transform.SetParent(glassesTransform, false);
+            // gameObject.transform.localPosition = new Vector3(0.2f,0.2f,0.2f);
+            // gameObject.transform.rotation = Camera.main.transform.rotation;
+
+            // when relative to Camera.main.transform, but in this case better use 2d GUI.
+            // var cameraTransform = Camera.main.transform;
+            // gameObject.transform.SetParent(cameraTransform, false);
+            // gameObject.transform.localPosition = new Vector3(0.2f,0.1f,0.15f);
+
+            gameObject.transform.SetParent(th.transform, false);
+            gameObject.transform.position = th.transform.position + Vector3.zero;
+            gameObject.transform.localPosition = new Vector3(0.2f, 0.1f, 1f);
+            var tr = th.transform.rotation;
+            var cr = Camera.main.transform.rotation;
+            var r = cr.normalized;
+
+            // var h = CursorManager.CursorHit;
+            // r.SetLookRotation(h.normal);
+            gameObject.transform.rotation = Quaternion.Euler(0, Camera.main.transform.eulerAngles.y, 0); ;
+
+            ConsoleWindow.Print($"our position {gameObject.transform.position}, parent position {th.transform.position}");
+
+            //th.transform.Translate(Vector3.forward);
+            //th.transform.localScale = Vector3.one * 0.5f;
+            // Vector3 look = Camera.main.transform.TransformDirection(Vector3.forward);
+            // Debug.DrawRay(Camera.main.transform.position, look, Color.green, 14);
+            // var cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            // cube.transform.position = th.transform.position;
+            // Destroy(cube);
+            // var plane = GameObject.CreatePrimitive(PrimitiveType.Plane);
+            // plane.transform.position = th.transform.position;
+
+
+            // var pos = gameObject.transform.position;
+            // gameObject.transform.position = new Vector3(pos.x   ,pos.y, pos.z);
+            //gameObject.transform.position = new Vector3(-70f   ,-0.7f, 3);
+
+
+            var b = gameObject.GetComponentsInChildren<TextMeshProUGUI>();
+
+            // var pos = gameObject.transform.position;
+            // pos = new Vector3(pos.x, pos.y+2, pos.z);
+            // var a = gameObject.GetComponentsInChildren<Canvas>();
+            //ConsoleWindow.Print($"AugmentedDisplayLeft Show {pos} {a.Length} {b.Length}");
+            // var pos2 = b[0].transform.position;
+            // b[0].transform.position = new Vector3(pos2.x, pos2.y+0.2f, pos2.z);
+
+            gameObject.SetActive(true);
+        }
+
+        void Start()
+        {
+            ConsoleWindow.Print($"AugmentedDisplayLeft Start {gameObject} {this}");
+        }
+
+        public static void Destroy()
+        {
+            if (Instance == null)
+                return;
+            UnityEngine.Object.Destroy(Instance.gameObject);
+            Instance = null;
+        }
+
+    }
+
+    public class AugmentedDisplayRight : MonoBehaviour
+    {
+        public static AugmentedDisplayRight Instance;
+
+        public static void Create()
+        {
+            var gameObject = new GameObject("AugmentedDisplayRight");
             gameObject.SetActive(false);
-            Instance = gameObject.AddComponent<DeeperDisplay>();
+            Instance = gameObject.AddComponent<AugmentedDisplayRight>();
         }
 
         public static void Destroy()
@@ -153,29 +333,40 @@ $@"{t.DisplayName}
 
         void OnGUI() // called by Unity
         {
+            gameObject.SetActive(AugmentedReality.Instance.IsEnabled());
+            if (!AugmentedReality.Instance.IsEnabled())
+            {
+                return;
+            }
+
             var x = Screen.width * 2 / 3;
             var w = Screen.width - x - 110;
             var y = 100;
             var h = Screen.height - y - 300;
             GUI.Box(new Rect(x, y, w, h), "");
-            GUI.Box(new Rect(x, y, w, h), text
-            ,
-            new GUIStyle()
-            {
-                alignment = TextAnchor.UpperLeft,
-                richText = true,
-                fontSize = 16
-            });
+            GUI.color = new Color(1.0f, 1.0f, 1.0f, 0.25f);
+            GUI.Label(new Rect(x, y, w, h), "aaa Loaded");
+
+            //GUI.Label(new Rect(x, y, w, h), text);
+            // GUI.Box(new Rect(x, y, w, h), text
+            // ,
+            // new GUIStyle()
+            // {
+            //     alignment = TextAnchor.UpperLeft,
+            //     richText = true,
+            //     fontSize = 16
+            // });
             GUI.Box(new Rect(x, y + 100, w, h),
-            $@"<color=white>
-aaaaa {InventoryManager.ParentHuman.GlassesSlot.Occupant}
+            $@"<color=grey>
+aaa Loaded
 </color>"
             ,
             new GUIStyle()
             {
                 alignment = TextAnchor.UpperLeft,
                 richText = true,
-                fontSize = 12
+                fontSize = 14,
+
             });
         }
     }
@@ -183,7 +374,7 @@ aaaaa {InventoryManager.ParentHuman.GlassesSlot.Occupant}
 #pragma warning disable IDE0051, IDE0060
 
     // [HarmonyPatch(typeof(Assets.Scripts.Objects.Slot))]
-    // public class DeeperPatcherGlassesSlot
+    // public class AugmentationPatcherGlassesSlot
     // {
     //     [HarmonyPatch(nameof(Slot.OnOccupantChange))] // Update is a private method
     //     [HarmonyPostfix]
@@ -194,7 +385,7 @@ aaaaa {InventoryManager.ParentHuman.GlassesSlot.Occupant}
     // }
 
     [HarmonyPatch(typeof(PlayerStateWindow))]
-    public class DeeperPatcherPlayerStateWindow
+    public class AugmentationPatcherPlayerStateWindow
     {
         static bool once = false;
 
@@ -233,7 +424,7 @@ aaaaa {InventoryManager.ParentHuman.GlassesSlot.Occupant}
     }
 
     [HarmonyPatch(typeof(Structure), nameof(Structure.GetPassiveTooltip))]
-    public class DeeperPatcherCable
+    public class AugmentationPatcherCable
     {
         static void Postfix(ref Structure __instance, ref PassiveTooltip __result)
         {
@@ -241,7 +432,7 @@ aaaaa {InventoryManager.ParentHuman.GlassesSlot.Occupant}
             {
                 case Cable c:
                     //ConsoleWindow.Print($"here: {__result.Title}");
-                    __result.Title = "xyiaytle";
+                    //__result.Title = "xyiaytle";
                     break;
             }
         }
@@ -255,28 +446,28 @@ aaaaa {InventoryManager.ParentHuman.GlassesSlot.Occupant}
 
     [HarmonyPatch(typeof(Assets.Scripts.CursorManager),
     nameof(Assets.Scripts.CursorManager.SetCursorTarget))]
-    public class DeeperPatcherCursorManager
+    public class AugmentationPatcherCursorManager
     {
         static void Postfix(ref Assets.Scripts.CursorManager __instance)
         {
-            var view = DeeperView.Instance;
+            var view = AugmentedReality.Instance;
             view.EyesOn(__instance.FoundThing);
         }
     }
 
     [HarmonyPatch(typeof(Assets.Scripts.UI.InputMouse), "Idle")] // Idle is a private method
-    public class DeeperPatcherInputMouse
+    public class AugmentationPatcherInputMouse
     {
         static void Postfix(ref Assets.Scripts.UI.InputMouse __instance)
         {
-            var view = DeeperView.Instance;
+            var view = AugmentedReality.Instance;
             view.MouseOn(__instance.CursorThing);
         }
     }
 
     [HarmonyPatch(typeof(Assets.Scripts.Objects.Items.SensorLenses),
     nameof(Assets.Scripts.Objects.Items.SensorLenses.UpdateEachFrame))]
-    public class DeeperPatcherSensorLenses
+    public class AugmentationPatcherSensorLenses
     {
         static void Postfix(ref Assets.Scripts.Objects.Items.SensorLenses __instance)
         {
@@ -286,11 +477,10 @@ aaaaa {InventoryManager.ParentHuman.GlassesSlot.Occupant}
 
 
     [HarmonyPatch(typeof(FiltrationMachine), nameof(FiltrationMachine.GetPassiveTooltip))]
-    public class DeeperPatcherFiltrationMachine
+    public class AugmentationPatcherFiltrationMachine
     {
         static void Postfix(ref PassiveTooltip __result)
         {
-            __result.Title = $"{DeeperView.Instance.Prefix} {__result.Title}";
         }
     }
 
