@@ -27,30 +27,46 @@ namespace cynofield.mods
 
             WorldManager.OnWorldStarted += OnWorldStartedHandler;
             WorldManager.OnWorldExit += OnWorldExitHandler;
-
-            thingsUi = new ThingsUi();
-            Instance = this;
-            AugmentedDisplayRight.Create();
-            AugmentedDisplayInWorld.Create();
-            //InventoryManager.ParentHuman.GlassesSlot.OnOccupantChange += OnOccupantChangeHandler;
+            Create();
         }
 
         void IPlugin.OnUnload()
         {
             WorldManager.OnWorldStarted -= OnWorldStartedHandler;
             WorldManager.OnWorldExit -= OnWorldExitHandler;
-            thingsUi.Destroy();
-            Instance = null;
-            AugmentedDisplayRight.Destroy();
-            AugmentedDisplayInWorld.Destroy();
+            Destroy();
         }
 
         void OnWorldStartedHandler()
         {
+            if (Instance != null)
+                Destroy();
+            //ConsoleWindow.Print(ToString() + ": OnWorldStartedHandler");
+            Create();
         }
 
         void OnWorldExitHandler()
         {
+            //ConsoleWindow.Print(ToString() + ": OnWorldExitHandler");
+            if (Instance != null)
+                Destroy();
+        }
+
+
+        void Create()
+        {
+            thingsUi = new ThingsUi();
+            AugmentedDisplayRight.Create();
+            AugmentedDisplayInWorld.Create();
+            Instance = this;
+        }
+
+        void Destroy()
+        {
+            thingsUi.Destroy();
+            AugmentedDisplayRight.Destroy();
+            AugmentedDisplayInWorld.Destroy();
+            Instance = null;
         }
 
         public bool IsActive()
@@ -152,9 +168,10 @@ namespace cynofield.mods
         {
             // TODO different types of rendering complexity
             var desc = AugmentedReality.Instance.thingsUi.Description2d(thing);
-            textMesh.text = $@"{thing.DisplayName}
-{desc}
-please <color=red><b>don't</b></color> play with me";
+            textMesh.text = desc;
+            //             $@"{thing.DisplayName}
+            // {desc}
+            // please <color=red><b>don't</b></color> play with me";
         }
 
         public void RenderARFully(Thing thing, Canvas canvas)
@@ -177,36 +194,81 @@ please <color=red><b>don't</b></color> play with me";
 
         }
 
-        public static string Describe(Thing thing)
+        public string Describe(Thing thing)
         {
             if (thing == null)
                 return "nothing";
             switch (thing)
             {
-                case Cable c:
-                    var net = c.CableNetwork;
-                    return $"network: {net.DisplayName} {net.CurrentLoad} / {net.PotentialLoad}";
-                case Transformer t:
-                    var color = t.Powered ? "green" : "red";
-                    return
-$@"{t.DisplayName}
-<color={color}><b>{t.Setting}</b></color>
-{PowerDisplay(t.UsedPower)}
-{PowerDisplay(t.AvailablePower)}";
+                case Cable obj:
+                    var net = obj.CableNetwork;
+                    return $"network: {net.DisplayName} {PowerDisplay(net.CurrentLoad)} / {PowerDisplay(net.PotentialLoad)}";
+                case Transformer obj:
+                    {
+                        var color = obj.Powered ? "green" : "red";
+                        return
+    $@"{obj.DisplayName}
+<color={color}><b>{obj.Setting}</b></color>
+{PowerDisplay(obj.UsedPower)}
+{PowerDisplay(obj.AvailablePower)}";
+                    }
+                case CircuitHousing obj:
+                    {
+                        var chip = obj._ProgrammableChipSlot.Occupant as ProgrammableChip;
+                        if (chip == null)
+                        {
+                            return $@"{obj.DisplayName}
+<color=red><b>db={obj.Setting}</b>
+no chip</color>";
+                        }
+                        else
+                        {
+                            var registers = Traverse.Create(chip)
+                            .Field("_Registers").GetValue() as double[];
+                            return
+$@"{obj.DisplayName}
+<color=green><b>db={obj.Setting}</b><mspace=1em> </mspace>r15={registers[15]}</color>
+<mspace=0.65em>{DisplayRegisters(registers)}</mspace>
+";
+                        }
+                    }
                 default:
                     return thing.ToString();
             }
+        }
+
+        private string DisplayRegisters(double[] registers)
+        {
+            string result = "";
+            int count = 0;
+            for (int i = 0; i < 16; i++)
+            {
+                if (registers[i] == 0)
+                    continue;
+                count++;
+                result += $"r{i}={Math.Round(registers[i], 2)}";
+                if (count > 0 && count % 2 == 0)
+                    result += "\n";
+                else
+                    result += "<mspace=1em> </mspace>";
+            }
+            return result;
         }
 
         static private string PowerDisplay(float power)
         {
             if (power > 900_000)
             {
-                return $"{Math.Round(power / 1_000_000, 1)}MW";
+                return $"{Math.Round(power / 1_000_000f, 2)}MW";
             }
+            else if (power > 900)
+            {
+                return $"{Math.Round(power / 1_000f, 2)}kW";
+            }
+
             else
             {
-                return $"{power}W";
+                return $"{Math.Round(power, 2)}W";
             }
         }
     }
@@ -218,6 +280,7 @@ $@"{t.DisplayName}
         public static void Create()
         {
             Instance = new GameObject("root").AddComponent<AugmentedDisplayInWorld>();
+            //ConsoleWindow.Print($"AugmentedDisplayInWorld create {Instance} {Instance.gameObject}");
         }
 
         public static void Destroy()
@@ -227,9 +290,12 @@ $@"{t.DisplayName}
 
             foreach (var ann in Instance.annotations)
             {
-                UnityEngine.Object.Destroy((ann as InWorldAnnotation).gameObject);
+                (ann as InWorldAnnotation).Destroy();
             }
+            Instance.annotations.Clear();
+            UnityEngine.Object.Destroy(Instance);
             UnityEngine.Object.Destroy(Instance.gameObject);
+            Instance.gameObject.SetActive(false);
             Instance = null;
         }
 
@@ -237,6 +303,7 @@ $@"{t.DisplayName}
         {
             GameObject obj;
             Canvas canvas;
+            RawImage bkgd;
             TextMeshProUGUI text;
             Thing anchor;
 
@@ -244,10 +311,9 @@ $@"{t.DisplayName}
 
             void Start()
             {
-                ConsoleWindow.Print($"InWorldAnnotation Start");
+                //ConsoleWindow.Print($"InWorldAnnotation Start");
                 obj = new GameObject("0");
                 obj.SetActive(false);
-                //obj.transform.parent = Instance.gameObject.transform;
                 obj.transform.parent = gameObject.transform;
                 canvas = obj.AddComponent<Canvas>();
                 canvas.renderMode = RenderMode.WorldSpace;
@@ -255,20 +321,43 @@ $@"{t.DisplayName}
                 var canvasTransform = canvas.transform;
                 canvasTransform.localScale = Vector3.one * 0.5f; // less than 0.5 looks bad
 
-                var bkgd = new GameObject("1").AddComponent<RawImage>();
+                bkgd = new GameObject("1").AddComponent<RawImage>();
                 bkgd.rectTransform.SetParent(canvas.transform, false);
                 bkgd.rectTransform.sizeDelta = new Vector2(1f, 1f);
-                bkgd.color = new Color(0.3f, 0.3f, 0.7f, 0.2f);
 
+                // https://docs.unity3d.com/Packages/com.unity.textmeshpro@4.0/manual/RichText.html
                 text = new GameObject("2").AddComponent<TextMeshProUGUI>();
                 text.rectTransform.SetParent(canvas.transform, false);
                 text.rectTransform.sizeDelta = bkgd.rectTransform.sizeDelta;
                 text.alignment = TextAlignmentOptions.TopLeft;
-                text.fontSize = 0.08f;//0.15f;
-                text.alpha = 0.2f; // low alpha is used to hide font antialiasing artifacts.
-                text.color = new Color(0f, 0f, 0f, 1f);
                 text.richText = true;
                 text.margin = new Vector4(0.05f, 0.05f, 0.05f, 0.05f);
+                // Resources.Load<TMP_FontAsset>(string.Format("UI/{0}", this.FontName))
+                // Font font = new Font("StreamingAssets/Fonts/3270-Regular.ttf");
+                // var tfont = TMP_FontAsset.CreateFontAsset(font);
+                // text.font = tfont;
+                //ConsoleWindow.Print($"{text.font.name}");
+                text.font = Localization.CurrentFont;
+                //0.08f for default font used by TextMeshProUGUI without font specified;
+                //0.06f when using Localization.CurrentFont
+                text.fontSize = 0.06f;
+
+                ColorScheme2(bkgd, text);
+            }
+
+            void ColorScheme1(RawImage bkgd, TextMeshProUGUI text)
+            {
+                bkgd.color = new Color(0.3f, 0.3f, 0.7f, 0.2f);
+                text.alpha = 0.2f;
+                text.color = new Color(0f, 0f, 0f, 1f);
+            }
+
+            void ColorScheme2(RawImage bkgd, TextMeshProUGUI text)
+            {
+                // bkgd.color = new Color(0xad / 255f, 0xd8 / 255f, 0xe6 / 255f, 0.2f);
+                bkgd.color = new Color(0xad / 255f, 0xad / 255f, 0xe6 / 255f, 0.2f);
+                text.alpha = 0.2f;
+                text.color = new Color(1f, 1f, 1f, 0.1f); // low alpha is used to hide font antialiasing artifacts.
             }
 
             public void ShowNear(Thing thing, string id, RaycastHit hit)
@@ -295,13 +384,36 @@ $@"{t.DisplayName}
                     Quaternion.Euler(0, Camera.main.transform.eulerAngles.y, 0)
                     );
 
-                var posPlayer = InventoryManager.ParentHuman.transform.position;
-                var posHit = hit.point;
-                transform.position = new Vector3(posHit.x, posPlayer.y + 0.8f, posHit.z);
-                // var pos = transform.position;
-                // transform.position = new Vector3(pos.x, posPlayer.y + 0.8f, pos.z);
-                transform.Translate(Camera.main.transform.forward * -0.5f, Space.World);
                 Render();
+
+                // Fine tune coordinates only after content is rendered.
+                // Expect that `bkgd` is here and covers whole annotation.
+                var posHit = hit.point;
+                //var posHead = InventoryManager.ParentHuman.HeadBone.transform.position;
+                var posHead = InventoryManager.ParentHuman.GlassesSlot.Occupant.transform.position;
+                var posLegs = InventoryManager.ParentHuman.transform.position;
+                var humanHeight = (posHead.y - posLegs.y) * 1.2f;
+                var limit1 = posLegs.y;
+                var limit2 = limit1 + humanHeight;
+                transform.position = new Vector3(posHit.x, posHit.y, posHit.z);
+                Vector3[] corners = new Vector3[4];
+                bkgd.rectTransform.GetWorldCorners(corners);
+                var y1 = corners[0].y; // bottom left
+                var y2 = corners[2].y; // top right
+                var height = y2 - y1;
+                var pos = transform.position;
+                if (y2 > limit2)
+                {
+                    // ConsoleWindow.Print($"ShowNear {y2} > {posHead.y} ; pos.y={pos.y}, y1={y1}, y2={y2}; head={posHead.y}, legs={posLegs.y}");
+                    transform.position = new Vector3(pos.x, limit2, pos.z);
+                }
+                else if (y1 < limit1)
+                {
+                    // ConsoleWindow.Print($"ShowNear {y1} < {posLegs.y} ; pos.y={pos.y}, y1={y1}, y2={y2}; head={posHead.y}, legs={posLegs.y}");
+                    transform.position = new Vector3(posHit.x, limit1 + height, posHit.z);
+                }
+                transform.Translate(Camera.main.transform.forward * -0.5f, Space.World);
+
                 obj.SetActive(true);
                 gameObject.SetActive(true);
             }
@@ -319,16 +431,26 @@ $@"{t.DisplayName}
 
             public bool IsActive()
             {
+                if (GameManager.GameState != Assets.Scripts.GridSystem.GameState.Running)
+                    return false;
+                if (InventoryManager.ParentHuman == null)
+                    return false;
+
                 return this.isActiveAndEnabled && anchor != null;
+            }
+
+            public void Destroy()
+            {
+                Destroy(gameObject);
+                Destroy(obj);
             }
         }
 
-        InWorldAnnotation ann;
         Queue annotations = new Queue();
 
         void Start()
         {
-            ConsoleWindow.Print($"AugmentedDisplayInWorld Start");
+            annotations.Enqueue(new GameObject().AddComponent<InWorldAnnotation>());
             annotations.Enqueue(new GameObject().AddComponent<InWorldAnnotation>());
             annotations.Enqueue(new GameObject().AddComponent<InWorldAnnotation>());
         }
@@ -370,15 +492,17 @@ $@"{t.DisplayName}
 
         private void PeriodicUpdate()
         {
+            if (!this.isActiveAndEnabled)
+                return;
+
             foreach (var obj in Instance.annotations)
             {
                 var a = (obj as InWorldAnnotation);
-                if (!a.IsActive())
+                if (a == null || !a.IsActive())
                     continue;
 
                 a.Render();
             }
-            return;
         }
 
         public void Show(Thing thing, RaycastHit hit)
@@ -502,7 +626,7 @@ aaa Loaded
             if (!once)
             {
                 once = true;
-                ConsoleWindow.Print($"{__instance.InfoExternalPressure.font}");
+                //ConsoleWindow.Print($"{__instance.InfoExternalPressure.font}");
             }
             // var infoExternalParent = __instance.InfoExternal.Transform.parent;
             // var statusInfoPanel = infoExternalParent.parent;
