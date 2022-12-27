@@ -1,6 +1,6 @@
 using System;
 
-namespace cynofield.mods.things.ui
+namespace cynofield.mods.ui.things
 {
     public class Utils
     {

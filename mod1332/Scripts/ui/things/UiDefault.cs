@@ -1,7 +1,7 @@
 using System;
 using Assets.Scripts.Objects;
 
-namespace cynofield.mods.things.ui
+namespace cynofield.mods.ui.things
 {
     class UiDefault : IThingArDescriber
     {

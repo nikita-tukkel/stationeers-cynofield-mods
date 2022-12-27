@@ -1,12 +1,12 @@
 using Assets.Scripts.Objects;
-using cynofield.mods.things.ui;
+using cynofield.mods.ui.things;
 using Objects.Pipes;
 using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
-namespace cynofield.mods
+namespace cynofield.mods.ui
 {
     public class ThingsUi
     {
@@ -44,11 +44,6 @@ namespace cynofield.mods
                 var desc = ui.Describe(thing);
                 textMesh.text = desc;
             }
-        }
-
-        public void Destroy()
-        {
-
         }
 
         private readonly IThingArDescriber defaultArUi = new UiDefault();

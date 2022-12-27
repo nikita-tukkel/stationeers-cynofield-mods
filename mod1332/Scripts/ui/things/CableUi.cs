@@ -2,7 +2,7 @@ using System;
 using Assets.Scripts.Objects;
 using Assets.Scripts.Objects.Electrical;
 
-namespace cynofield.mods.things.ui
+namespace cynofield.mods.ui.things
 {
     class CableUi : IThingArDescriber
     {

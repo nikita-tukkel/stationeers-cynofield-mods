@@ -3,33 +3,26 @@ using Assets.Scripts.Objects;
 using UnityEngine;
 using System.Collections;
 
-namespace cynofield.mods
+namespace cynofield.mods.ui
 {
     public class AugmentedDisplayInWorld : MonoBehaviour
     {
-        public static AugmentedDisplayInWorld Instance;
-
-        public static void Create(ThingsUi thingsUi)
+        public static AugmentedDisplayInWorld Create(ThingsUi thingsUi)
         {
-            Instance = new GameObject("root").AddComponent<AugmentedDisplayInWorld>();
-            Instance.thingsUi = thingsUi;
+            var instance = new GameObject("root").AddComponent<AugmentedDisplayInWorld>();
+            instance.thingsUi = thingsUi;
             //ConsoleWindow.Print($"AugmentedDisplayInWorld create {Instance} {Instance.gameObject}");
+            return instance;
         }
 
-        public static void Destroy()
+        void OnDestroy()
         {
-            if (Instance == null)
-                return;
-
-            foreach (var ann in Instance.annotations)
+            // destroy them explicitly because they attach to different parents
+            foreach (var ann in annotations)
             {
                 (ann as InWorldAnnotation).Destroy();
             }
-            Instance.annotations.Clear();
-            UnityEngine.Object.Destroy(Instance);
-            UnityEngine.Object.Destroy(Instance.gameObject);
-            Instance.gameObject.SetActive(false);
-            Instance = null;
+            annotations.Clear();
         }
 
         private ThingsUi thingsUi;

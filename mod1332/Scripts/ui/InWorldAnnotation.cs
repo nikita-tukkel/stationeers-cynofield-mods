@@ -5,7 +5,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace cynofield.mods
+namespace cynofield.mods.ui
 {
     public class InWorldAnnotation : MonoBehaviour
     {

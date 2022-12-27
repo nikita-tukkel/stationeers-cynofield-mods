@@ -3,7 +3,7 @@ using Assets.Scripts.Objects;
 using Assets.Scripts.Objects.Electrical;
 using HarmonyLib;
 
-namespace cynofield.mods.things.ui
+namespace cynofield.mods.ui.things
 {
     class CircuitHousingUi : IThingArDescriber
     {

@@ -1,16 +1,11 @@
 using Assets.Scripts;
-using Assets.Scripts.Inventory;
 using Assets.Scripts.Objects;
 using Assets.Scripts.Objects.Electrical;
-using Assets.Scripts.Objects.Items;
 using Assets.Scripts.Objects.Pipes;
 using Assets.Scripts.UI;
+using cynofield.mods.ui;
 using HarmonyLib;
 using Stationeers.Addons;
-using TMPro;
-using UnityEngine;
-using UnityEngine.UI;
-using System.Collections;
 
 namespace cynofield.mods
 {
@@ -50,182 +45,26 @@ namespace cynofield.mods
                 Destroy();
         }
 
-
         void Create()
         {
-            thingsUi = new ThingsUi();
-            AugmentedDisplayRight.Create();
-            AugmentedDisplayInWorld.Create(thingsUi);
+            AugmentedUiManager.Create();
             Instance = this;
         }
 
         void Destroy()
         {
-            thingsUi.Destroy();
-            AugmentedDisplayRight.Destroy();
-            AugmentedDisplayInWorld.Destroy();
+            AugmentedUiManager.Instance?.Destroy();
             Instance = null;
         }
 
-        public bool IsActive()
-        {
-            if (GameManager.GameState != Assets.Scripts.GridSystem.GameState.Running)
-                return false;
-            // if (WorldManager.IsGamePaused)
-            //     return false;
-            if (InventoryManager.ParentHuman == null)
-                return false;
-            if (InventoryManager.ParentHuman.GlassesSlot == null)
-                return false;
-
-            return true;
-        }
-
-        public bool IsEnabled()
-        {
-            if (!IsActive())
-                return false;
-
-            var glasses = InventoryManager.ParentHuman.GlassesSlot.Occupant;
-            if (glasses == null)
-                return false;
-
-            if (!(glasses is Assets.Scripts.Objects.Items.SensorLenses))
-                return false;
-
-            var lenses = glasses as SensorLenses;
-            // only check battery state and ignore inserted sensor:
-            var power = (lenses.Battery == null) ? 0 : lenses.Battery.PowerStored;
-            return lenses.OnOff && power > 0;
-        }
-
-        void OnOccupantChangeHandler()
-        {
-            var occupant = InventoryManager.ParentHuman.GlassesSlot.Occupant;
-            if (occupant == null)
-            {
-                ConsoleWindow.Print($"no glasses");
-            }
-            else
-            {
-                ConsoleWindow.Print($"{occupant}");
-            }
-        }
-
-        Thing lookingAt = null;
-        Thing pointingAt = null;
-
         internal void EyesOn(Thing thing)
         {
-            if (!IsEnabled())
-                return;
-
-            if (lookingAt != thing)
-            {
-                lookingAt = thing;
-                if (lookingAt != null)
-                {
-                    var desc = "TODO"; // thingsUi.Description2d(lookingAt);
-                    AugmentedDisplayRight.Instance.Display(
-                        $"<color=white><color=green><b>eyes on</b></color>: {desc}</color>");
-                }
-                else
-                {
-                    AugmentedDisplayRight.Instance.Hide();
-                }
-            }
+            AugmentedUiManager.Instance?.EyesOn(thing);
         }
 
         internal void MouseOn(Thing thing)
         {
-            if (!IsEnabled())
-                return;
-
-            if (pointingAt != thing)
-            {
-                pointingAt = thing;
-                if (pointingAt != null)
-                {
-                    var desc = "TODO"; // thingsUi.Description2d(pointingAt);
-                    AugmentedDisplayRight.Instance.Display(
-                        $"<color=white><color=green><b>mouse on</b></color>: {desc}</color>");
-                }
-                else
-                {
-                    AugmentedDisplayRight.Instance.Hide();
-                }
-            }
-        }
-
-    }
-
-    public class AugmentedDisplayRight : MonoBehaviour
-    {
-        public static AugmentedDisplayRight Instance;
-
-        public static void Create()
-        {
-            var gameObject = new GameObject("AugmentedDisplayRight");
-            gameObject.SetActive(false);
-            Instance = gameObject.AddComponent<AugmentedDisplayRight>();
-        }
-
-        public static void Destroy()
-        {
-            if (Instance == null)
-                return;
-            UnityEngine.Object.Destroy(Instance.gameObject);
-            Instance = null;
-        }
-
-        private string text;
-        public void Display(string text)
-        {
-            gameObject.SetActive(true);
-            this.text = text;
-        }
-
-        public void Hide()
-        {
-            gameObject.SetActive(false);
-        }
-
-        void OnGUI() // called by Unity
-        {
-            gameObject.SetActive(AugmentedReality.Instance.IsEnabled());
-            if (!AugmentedReality.Instance.IsEnabled())
-            {
-                return;
-            }
-
-            var x = Screen.width * 2 / 3;
-            var w = Screen.width - x - 110;
-            var y = 100;
-            var h = Screen.height - y - 300;
-            GUI.Box(new Rect(x, y, w, h), "");
-            GUI.color = new Color(1.0f, 1.0f, 1.0f, 0.25f);
-
-            //GUI.Label(new Rect(x, y, w, h), text);
-            GUI.Box(new Rect(x, y, w, h), text
-            ,
-            new GUIStyle()
-            {
-                alignment = TextAnchor.UpperLeft,
-                richText = true,
-                fontSize = 16
-            });
-            GUI.Box(new Rect(x, y + 100, w, h),
-            $@"<color=grey>
-aaa Loaded
-</color>"
-            ,
-            new GUIStyle()
-            {
-                alignment = TextAnchor.UpperLeft,
-                richText = true,
-                fontSize = 14,
-
-            });
+            AugmentedUiManager.Instance?.MouseOn(thing);
         }
     }
 
