@@ -125,7 +125,7 @@ namespace cynofield.mods
                 lookingAt = thing;
                 if (lookingAt != null)
                 {
-                    var desc = thingsUi.Description2d(lookingAt);
+                    var desc = "TODO"; // thingsUi.Description2d(lookingAt);
                     AugmentedDisplayRight.Instance.Display(
                         $"<color=white><color=green><b>eyes on</b></color>: {desc}</color>");
                 }
@@ -146,7 +146,7 @@ namespace cynofield.mods
                 pointingAt = thing;
                 if (pointingAt != null)
                 {
-                    var desc = thingsUi.Description2d(pointingAt);
+                    var desc = "TODO"; // thingsUi.Description2d(pointingAt);
                     AugmentedDisplayRight.Instance.Display(
                         $"<color=white><color=green><b>mouse on</b></color>: {desc}</color>");
                 }

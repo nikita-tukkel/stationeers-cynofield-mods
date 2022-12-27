@@ -107,7 +107,7 @@ namespace cynofield.mods
                 // return if there is already shown annotation for this thing
                 var a = (obj as InWorldAnnotation);
                 if (a.id == thingId && a.IsActive())
-                    return; // TODO update description?
+                    return;
             }
 
             var ann = annotations.Dequeue() as InWorldAnnotation;
