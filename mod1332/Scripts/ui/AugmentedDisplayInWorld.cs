@@ -108,6 +108,7 @@ namespace cynofield.mods.ui
             ann.ShowNear(thing, thingId, hit);
         }
 
+// TODO 'Thing.netId' is obsolete: 'Use ReferenceId instead']
         string GetId(Thing thing) { return thing.NetworkId.ToString(); }
     }
 }
