@@ -32,6 +32,7 @@ namespace cynofield.mods.ui
             obj.transform.parent = gameObject.transform;
             canvas = obj.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.WorldSpace;
+            //canvas.pixelPerfect = true; // for RenderMode.ScreenSpaceOverlay
 
             var canvasTransform = canvas.transform;
             canvasTransform.localScale = Vector3.one * 0.5f; // less than 0.5 looks bad
@@ -47,6 +48,9 @@ namespace cynofield.mods.ui
             text.alignment = TextAlignmentOptions.TopLeft;
             text.richText = true;
             text.margin = new Vector4(0.05f, 0.05f, 0.05f, 0.05f);
+            text.overflowMode = TextOverflowModes.Truncate;
+            text.enableWordWrapping = false;
+
             // Resources.Load<TMP_FontAsset>(string.Format("UI/{0}", this.FontName))
             // Font font = new Font("StreamingAssets/Fonts/3270-Regular.ttf");
             // var tfont = TMP_FontAsset.CreateFontAsset(font);
@@ -57,22 +61,43 @@ namespace cynofield.mods.ui
             //0.06f when using Localization.CurrentFont
             text.fontSize = 0.06f;
 
-            ColorScheme2(bkgd, text);
+            ApplyNextColorScheme(bkgd, text);
         }
 
-        void ColorScheme1(RawImage bkgd, TextMeshProUGUI text)
+        private static int ColorSchemeId = 0;
+        private static void ApplyNextColorScheme(RawImage bkgd, TextMeshProUGUI text)
         {
-            bkgd.color = new Color(0.3f, 0.3f, 0.7f, 0.2f);
-            text.alpha = 0.2f;
-            text.color = new Color(0f, 0f, 0f, 1f);
+            ApplyColorScheme(ColorSchemeId++, bkgd, text);
         }
 
-        void ColorScheme2(RawImage bkgd, TextMeshProUGUI text)
+        private static void ApplyColorScheme(int i, RawImage bkgd, TextMeshProUGUI text)
         {
-            // bkgd.color = new Color(0xad / 255f, 0xd8 / 255f, 0xe6 / 255f, 0.2f);
-            bkgd.color = new Color(0xad / 255f, 0xad / 255f, 0xe6 / 255f, 0.2f);
-            text.alpha = 0.2f;
-            text.color = new Color(1f, 1f, 1f, 0.1f); // low alpha is used to hide font antialiasing artifacts.
+            switch (i)
+            {
+                case 1:
+                    {
+                        // bkgd.color = new Color(0xad / 255f, 0xd8 / 255f, 0xe6 / 255f, 0.2f);
+                        bkgd.color = new Color(0xad / 255f, 0xad / 255f, 0xe6 / 255f, 0.2f);
+                        text.alpha = 0.8f;
+                        text.color = new Color(0f, 0f, 0f, 0.8f); // low alpha is used to hide font antialiasing artifacts.
+                        text.fontStyle = FontStyles.Bold;
+                        break;
+                    }
+                // case 2:
+                //     {
+                //         break;
+                //     }
+                default:
+                    {
+                        ColorSchemeId = 1; // reset to the first, so the sequence after restart is 0, 1, 2...., 0.
+
+                        bkgd.color = new Color(0.2f, 0.3f, 0.7f, 0.4f);
+                        text.alpha = 0.2f;
+                        text.color = new Color(1f, 1f, 1f, 0.1f); // low alpha is used to hide font antialiasing artifacts.
+                        text.fontStyle = FontStyles.Bold;
+                        break;
+                    }
+            }
         }
 
         public void ShowNear(Thing thing, string id, RaycastHit hit)

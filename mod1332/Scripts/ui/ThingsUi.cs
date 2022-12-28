@@ -31,10 +31,16 @@ namespace cynofield.mods.ui
             return (thing is VolumePump);
         }
 
-        public void RenderArAnnotation(Thing thing, Canvas canvas, TextMeshProUGUI textMesh)
+        private IThingArDescriber GetUi(Thing thing)
         {
             var type = thing.GetType();
             if (!uis.TryGetValue(type, out IThingArDescriber ui)) ui = defaultArUi;
+            return ui;
+        }
+
+        public void RenderArAnnotation(Thing thing, Canvas canvas, TextMeshProUGUI textMesh)
+        {
+            var ui = GetUi(thing);
             if (ui is IThingArRenderer)
             {
                 // TODO more complex rendering
@@ -44,6 +50,11 @@ namespace cynofield.mods.ui
                 var desc = ui.Describe(thing);
                 textMesh.text = desc;
             }
+        }
+
+        public string Describe(Thing thing)
+        {
+            return GetUi(thing).Describe(thing);
         }
 
         private readonly IThingArDescriber defaultArUi = new UiDefault();

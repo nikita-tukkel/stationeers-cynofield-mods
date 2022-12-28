@@ -71,7 +71,7 @@ namespace cynofield.mods.ui
                 lookingAt = thing;
                 if (lookingAt != null)
                 {
-                    var desc = "TODO"; // thingsUi.Description2d(lookingAt);
+                    var desc = thingsUi.Describe(lookingAt);
                     rightHud.Display(
                         $"<color=white><color=green><b>eyes on</b></color>: {desc}</color>");
                 }
@@ -92,7 +92,7 @@ namespace cynofield.mods.ui
                 pointingAt = thing;
                 if (pointingAt != null)
                 {
-                    var desc = "TODO"; // thingsUi.Description2d(pointingAt);
+                    var desc = thingsUi.Describe(pointingAt);
                     rightHud.Display(
                         $"<color=white><color=green><b>mouse on</b></color>: {desc}</color>");
                 }
