@@ -17,6 +17,6 @@ $@"network: {net.DisplayName}
 {utils.PowerDisplay(net.CurrentLoad)} / {utils.PowerDisplay(net.PotentialLoad)}";
         }
 
-        private readonly Utils utils = new Utils();
+        private readonly UiUtils utils = new UiUtils();
     }
 }

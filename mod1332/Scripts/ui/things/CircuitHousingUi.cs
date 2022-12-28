@@ -54,6 +54,6 @@ $@"{obj.DisplayName}
             return Traverse.Create(chip).Field("_Registers").GetValue() as double[];
         }
 
-        private readonly Utils utils = new Utils();
+        private readonly UiUtils utils = new UiUtils();
     }
 }

@@ -2,7 +2,7 @@ using System;
 
 namespace cynofield.mods.ui.things
 {
-    public class Utils
+    public class UiUtils
     {
         public string PowerDisplay(float power)
         {

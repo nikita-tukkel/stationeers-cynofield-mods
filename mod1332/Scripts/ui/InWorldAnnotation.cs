@@ -1,3 +1,4 @@
+using System;
 using Assets.Scripts;
 using Assets.Scripts.Inventory;
 using Assets.Scripts.Objects;
@@ -24,7 +25,7 @@ namespace cynofield.mods.ui
             this.thingsUi = thingsUi;
         }
 
-        void Start()
+        public void Start__2()
         {
             //ConsoleWindow.Print($"InWorldAnnotation Start");
             obj = new GameObject("0");
@@ -188,12 +189,17 @@ namespace cynofield.mods.ui
                     }
                 // case 2:
                 //     {
+                //         // Background without material
+                //         //  - not used, become blind under flashlight
+                //         bkgd.color = new Color(0.2f, 0.4f, 0.2f, 0.1f);
+                //         text.color = new Color(1f, 1f, 1f, 0.1f); // low alpha is used to hide font antialiasing artifacts.
+                //         text.fontStyle = FontStyles.Bold;
                 //         break;
                 //     }
                 default:
                     {
                         bkgd.material = MaterialForLightText();
-                        // text.alpha = 0.2f; // doesn't seem to change anything, using `bkgd.color.a` instead (see above).
+                        // text.alpha = 0.2f; // doesn't seem to change anything, using `bkgd.color.a` or `material.color.a` instead (see above).
                         text.color = new Color(1f, 1f, 1f, 0.1f); // low alpha is used to hide font antialiasing artifacts.
                         text.fontStyle = FontStyles.Bold;
                         break;
@@ -219,7 +225,7 @@ namespace cynofield.mods.ui
             transform.SetParent(thing.transform, false);
             transform.SetPositionAndRotation(
                 // need to reset position on this component reuse
-                thing.transform.position + Vector3.zero,
+                thing.transform.position,
 
                 // rotate vertically to the camera:
                 Quaternion.Euler(0, Camera.main.transform.eulerAngles.y, 0)
@@ -254,6 +260,55 @@ namespace cynofield.mods.ui
                 transform.position = new Vector3(posHit.x, limit1 + height, posHit.z);
             }
             transform.Translate(Camera.main.transform.forward * -0.5f, Space.World);
+
+            obj.SetActive(true);
+            gameObject.SetActive(true);
+        }
+
+        public void ShowOver(Thing thing, string id, RaycastHit hit)
+        {
+            if (thing == null)
+            {
+                Hide();
+                return;
+            }
+            if (thing == anchor)
+            {
+                return;
+            }
+            this.anchor = thing;
+            this.id = id;
+
+            // relink to new parent, thus appear in the parent scene.
+            transform.SetParent(thing.transform, false);
+            transform.SetPositionAndRotation(thing.transform.position, Quaternion.LookRotation(Vector3.zero));
+            Render();
+
+            var fromPlayerToThing = hit.transform.position - InventoryManager.ParentHuman.transform.position;
+            // TODO refactor
+            var fd = Vector3.Dot(fromPlayerToThing, Vector3.forward);
+            var res = Vector3.forward;
+            var resd = fd;
+            var bd = Vector3.Dot(fromPlayerToThing, Vector3.back);
+            if (bd > resd)
+            {
+                res = Vector3.back;
+                resd = bd;
+            }
+            var ld = Vector3.Dot(fromPlayerToThing, Vector3.left);
+            if (ld > resd)
+            {
+                res = Vector3.left;
+                resd = ld;
+            }
+            var rd = Vector3.Dot(fromPlayerToThing, Vector3.right);
+            if (rd > resd)
+            {
+                res = Vector3.right;
+                resd = rd;
+            }
+            transform.rotation = Quaternion.LookRotation(res);
+            transform.Translate(res * -0.3f, Space.World);
 
             obj.SetActive(true);
             gameObject.SetActive(true);

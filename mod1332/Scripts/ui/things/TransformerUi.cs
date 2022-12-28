@@ -19,6 +19,6 @@ $@"{obj.DisplayName}
 {utils.PowerDisplay(obj.AvailablePower)}";
         }
 
-        private readonly Utils utils = new Utils();
+        private readonly UiUtils utils = new UiUtils();
     }
 }

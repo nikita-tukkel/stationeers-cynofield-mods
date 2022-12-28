@@ -1,6 +1,9 @@
 using Assets.Scripts;
 using Assets.Scripts.Objects;
 using UnityEngine;
+using Assets.Scripts.Inventory;
+using cynofield.mods.utils;
+using System.Collections.Generic;
 using System.Collections;
 
 namespace cynofield.mods.ui
@@ -27,20 +30,35 @@ namespace cynofield.mods.ui
 
         private ThingsUi thingsUi;
         private readonly Queue annotations = new Queue();
+        private readonly Utils utils = new Utils();
+        private NearbyObjects nearbyObjects;
 
         void Start()
         {
             for (int i = 0; i < 3; i++)
             {
-                var a = new GameObject().AddComponent<InWorldAnnotation>();
-                a.Inject(thingsUi);
+                var a = CreateAnnotation();
                 annotations.Enqueue(a);
             }
         }
 
+        private readonly Dictionary<string, Thing> nearbyThings = new Dictionary<string, Thing>(1000);
+        private readonly Dictionary<string, Thing> trackedThings = new Dictionary<string, Thing>(1000);
+        private readonly Dictionary<string, Thing> removedThings = new Dictionary<string, Thing>(1000);
+        private readonly Dictionary<string, InWorldAnnotation> staticAnnotations = new Dictionary<string, InWorldAnnotation>(1000);
+        private readonly Queue staticAnnotationsPool = new Queue();
         private float periodicUpdateCounter;
         void Update()
         {
+            if (nearbyObjects == null)
+            {
+                var human = InventoryManager.ParentHuman?.transform;
+                if (human != null)
+                {
+                    nearbyObjects = NearbyObjects.Create(InventoryManager.ParentHuman.transform);
+                }
+            }
+
             periodicUpdateCounter += Time.deltaTime;
 
             bool isCtrlKeyDown = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
@@ -86,6 +104,97 @@ namespace cynofield.mods.ui
 
                 a.Render();
             }
+
+            UpdateTrackedObjects();
+        }
+
+        private void UpdateTrackedObjects()
+        {
+            if (nearbyObjects == null)
+                return;
+            nearbyObjects.GetAll(nearbyThings);
+            foreach (var entry in nearbyThings)
+            {
+                var id = entry.Key;
+                var th = entry.Value;
+                if (trackedThings.TryAdd(id, th))
+                {
+                    OnTrackedAdded(id, th);
+                }
+            }
+
+            removedThings.Clear();
+            foreach (var entry in trackedThings)
+            {
+                var id = entry.Key;
+                var th = entry.Value;
+                if (!nearbyThings.ContainsKey(id))
+                {
+                    removedThings[id] = th;
+                }
+            }
+            foreach (var entry in removedThings)
+            {
+                var id = entry.Key;
+                var th = entry.Value;
+                trackedThings.Remove(id);
+                OnTrackedRemoved(id, th);
+            }
+
+        }
+
+        private void OnTrackedAdded(string thingId, Thing thing)
+        {
+            Debug.Log($"New tracked {thing.DisplayName}");
+
+            if (staticAnnotations.TryGetValue(thingId, out InWorldAnnotation ann))
+            {
+                ann.gameObject.SetActive(true);
+                return;
+            }
+
+            var hit = Physics.Linecast(InventoryManager.ParentHuman.transform.position, thing.transform.position, out RaycastHit hitInfo);
+            if (hit)
+            {
+                var hitth = hitInfo.collider.transform.GetComponent<Thing>();
+                if (hitth == thing)
+                {
+                    Debug.Log($"Hit tracked thing {hitth.DisplayName}");
+                    ann = CreateStaticAnnotation();
+                    ann.ShowOver(thing, thingId, hitInfo);
+                }
+                else
+                {
+                    Debug.Log($"Hit something {hitth?.DisplayName}");
+                }
+            }
+            else
+            {
+                Debug.Log($"No hit");
+            }
+        }
+
+        private InWorldAnnotation CreateStaticAnnotation()
+        {
+            if (staticAnnotationsPool.Count > 0)
+                return staticAnnotationsPool.Dequeue() as InWorldAnnotation;
+
+            var ann = CreateAnnotation();
+            return ann;
+        }
+
+        private InWorldAnnotation CreateAnnotation()
+        {
+            var result = new GameObject().AddComponent<InWorldAnnotation>();
+            result.Inject(thingsUi);
+            result.Start__2();
+            return result;
+        }
+
+        private void OnTrackedRemoved(string id, Thing thing)
+        {
+            Debug.Log($"Removed tracked {thing.DisplayName}");
+
         }
 
         public void Show(Thing thing, RaycastHit hit)
@@ -93,7 +202,7 @@ namespace cynofield.mods.ui
             if (thing == null)
                 return;
 
-            var thingId = GetId(thing);
+            var thingId = utils.GetId(thing);
 
             foreach (var obj in annotations)
             {
@@ -107,8 +216,5 @@ namespace cynofield.mods.ui
             annotations.Enqueue(ann);
             ann.ShowNear(thing, thingId, hit);
         }
-
-// TODO 'Thing.netId' is obsolete: 'Use ReferenceId instead']
-        string GetId(Thing thing) { return thing.NetworkId.ToString(); }
     }
 }
