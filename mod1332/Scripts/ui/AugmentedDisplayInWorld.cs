@@ -24,15 +24,19 @@ namespace cynofield.mods.ui
             // destroy them explicitly because they attach to different parents
             foreach (var ann in annotations)
             {
-                (ann as InWorldAnnotation).Destroy();
+                Utils.Destroy(ann as InWorldAnnotation);
             }
             annotations.Clear();
 
             foreach (var ann in staticAnnotations.Values)
-                ann.Destroy();
+            {
+                Utils.Destroy(ann);
+            }
             staticAnnotations.Clear();
             foreach (var ann in staticAnnotationsPool)
-                (ann as InWorldAnnotation).Destroy();
+            {
+                Utils.Destroy(ann as InWorldAnnotation);
+            }
             staticAnnotationsPool.Clear();
         }
 
@@ -74,7 +78,7 @@ namespace cynofield.mods.ui
             {
                 foreach (var obj in annotations)
                 {
-                    (obj as InWorldAnnotation).gameObject.SetActive(false);
+                    Utils.Hide(obj as InWorldAnnotation);
                 }
                 return;
             }

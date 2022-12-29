@@ -1,7 +1,7 @@
-using System;
 using Assets.Scripts;
 using Assets.Scripts.Inventory;
 using Assets.Scripts.Objects;
+using cynofield.mods.utils;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -12,10 +12,7 @@ namespace cynofield.mods.ui
     {
         public static InWorldAnnotation Create(Transform parent, ThingsUi thingsUi, int _colorSchemeId = -1)
         {
-            var result = new GameObject().AddComponent<InWorldAnnotation>();
-            result.gameObject.SetActive(false);
-            if (parent != null)
-                result.transform.SetParent(parent, false);
+            var result = Utils.CreateGameObject<InWorldAnnotation>(parent);
             result.Init(thingsUi, _colorSchemeId);
             return result;
         }
@@ -29,19 +26,17 @@ namespace cynofield.mods.ui
                 if (_colorSchemeId != value)
                 {
                     _colorSchemeId = value;
-                    ApplyColorSchemeInternal();
+                    ApplyColorScheme();
                 }
             }
         }
-        GameObject obj;
-        Canvas canvas;
-        RawImage bkgd;
-        RawImage bkgd2;
-        TextMeshProUGUI text;
-        Thing anchor;
 
-        ThingsUi thingsUi;
-
+        private Canvas canvas;
+        private RawImage bkgd;
+        private RawImage bkgd2;
+        private TextMeshProUGUI text;
+        private Thing anchor;
+        private ThingsUi thingsUi;
         public string id;
 
         public void Init(ThingsUi thingsUi, int _colorSchemeId = -1)
@@ -50,28 +45,21 @@ namespace cynofield.mods.ui
             this._colorSchemeId = _colorSchemeId;
 
             //ConsoleWindow.Print($"InWorldAnnotation Start");
-            obj = new GameObject("0");
-            obj.SetActive(false);
-            obj.transform.parent = gameObject.transform;
-            canvas = obj.AddComponent<Canvas>();
+            canvas = gameObject.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.WorldSpace;
             //canvas.pixelPerfect = true; // for RenderMode.ScreenSpaceOverlay
-            //canvas.transform.localScale = Vector3.one * 0.5f; // less than 0.5 looks bad
 
             var size = new Vector2(0.7f, 0.7f);
             // Culling doesn't work for unknown reason, so have to duplicate the background for
             //  opposite side of the annotation.
-            bkgd = new GameObject("2").AddComponent<RawImage>();
-            bkgd.rectTransform.SetParent(canvas.transform, false);
+            bkgd = Utils.CreateGameObject<RawImage>(canvas);
             bkgd.rectTransform.sizeDelta = size;
-            bkgd2 = new GameObject("3").AddComponent<RawImage>();
-            bkgd2.rectTransform.SetParent(canvas.transform, false);
+            bkgd2 = Utils.CreateGameObject<RawImage>(canvas);
             bkgd2.rectTransform.sizeDelta = size;
             bkgd2.transform.Rotate(Vector3.up, 180);
 
             // https://docs.unity3d.com/Packages/com.unity.textmeshpro@4.0/manual/RichText.html
-            text = new GameObject("1").AddComponent<TextMeshProUGUI>();
-            text.rectTransform.SetParent(canvas.transform, false);
+            text = Utils.CreateGameObject<TextMeshProUGUI>(canvas);
             text.rectTransform.sizeDelta = size;
             text.alignment = TextAlignmentOptions.TopLeft;
             text.richText = true;
@@ -95,7 +83,7 @@ namespace cynofield.mods.ui
                 if (ColorSchemeCounter > 1)
                     ColorSchemeCounter = 0;
             }
-            ApplyColorSchemeInternal();
+            ApplyColorScheme();
         }
 
         public static Material MaterialForLightText()
@@ -188,7 +176,7 @@ namespace cynofield.mods.ui
             return material;
         }
 
-        private void ApplyColorSchemeInternal()
+        private void ApplyColorScheme()
         {
             switch (_colorSchemeId)
             {
@@ -223,11 +211,6 @@ namespace cynofield.mods.ui
 
         public void ShowNear(Thing thing, string id, RaycastHit hit)
         {
-            if (thing == null)
-            {
-                Hide();
-                return;
-            }
             this.anchor = thing;
             this.id = id;
 
@@ -272,17 +255,11 @@ namespace cynofield.mods.ui
             }
             transform.Translate(Camera.main.transform.forward * 0.5f, Space.World);
 
-            obj.SetActive(true);
-            gameObject.SetActive(true);
+            Utils.Show(gameObject);
         }
 
         public void ShowOver(Thing thing, string id)
         {
-            if (thing == null)
-            {
-                Hide();
-                return;
-            }
             this.anchor = thing;
             this.id = id;
 
@@ -317,8 +294,7 @@ namespace cynofield.mods.ui
             transform.rotation = Quaternion.LookRotation(res);
             transform.Translate(res * -0.35f, Space.World);
 
-            obj.SetActive(true);
-            gameObject.SetActive(true);
+            Utils.Show(gameObject);
         }
 
         public void Render()
@@ -334,19 +310,6 @@ namespace cynofield.mods.ui
                 return false;
 
             return this.isActiveAndEnabled && anchor != null;
-        }
-
-        public void Hide()
-        {
-            anchor = null;
-            gameObject.SetActive(false);
-        }
-
-        public void Destroy()
-        {
-            Destroy(gameObject);
-            if (obj != null)
-                Destroy(obj);
         }
     }
 }
