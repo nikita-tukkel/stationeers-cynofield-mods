@@ -221,10 +221,6 @@ namespace cynofield.mods.ui
                 Hide();
                 return;
             }
-            if (thing == anchor)
-            {
-                return;
-            }
             this.anchor = thing;
             this.id = id;
 
@@ -249,7 +245,8 @@ namespace cynofield.mods.ui
             var humanHeight = (posHead.y - posLegs.y) * 1.2f;
             var limit1 = posLegs.y;
             var limit2 = limit1 + humanHeight;
-            transform.position = new Vector3(posHit.x, posHit.y, posHit.z);
+            //transform.position = new Vector3(posHit.x, posHit.y, posHit.z);
+            transform.position = posHead;
             Vector3[] corners = new Vector3[4];
             bkgd.rectTransform.GetWorldCorners(corners);
             var y1 = corners[0].y; // bottom left
@@ -266,7 +263,7 @@ namespace cynofield.mods.ui
                 // ConsoleWindow.Print($"ShowNear {y1} < {posLegs.y} ; pos.y={pos.y}, y1={y1}, y2={y2}; head={posHead.y}, legs={posLegs.y}");
                 transform.position = new Vector3(posHit.x, limit1 + height, posHit.z);
             }
-            transform.Translate(Camera.main.transform.forward * -0.5f, Space.World);
+            transform.Translate(Camera.main.transform.forward * 0.5f, Space.World);
 
             obj.SetActive(true);
             gameObject.SetActive(true);

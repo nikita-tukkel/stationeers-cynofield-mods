@@ -195,16 +195,29 @@ namespace cynofield.mods.ui
 
             var thingId = utils.GetId(thing);
 
+            InWorldAnnotation existing = null;
             foreach (var obj in annotations)
             {
-                // return if there is already shown annotation for this thing
+                // find annotation already shown for this thing
                 var a = (obj as InWorldAnnotation);
                 if (a.id == thingId && a.IsActive())
-                    return;
+                {
+                    existing = a;
+                    break;
+                }
             }
 
-            var ann = annotations.Dequeue() as InWorldAnnotation;
-            annotations.Enqueue(ann);
+            InWorldAnnotation ann;
+            if (existing == null)
+            {
+                ann = annotations.Dequeue() as InWorldAnnotation;
+                annotations.Enqueue(ann);
+            }
+            else
+            {
+                ann = existing;
+            }
+
             ann.ShowNear(thing, thingId, hit);
         }
     }
