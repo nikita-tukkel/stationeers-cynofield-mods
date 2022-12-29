@@ -4,6 +4,7 @@ using Assets.Scripts.Objects.Electrical;
 using Assets.Scripts.Objects.Pipes;
 using Assets.Scripts.UI;
 using cynofield.mods.ui;
+using cynofield.mods.utils;
 using HarmonyLib;
 using Stationeers.Addons;
 
@@ -53,7 +54,7 @@ namespace cynofield.mods
 
         void Destroy()
         {
-            AugmentedUiManager.Instance?.Destroy();
+            AugmentedUiManager.Instance.Destroy();
             Instance = null;
         }
 

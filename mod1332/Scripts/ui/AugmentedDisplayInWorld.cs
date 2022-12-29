@@ -13,10 +13,19 @@ namespace cynofield.mods.ui
     {
         public static AugmentedDisplayInWorld Create(ThingsUi thingsUi)
         {
-            var instance = new GameObject("root").AddComponent<AugmentedDisplayInWorld>();
-            instance.thingsUi = thingsUi;
-            //ConsoleWindow.Print($"AugmentedDisplayInWorld create {Instance} {Instance.gameObject}");
-            return instance;
+            var result = Utils.CreateGameObject<AugmentedDisplayInWorld>();
+            result.Init(thingsUi);
+            return result;
+        }
+
+        private void Init(ThingsUi thingsUi)
+        {
+            this.thingsUi = thingsUi;
+            for (int i = 0; i < 3; i++)
+            {
+                var ann = CreateAnnotation();
+                annotations.Enqueue(ann);
+            }
         }
 
         void OnDestroy()
@@ -44,15 +53,6 @@ namespace cynofield.mods.ui
         private readonly Queue annotations = new Queue();
         private readonly Utils utils = new Utils();
         private NearbyObjects nearbyObjects;
-
-        void Start()
-        {
-            for (int i = 0; i < 3; i++)
-            {
-                var ann = CreateAnnotation();
-                annotations.Enqueue(ann);
-            }
-        }
 
         private readonly Dictionary<string, Thing> nearbyThings = new Dictionary<string, Thing>(1000);
         private readonly Dictionary<string, Thing> trackedThings = new Dictionary<string, Thing>(1000);
@@ -167,7 +167,7 @@ namespace cynofield.mods.ui
 
         private void OnTrackedAdded(string thingId, Thing thing)
         {
-            Debug.Log($"New tracked {thing.DisplayName}");
+            //Debug.Log($"New tracked {thing.DisplayName}");
             var colorSchemeId = ParseColorSchemeId(thing.DisplayName);
             var ann = CreateStaticAnnotation(colorSchemeId);
             staticAnnotations.Add(thingId, ann);
@@ -196,7 +196,7 @@ namespace cynofield.mods.ui
 
         private void OnTrackedRemoved(string thingId, Thing thing)
         {
-            Debug.Log($"Removed tracked {thing.DisplayName}");
+            //Debug.Log($"Removed tracked {thing.DisplayName}");
             if (!staticAnnotations.TryGetValue(thingId, out InWorldAnnotation ann))
                 return;
 
@@ -237,7 +237,7 @@ namespace cynofield.mods.ui
             foreach (var obj in annotations)
             {
                 // find annotation already shown for this thing
-                var a = (obj as InWorldAnnotation);
+                var a = obj as InWorldAnnotation;
                 if (a.id == thingId && a.IsActive())
                 {
                     existing = a;

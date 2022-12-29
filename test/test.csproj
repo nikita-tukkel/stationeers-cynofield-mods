@@ -25,6 +25,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\mod25243\mod25243.csproj" />
+    <ProjectReference Include="..\mod1332\mod1332.csproj" />
   </ItemGroup>
 
 </Project>

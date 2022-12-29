@@ -39,7 +39,7 @@ namespace cynofield.mods.ui
         private ThingsUi thingsUi;
         public string id;
 
-        public void Init(ThingsUi thingsUi, int _colorSchemeId = -1)
+        private void Init(ThingsUi thingsUi, int _colorSchemeId = -1)
         {
             this.thingsUi = thingsUi;
             this._colorSchemeId = _colorSchemeId;

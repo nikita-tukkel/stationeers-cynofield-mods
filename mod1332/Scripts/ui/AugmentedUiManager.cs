@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using Assets.Scripts;
 using Assets.Scripts.Inventory;
@@ -7,13 +8,14 @@ using Assets.Scripts.Objects.Items;
 using Assets.Scripts.Objects.Pipes;
 using Assets.Scripts.UI;
 using cynofield.mods.ui;
+using cynofield.mods.utils;
 using HarmonyLib;
 using Stationeers.Addons;
 using UnityEngine;
 
 namespace cynofield.mods.ui
 {
-    public class AugmentedUiManager
+    public class AugmentedUiManager : IHierarchy
     {
         public static AugmentedUiManager Instance;
 
@@ -31,35 +33,19 @@ namespace cynofield.mods.ui
             components.Add(rightHud);
             this.inworldUi = AugmentedDisplayInWorld.Create(thingsUi);
             components.Add(inworldUi);
+
+            // TODO activation from plugin lifecycle
+            // TODO `Human` provider and enable/disable state managers
+            Utils.Show(inworldUi);
         }
 
         AugmentedDisplayRight rightHud;
         AugmentedDisplayInWorld inworldUi;
-        List<Component> components = new List<Component>(); // TODO make it a GameObject?
         AREnabler enabler;
         ThingsUi thingsUi;
 
         Thing lookingAt = null;
         Thing pointingAt = null;
-
-        public void Enable()
-        {
-
-        }
-
-
-        public void Disable()
-        {
-
-        }
-
-        public void Destroy()
-        {
-            foreach (var c in components)
-            {
-                UnityEngine.Object.Destroy(c.gameObject);
-            }
-        }
 
         internal void EyesOn(Thing thing)
         {
@@ -103,6 +89,10 @@ namespace cynofield.mods.ui
             }
         }
 
-    }
+        private readonly List<Component> components = new List<Component>();
 
+        IHierarchy IHierarchy.Parent => null;
+
+        IEnumerator IEnumerable.GetEnumerator() => components.GetEnumerator();
+    }
 }
