@@ -26,6 +26,13 @@ namespace cynofield.mods.ui
                 (ann as InWorldAnnotation).Destroy();
             }
             annotations.Clear();
+
+            foreach (var ann in staticAnnotations.Values)
+                ann.Destroy();
+            staticAnnotations.Clear();
+            foreach (var ann in staticAnnotationsPool)
+                (ann as InWorldAnnotation).Destroy();
+            staticAnnotationsPool.Clear();
         }
 
         private ThingsUi thingsUi;
@@ -141,37 +148,33 @@ namespace cynofield.mods.ui
                 OnTrackedRemoved(id, th);
             }
 
+            foreach (var entry in trackedThings)
+            {
+                var id = entry.Key;
+                var th = entry.Value;
+                if (!staticAnnotations.TryGetValue(id, out InWorldAnnotation ann))
+                    continue;
+                ann.ShowOver(th, id);
+            }
         }
 
         private void OnTrackedAdded(string thingId, Thing thing)
         {
             Debug.Log($"New tracked {thing.DisplayName}");
+            var ann = CreateStaticAnnotation();
+            staticAnnotations.Add(thingId, ann);
+        }
 
-            if (staticAnnotations.TryGetValue(thingId, out InWorldAnnotation ann))
-            {
-                ann.gameObject.SetActive(true);
+        private void OnTrackedRemoved(string thingId, Thing thing)
+        {
+            Debug.Log($"Removed tracked {thing.DisplayName}");
+            if (!staticAnnotations.TryGetValue(thingId, out InWorldAnnotation ann))
                 return;
-            }
 
-            var hit = Physics.Linecast(InventoryManager.ParentHuman.transform.position, thing.transform.position, out RaycastHit hitInfo);
-            if (hit)
-            {
-                var hitth = hitInfo.collider.transform.GetComponent<Thing>();
-                if (hitth == thing)
-                {
-                    Debug.Log($"Hit tracked thing {hitth.DisplayName}");
-                    ann = CreateStaticAnnotation();
-                    ann.ShowOver(thing, thingId, hitInfo);
-                }
-                else
-                {
-                    Debug.Log($"Hit something {hitth?.DisplayName}");
-                }
-            }
-            else
-            {
-                Debug.Log($"No hit");
-            }
+            // hide and move into pool
+            ann.gameObject.SetActive(false);
+            staticAnnotations.Remove(thingId);
+            staticAnnotationsPool.Enqueue(ann);
         }
 
         private InWorldAnnotation CreateStaticAnnotation()
@@ -183,19 +186,7 @@ namespace cynofield.mods.ui
             return ann;
         }
 
-        private InWorldAnnotation CreateAnnotation()
-        {
-            var result = new GameObject().AddComponent<InWorldAnnotation>();
-            result.Inject(thingsUi);
-            result.Start__2();
-            return result;
-        }
-
-        private void OnTrackedRemoved(string id, Thing thing)
-        {
-            Debug.Log($"Removed tracked {thing.DisplayName}");
-
-        }
+        private InWorldAnnotation CreateAnnotation() { return InWorldAnnotation.Create(null, thingsUi); }
 
         public void Show(Thing thing, RaycastHit hit)
         {

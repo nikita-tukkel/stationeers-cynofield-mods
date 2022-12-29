@@ -2,6 +2,7 @@ using System.Net.Http.Headers;
 using System.Collections.Generic;
 using Assets.Scripts.Objects;
 using UnityEngine;
+using System;
 
 namespace cynofield.mods.utils
 {
@@ -37,7 +38,8 @@ namespace cynofield.mods.utils
                 // limit to descendands of Structure, but maybe need to look through all Thing's.
                 if (c.TryGetComponent<Structure>(out var thing))
                 {
-                    if (thing.isActiveAndEnabled && thing.DisplayName.Contains("#AR"))
+                    if (thing.isActiveAndEnabled && thing.DisplayName.Contains("#AR",
+                    StringComparison.InvariantCultureIgnoreCase))
                     {
                         nearbyThings[utils.GetId(thing)] = thing;
                     }

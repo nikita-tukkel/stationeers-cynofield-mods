@@ -10,6 +10,16 @@ namespace cynofield.mods.ui
 {
     public class InWorldAnnotation : MonoBehaviour
     {
+        public static InWorldAnnotation Create(Transform parent, ThingsUi thingsUi)
+        {
+            var result = new GameObject().AddComponent<InWorldAnnotation>();
+            result.gameObject.SetActive(false);
+            if (parent != null)
+                result.transform.SetParent(parent, false);
+            result.Init(thingsUi);
+            return result;
+        }
+
         GameObject obj;
         Canvas canvas;
         RawImage bkgd;
@@ -20,13 +30,10 @@ namespace cynofield.mods.ui
 
         public string id;
 
-        public void Inject(ThingsUi thingsUi)
+        public void Init(ThingsUi thingsUi)
         {
             this.thingsUi = thingsUi;
-        }
 
-        public void Start__2()
-        {
             //ConsoleWindow.Print($"InWorldAnnotation Start");
             obj = new GameObject("0");
             obj.SetActive(false);
@@ -34,28 +41,28 @@ namespace cynofield.mods.ui
             canvas = obj.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.WorldSpace;
             //canvas.pixelPerfect = true; // for RenderMode.ScreenSpaceOverlay
-            var canvasTransform = canvas.transform;
-            canvasTransform.localScale = Vector3.one * 0.5f; // less than 0.5 looks bad
+            //canvas.transform.localScale = Vector3.one * 0.5f; // less than 0.5 looks bad
 
-            // Culling doesn't work for some reason, so have to duplicate the background for
+            var size = new Vector2(0.7f, 0.7f);
+            // Culling doesn't work for unknown reason, so have to duplicate the background for
             //  opposite side of the annotation.
             bkgd = new GameObject("2").AddComponent<RawImage>();
             bkgd.rectTransform.SetParent(canvas.transform, false);
-            bkgd.rectTransform.sizeDelta = new Vector2(1f, 1f);
+            bkgd.rectTransform.sizeDelta = size;
             var bkgd2 = new GameObject("3").AddComponent<RawImage>();
             bkgd2.rectTransform.SetParent(canvas.transform, false);
-            bkgd2.rectTransform.sizeDelta = bkgd.rectTransform.sizeDelta;
+            bkgd2.rectTransform.sizeDelta = size;
             bkgd2.transform.Rotate(Vector3.up, 180);
 
             // https://docs.unity3d.com/Packages/com.unity.textmeshpro@4.0/manual/RichText.html
             text = new GameObject("1").AddComponent<TextMeshProUGUI>();
             text.rectTransform.SetParent(canvas.transform, false);
-            text.rectTransform.sizeDelta = bkgd.rectTransform.sizeDelta;
+            text.rectTransform.sizeDelta = size;
             text.alignment = TextAlignmentOptions.TopLeft;
             text.richText = true;
             text.margin = new Vector4(0.05f, 0.05f, 0.05f, 0.05f);
             text.overflowMode = TextOverflowModes.Truncate;
-            text.enableWordWrapping = false;
+            text.enableWordWrapping = true;
 
             // Resources.Load<TMP_FontAsset>(string.Format("UI/{0}", this.FontName))
             // Font font = new Font("StreamingAssets/Fonts/3270-Regular.ttf");
@@ -265,15 +272,11 @@ namespace cynofield.mods.ui
             gameObject.SetActive(true);
         }
 
-        public void ShowOver(Thing thing, string id, RaycastHit hit)
+        public void ShowOver(Thing thing, string id)
         {
             if (thing == null)
             {
                 Hide();
-                return;
-            }
-            if (thing == anchor)
-            {
                 return;
             }
             this.anchor = thing;
@@ -281,10 +284,10 @@ namespace cynofield.mods.ui
 
             // relink to new parent, thus appear in the parent scene.
             transform.SetParent(thing.transform, false);
-            transform.SetPositionAndRotation(thing.transform.position, Quaternion.LookRotation(Vector3.zero));
+            transform.position = thing.transform.position;
             Render();
 
-            var fromPlayerToThing = hit.transform.position - InventoryManager.ParentHuman.transform.position;
+            Vector3 fromPlayerToThing = thing.transform.position - InventoryManager.ParentHuman.transform.position;
             // TODO refactor
             var fd = Vector3.Dot(fromPlayerToThing, Vector3.forward);
             var res = Vector3.forward;
@@ -308,7 +311,7 @@ namespace cynofield.mods.ui
                 resd = rd;
             }
             transform.rotation = Quaternion.LookRotation(res);
-            transform.Translate(res * -0.3f, Space.World);
+            transform.Translate(res * -0.35f, Space.World);
 
             obj.SetActive(true);
             gameObject.SetActive(true);

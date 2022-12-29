@@ -40,9 +40,9 @@ namespace cynofield.mods.ui
 
         public void RenderArAnnotation(Thing thing, Canvas canvas, TextMeshProUGUI textMesh)
         {
-            Debug.Log($"ThingsUi.RenderArAnnotation thing={thing}, canvas={canvas}, text={textMesh}");
+            //Debug.Log($"ThingsUi.RenderArAnnotation thing={thing}, canvas={canvas}, text={textMesh}");
             var ui = GetUi(thing);
-            Debug.Log($"ThingsUi.RenderArAnnotation ui={ui}");
+            //Debug.Log($"ThingsUi.RenderArAnnotation ui={ui}");
             if (ui is IThingArRenderer)
             {
                 // TODO more complex rendering
