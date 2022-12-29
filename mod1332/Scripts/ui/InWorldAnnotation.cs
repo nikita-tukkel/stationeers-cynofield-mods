@@ -10,19 +10,33 @@ namespace cynofield.mods.ui
 {
     public class InWorldAnnotation : MonoBehaviour
     {
-        public static InWorldAnnotation Create(Transform parent, ThingsUi thingsUi)
+        public static InWorldAnnotation Create(Transform parent, ThingsUi thingsUi, int _colorSchemeId = -1)
         {
             var result = new GameObject().AddComponent<InWorldAnnotation>();
             result.gameObject.SetActive(false);
             if (parent != null)
                 result.transform.SetParent(parent, false);
-            result.Init(thingsUi);
+            result.Init(thingsUi, _colorSchemeId);
             return result;
         }
 
+        private static int ColorSchemeCounter = 0;
+        private int _colorSchemeId;
+        public int ColorSchemeId
+        {
+            set
+            {
+                if (_colorSchemeId != value)
+                {
+                    _colorSchemeId = value;
+                    ApplyColorSchemeInternal();
+                }
+            }
+        }
         GameObject obj;
         Canvas canvas;
         RawImage bkgd;
+        RawImage bkgd2;
         TextMeshProUGUI text;
         Thing anchor;
 
@@ -30,9 +44,10 @@ namespace cynofield.mods.ui
 
         public string id;
 
-        public void Init(ThingsUi thingsUi)
+        public void Init(ThingsUi thingsUi, int _colorSchemeId = -1)
         {
             this.thingsUi = thingsUi;
+            this._colorSchemeId = _colorSchemeId;
 
             //ConsoleWindow.Print($"InWorldAnnotation Start");
             obj = new GameObject("0");
@@ -49,7 +64,7 @@ namespace cynofield.mods.ui
             bkgd = new GameObject("2").AddComponent<RawImage>();
             bkgd.rectTransform.SetParent(canvas.transform, false);
             bkgd.rectTransform.sizeDelta = size;
-            var bkgd2 = new GameObject("3").AddComponent<RawImage>();
+            bkgd2 = new GameObject("3").AddComponent<RawImage>();
             bkgd2.rectTransform.SetParent(canvas.transform, false);
             bkgd2.rectTransform.sizeDelta = size;
             bkgd2.transform.Rotate(Vector3.up, 180);
@@ -74,7 +89,13 @@ namespace cynofield.mods.ui
             //0.06f when using Localization.CurrentFont
             text.fontSize = 0.06f;
 
-            ApplyNextColorScheme(bkgd, bkgd2, text);
+            if (this._colorSchemeId < 0)
+            {
+                this._colorSchemeId = ColorSchemeCounter++;
+                if (ColorSchemeCounter > 1)
+                    ColorSchemeCounter = 0;
+            }
+            ApplyColorSchemeInternal();
         }
 
         public static Material MaterialForLightText()
@@ -167,29 +188,14 @@ namespace cynofield.mods.ui
             return material;
         }
 
-
-        private static int ColorSchemeId = 0;
-        private static void ApplyNextColorScheme(RawImage bkgd, TextMeshProUGUI text)
+        private void ApplyColorSchemeInternal()
         {
-            ApplyNextColorScheme(bkgd, null, text);
-        }
-        private static void ApplyNextColorScheme(RawImage bkgd1, RawImage bkgd2, TextMeshProUGUI text)
-        {
-            ApplyColorScheme(ColorSchemeId, bkgd1, text);
-            if (bkgd2 != null)
-                ApplyColorScheme(ColorSchemeId, bkgd2, text);
-            ColorSchemeId++;
-            if (ColorSchemeId > 1)
-                ColorSchemeId = 0;
-        }
-
-        private static void ApplyColorScheme(int i, RawImage bkgd, TextMeshProUGUI text)
-        {
-            switch (i)
+            switch (_colorSchemeId)
             {
                 case 1:
                     {
                         bkgd.material = MaterialForDarkText();
+                        bkgd2.material = bkgd.material;
                         text.color = new Color(0f, 0f, 0f, 0.65f); // low alpha is used to hide font antialiasing artifacts.
                         text.fontStyle = FontStyles.Bold;
                         break;
@@ -206,6 +212,7 @@ namespace cynofield.mods.ui
                 default:
                     {
                         bkgd.material = MaterialForLightText();
+                        bkgd2.material = bkgd.material;
                         // text.alpha = 0.2f; // doesn't seem to change anything, using `bkgd.color.a` or `material.color.a` instead (see above).
                         text.color = new Color(1f, 1f, 1f, 0.1f); // low alpha is used to hide font antialiasing artifacts.
                         text.fontStyle = FontStyles.Bold;
@@ -242,7 +249,7 @@ namespace cynofield.mods.ui
             //var posHead = InventoryManager.ParentHuman.HeadBone.transform.position;
             var posHead = InventoryManager.ParentHuman.GlassesSlot.Occupant.transform.position;
             var posLegs = InventoryManager.ParentHuman.transform.position;
-            var humanHeight = (posHead.y - posLegs.y) * 1.2f;
+            var humanHeight = (posHead.y - posLegs.y) * 1f;
             var limit1 = posLegs.y;
             var limit2 = limit1 + humanHeight;
             //transform.position = new Vector3(posHit.x, posHit.y, posHit.z);

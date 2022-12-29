@@ -1,10 +1,11 @@
 using Assets.Scripts;
-using Assets.Scripts.Objects;
-using UnityEngine;
 using Assets.Scripts.Inventory;
+using Assets.Scripts.Objects;
 using cynofield.mods.utils;
-using System.Collections.Generic;
+using System;
 using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
 
 namespace cynofield.mods.ui
 {
@@ -44,8 +45,8 @@ namespace cynofield.mods.ui
         {
             for (int i = 0; i < 3; i++)
             {
-                var a = CreateAnnotation();
-                annotations.Enqueue(a);
+                var ann = CreateAnnotation();
+                annotations.Enqueue(ann);
             }
         }
 
@@ -154,6 +155,8 @@ namespace cynofield.mods.ui
                 var th = entry.Value;
                 if (!staticAnnotations.TryGetValue(id, out InWorldAnnotation ann))
                     continue;
+                var colorSchemeId = ParseColorSchemeId(th.DisplayName);
+                ann.ColorSchemeId = colorSchemeId;
                 ann.ShowOver(th, id);
             }
         }
@@ -161,8 +164,30 @@ namespace cynofield.mods.ui
         private void OnTrackedAdded(string thingId, Thing thing)
         {
             Debug.Log($"New tracked {thing.DisplayName}");
-            var ann = CreateStaticAnnotation();
+            var colorSchemeId = ParseColorSchemeId(thing.DisplayName);
+            var ann = CreateStaticAnnotation(colorSchemeId);
             staticAnnotations.Add(thingId, ann);
+        }
+
+        private int ParseColorSchemeId(string str)
+        {
+            string[] tokens = str.Split(' ');
+            string arToken = null;
+            foreach (var token in tokens)
+            {
+                if (token.StartsWith("#AR", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    arToken = token;
+                    break;
+                }
+            }
+            if (arToken == null)
+                return -1;
+            var tokenParams = arToken.Substring(3);
+            if (!int.TryParse(tokenParams, out int result))
+                return -1;
+
+            return result;
         }
 
         private void OnTrackedRemoved(string thingId, Thing thing)
@@ -177,16 +202,25 @@ namespace cynofield.mods.ui
             staticAnnotationsPool.Enqueue(ann);
         }
 
-        private InWorldAnnotation CreateStaticAnnotation()
+        private InWorldAnnotation CreateStaticAnnotation(int colorSchemeId = -1)
         {
+            InWorldAnnotation ann;
             if (staticAnnotationsPool.Count > 0)
-                return staticAnnotationsPool.Dequeue() as InWorldAnnotation;
-
-            var ann = CreateAnnotation();
+            {
+                ann = staticAnnotationsPool.Dequeue() as InWorldAnnotation;
+                ann.ColorSchemeId = colorSchemeId;
+            }
+            else
+            {
+                ann = CreateAnnotation(colorSchemeId);
+            }
             return ann;
         }
 
-        private InWorldAnnotation CreateAnnotation() { return InWorldAnnotation.Create(null, thingsUi); }
+        private InWorldAnnotation CreateAnnotation(int colorSchemeId = -1)
+        {
+            return InWorldAnnotation.Create(null, thingsUi, colorSchemeId);
+        }
 
         public void Show(Thing thing, RaycastHit hit)
         {
