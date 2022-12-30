@@ -21,8 +21,11 @@ namespace cynofield.mods.ui
             components.Add(rightHud);
             inworldUi = AugmentedDisplayInWorld.Create(thingsUi, playerProvider);
             components.Add(inworldUi);
+            leftHud = AugmentedDisplayLeft.Create();
+            components.Add(leftHud);
         }
 
+        private readonly AugmentedDisplayLeft leftHud;
         private readonly AugmentedDisplayRight rightHud;
         private readonly AugmentedDisplayInWorld inworldUi;
         private readonly ThingsUi thingsUi;

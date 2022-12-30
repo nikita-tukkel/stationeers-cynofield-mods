@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace cynofield.mods.utils
 {
@@ -184,5 +185,21 @@ namespace cynofield.mods.utils
         }
 
         public string GetId(Thing thing) { return thing == null ? "" : thing.ReferenceId.ToString(); }
+
+        public static VerticalLayoutGroup VL(Component parent) => VL(parent.gameObject);
+        public static VerticalLayoutGroup VL(GameObject parent)
+        {
+            var layout = parent.AddComponent<VerticalLayoutGroup>();
+            layout.childAlignment = TextAnchor.UpperLeft;
+            layout.childControlWidth = false;
+            layout.childControlHeight = false;
+            layout.childForceExpandWidth = false;
+            layout.childForceExpandHeight = false;
+            layout.childScaleWidth = false;
+            layout.childScaleHeight = false;
+            layout.spacing = 10;
+            layout.padding = new RectOffset(5, 5, 5, 5);
+            return layout;
+        }
     }
 }
