@@ -1,34 +1,24 @@
+using Assets.Scripts.Objects;
+using cynofield.mods.utils;
 using System.Collections;
 using System.Collections.Generic;
-using Assets.Scripts;
-using Assets.Scripts.Inventory;
-using Assets.Scripts.Objects;
-using Assets.Scripts.Objects.Electrical;
-using Assets.Scripts.Objects.Items;
-using Assets.Scripts.Objects.Pipes;
-using Assets.Scripts.UI;
-using cynofield.mods.ui;
-using cynofield.mods.utils;
-using HarmonyLib;
-using Stationeers.Addons;
 using UnityEngine;
 
 namespace cynofield.mods.ui
 {
     public class AugmentedUiManager : IHierarchy
     {
-        public static AugmentedUiManager Instance;
-
-        public static void Create()
+        public static AugmentedUiManager Create()
         {
             ThingsUi thingsUi = new ThingsUi();
-            Instance = new AugmentedUiManager(thingsUi);
+            AREnabler enabler = new AREnabler();
+            return new AugmentedUiManager(thingsUi, enabler);
         }
 
-        public AugmentedUiManager(ThingsUi thingsUi)
+        private AugmentedUiManager(ThingsUi thingsUi, AREnabler enabler)
         {
             this.thingsUi = thingsUi;
-            this.enabler = new AREnabler();
+            this.enabler = enabler;
             this.rightHud = AugmentedDisplayRight.Create();
             components.Add(rightHud);
             this.inworldUi = AugmentedDisplayInWorld.Create(thingsUi);
