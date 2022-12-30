@@ -1,17 +1,13 @@
-using Assets.Scripts;
-using Assets.Scripts.Objects;
 using UnityEngine;
-using System.Collections;
 
+using cynofield.mods.utils;
 namespace cynofield.mods.ui
 {
     public class AugmentedDisplayRight : MonoBehaviour
     {
         public static AugmentedDisplayRight Create()
         {
-            var gameObject = new GameObject("AugmentedDisplayRight");
-            gameObject.SetActive(false);
-            return gameObject.AddComponent<AugmentedDisplayRight>();
+            return Utils.CreateGameObject<AugmentedDisplayRight>();
         }
 
         private string text;

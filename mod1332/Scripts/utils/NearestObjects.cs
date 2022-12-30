@@ -1,8 +1,8 @@
-using System.Net.Http.Headers;
 using System.Collections.Generic;
 using Assets.Scripts.Objects;
 using UnityEngine;
 using System;
+using cynofield.mods.ui;
 
 namespace cynofield.mods.utils
 {
@@ -10,8 +10,8 @@ namespace cynofield.mods.utils
     {
         public static NearbyObjects Create(Transform parent)
         {
-            var instance = new GameObject("NearestObjects").AddComponent<NearbyObjects>();
-            instance.transform.SetParent(parent, false);
+            var instance = Utils.CreateGameObject<NearbyObjects>(parent);
+            instance.gameObject.SetActive(true);
             return instance;
         }
 
@@ -19,7 +19,7 @@ namespace cynofield.mods.utils
         private readonly Collider[] nearbyColliders = new Collider[1000];
         private readonly Dictionary<string, Thing> nearbyThings = new Dictionary<string, Thing>(1000);
 
-        private float periodicUpdateCounter = 1; // start from 1 to have first update sooner
+        private float periodicUpdateCounter = 1.5f; // start not from 0 to have first update sooner
         void Update()
         {
             periodicUpdateCounter += Time.deltaTime;
@@ -38,7 +38,7 @@ namespace cynofield.mods.utils
                 // limit to descendands of Structure, but maybe need to look through all Thing's.
                 if (c.TryGetComponent<Structure>(out var thing))
                 {
-                    if (thing.isActiveAndEnabled && thing.DisplayName.Contains("#AR",
+                    if (thing.isActiveAndEnabled && thing.DisplayName.Contains(AugmentedDisplayInWorld.AR_TAG,
                     StringComparison.InvariantCultureIgnoreCase))
                     {
                         nearbyThings[utils.GetId(thing)] = thing;
@@ -73,10 +73,6 @@ namespace cynofield.mods.utils
             {
                 map[entry.Key] = entry.Value;
             }
-        }
-
-        void OnDestroy()
-        {
         }
     }
 }

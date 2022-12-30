@@ -1,5 +1,4 @@
 using Assets.Scripts;
-using Assets.Scripts.Inventory;
 using Assets.Scripts.Objects;
 using cynofield.mods.utils;
 using TMPro;
@@ -10,10 +9,12 @@ namespace cynofield.mods.ui
 {
     public class InWorldAnnotation : MonoBehaviour
     {
-        public static InWorldAnnotation Create(Transform parent, ThingsUi thingsUi, int _colorSchemeId = -1)
+        public static InWorldAnnotation Create(Transform parent,
+            ThingsUi thingsUi, PlayerProvider playerProvider,
+            int _colorSchemeId = -1)
         {
             var result = Utils.CreateGameObject<InWorldAnnotation>(parent);
-            result.Init(thingsUi, _colorSchemeId);
+            result.Init(thingsUi, playerProvider, _colorSchemeId);
             return result;
         }
 
@@ -35,13 +36,16 @@ namespace cynofield.mods.ui
         private RawImage bkgd;
         private RawImage bkgd2;
         private TextMeshProUGUI text;
-        private Thing anchor;
         private ThingsUi thingsUi;
+        private PlayerProvider playerProvider;
         public string id;
+        public Thing anchor;
 
-        private void Init(ThingsUi thingsUi, int _colorSchemeId = -1)
+        private void Init(ThingsUi thingsUi, PlayerProvider playerProvider,
+            int _colorSchemeId = -1)
         {
             this.thingsUi = thingsUi;
+            this.playerProvider = playerProvider;
             this._colorSchemeId = _colorSchemeId;
 
             //ConsoleWindow.Print($"InWorldAnnotation Start");
@@ -229,9 +233,10 @@ namespace cynofield.mods.ui
             // Fine tune coordinates only after content is rendered.
             // Expect that `bkgd` is here and covers whole annotation.
             var posHit = hit.point;
-            //var posHead = InventoryManager.ParentHuman.HeadBone.transform.position;
-            var posHead = InventoryManager.ParentHuman.GlassesSlot.Occupant.transform.position;
-            var posLegs = InventoryManager.ParentHuman.transform.position;
+            var human = playerProvider.GetPlayerAvatar();
+            //var posHead = human.HeadBone.transform.position;
+            var posHead = human.GlassesSlot.Occupant.transform.position;
+            var posLegs = human.transform.position;
             var humanHeight = (posHead.y - posLegs.y) * 1f;
             var limit1 = posLegs.y;
             var limit2 = limit1 + humanHeight;
@@ -268,7 +273,8 @@ namespace cynofield.mods.ui
             transform.position = thing.transform.position;
             Render();
 
-            Vector3 fromPlayerToThing = thing.transform.position - InventoryManager.ParentHuman.transform.position;
+            var human = playerProvider.GetPlayerAvatar();
+            Vector3 fromPlayerToThing = thing.transform.position - human.transform.position;
             // TODO refactor
             var fd = Vector3.Dot(fromPlayerToThing, Vector3.forward);
             var res = Vector3.forward;
@@ -304,12 +310,14 @@ namespace cynofield.mods.ui
 
         public bool IsActive()
         {
-            if (GameManager.GameState != Assets.Scripts.GridSystem.GameState.Running)
-                return false;
-            if (InventoryManager.ParentHuman == null)
-                return false;
-
             return this.isActiveAndEnabled && anchor != null;
+        }
+
+        public void Deactivate()
+        {
+            Utils.Hide(this);
+            anchor = null;
+            id = null;
         }
     }
 }

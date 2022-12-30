@@ -1,5 +1,4 @@
 using Assets.Scripts;
-using Assets.Scripts.Inventory;
 using Assets.Scripts.Objects;
 using cynofield.mods.utils;
 using System;
@@ -11,16 +10,19 @@ namespace cynofield.mods.ui
 {
     public class AugmentedDisplayInWorld : MonoBehaviour
     {
-        public static AugmentedDisplayInWorld Create(ThingsUi thingsUi)
+        public static readonly string AR_TAG = "#AR";
+
+        public static AugmentedDisplayInWorld Create(ThingsUi thingsUi, PlayerProvider playerProvider)
         {
             var result = Utils.CreateGameObject<AugmentedDisplayInWorld>();
-            result.Init(thingsUi);
+            result.Init(thingsUi, playerProvider);
             return result;
         }
 
-        private void Init(ThingsUi thingsUi)
+        private void Init(ThingsUi thingsUi, PlayerProvider playerProvider)
         {
             this.thingsUi = thingsUi;
+            this.playerProvider = playerProvider;
             for (int i = 0; i < 3; i++)
             {
                 var ann = CreateAnnotation();
@@ -30,26 +32,33 @@ namespace cynofield.mods.ui
 
         void OnDestroy()
         {
-            // destroy them explicitly because they attach to different parents
-            foreach (var ann in annotations)
-            {
-                Utils.Destroy(ann as InWorldAnnotation);
-            }
+            IterateAll((ann) => Utils.Destroy(ann));
             annotations.Clear();
-
-            foreach (var ann in staticAnnotations.Values)
-            {
-                Utils.Destroy(ann);
-            }
             staticAnnotations.Clear();
-            foreach (var ann in staticAnnotationsPool)
-            {
-                Utils.Destroy(ann as InWorldAnnotation);
-            }
             staticAnnotationsPool.Clear();
         }
 
+        void OnEnable()
+        {
+            IterateAll((ann) => { if (ann.anchor) Utils.Show(ann); });
+        }
+
+        void OnDisable()
+        {
+            IterateAll((ann) => ann.Deactivate());
+        }
+
+        private delegate void ActionDelegate(InWorldAnnotation ann);
+        private void IterateAll(ActionDelegate method)
+        {
+            // must iterate all objects explicitly on show/hide/destroy because they attached to different parents
+            foreach (var ann in annotations) { method(ann as InWorldAnnotation); }
+            foreach (var ann in staticAnnotations.Values) { method(ann); }
+            foreach (var ann in staticAnnotationsPool) { method(ann as InWorldAnnotation); }
+        }
+
         private ThingsUi thingsUi;
+        private PlayerProvider playerProvider;
         private readonly Queue annotations = new Queue();
         private readonly Utils utils = new Utils();
         private NearbyObjects nearbyObjects;
@@ -64,11 +73,10 @@ namespace cynofield.mods.ui
         {
             if (nearbyObjects == null)
             {
-                var human = InventoryManager.ParentHuman?.transform;
-                if (human != null)
-                {
-                    nearbyObjects = NearbyObjects.Create(InventoryManager.ParentHuman.transform);
-                }
+                // late init in case Human object was not available on early calls to Update.
+                var human = playerProvider.GetPlayerAvatar();
+                if (human)
+                    nearbyObjects = NearbyObjects.Create(human.transform);
             }
 
             periodicUpdateCounter += Time.deltaTime;
@@ -78,7 +86,7 @@ namespace cynofield.mods.ui
             {
                 foreach (var obj in annotations)
                 {
-                    Utils.Hide(obj as InWorldAnnotation);
+                    (obj as InWorldAnnotation).Deactivate();
                 }
                 return;
             }
@@ -179,7 +187,7 @@ namespace cynofield.mods.ui
             string arToken = null;
             foreach (var token in tokens)
             {
-                if (token.StartsWith("#AR", StringComparison.InvariantCultureIgnoreCase))
+                if (token.StartsWith(AR_TAG, StringComparison.InvariantCultureIgnoreCase))
                 {
                     arToken = token;
                     break;
@@ -187,7 +195,7 @@ namespace cynofield.mods.ui
             }
             if (arToken == null)
                 return -1;
-            var tokenParams = arToken.Substring(3);
+            var tokenParams = arToken.Substring(AR_TAG.Length);
             if (!int.TryParse(tokenParams, out int result))
                 return -1;
 
@@ -223,7 +231,7 @@ namespace cynofield.mods.ui
 
         private InWorldAnnotation CreateAnnotation(int colorSchemeId = -1)
         {
-            return InWorldAnnotation.Create(null, thingsUi, colorSchemeId);
+            return InWorldAnnotation.Create(null, thingsUi, playerProvider, colorSchemeId);
         }
 
         public void Show(Thing thing, RaycastHit hit)

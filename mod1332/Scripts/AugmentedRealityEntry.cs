@@ -22,7 +22,9 @@ namespace cynofield.mods
         {
             PlayerProvider playerProvider = new PlayerProvider();
             stateManager = new ArStateManager(playerProvider);
-            uiManager = AugmentedUiManager.Create();
+            uiManager = AugmentedUiManager.Create(playerProvider);
+            stateManager.OnHide += OnHideHandler;
+            stateManager.OnShow += OnShowHandler;
         }
 
         public void Destroy()
@@ -31,20 +33,34 @@ namespace cynofield.mods
             Instance = null;
         }
 
+        void OnHideHandler()
+        {
+            uiManager.Hide();
+        }
+
+        void OnShowHandler()
+        {
+            uiManager.Show();
+        }
+
         public void EyesOn(Thing thing)
         {
-            if (stateManager.IsVisible())
-            {
-                uiManager.EyesOn(thing);
-            }
+            if (!stateManager.IsVisible())
+                return;
+
+            // var thingName = thing ? thing.DisplayName : null;
+            // Debug.Log($"{ToString()} EyesOn {thingName}");
+            uiManager.EyesOn(thing);
         }
 
         public void MouseOn(Thing thing)
         {
-            if (stateManager.IsVisible())
-            {
-                uiManager.MouseOn(thing);
-            }
+            if (!stateManager.IsVisible())
+                return;
+
+            // var thingName = thing ? thing.DisplayName : null;
+            // Debug.Log($"{ToString()} MouseOn {thingName}");
+            uiManager.MouseOn(thing);
         }
     }
 
@@ -68,6 +84,10 @@ namespace cynofield.mods
             return st == State.VISIBLE;
         }
 
+        public delegate void StateCallback();
+        public event StateCallback OnHide;
+        public event StateCallback OnShow;
+
         private readonly PlayerProvider playerProvider;
         private State st = State.DISABLED;
 
@@ -77,17 +97,25 @@ namespace cynofield.mods
             switch (st)
             {
                 case State.DISABLED:
-                    { }
+                    {
+                        //Debug.Log($"{ToString()} 1 {st}");
+                        if (!MustDisable())
+                        {
+                            if (MustHide()) st = State.HIDDEN;
+                            else st = State.VISIBLE;
+                        }
+                    }
                     break;
                 case State.HIDDEN:
                     {
                         if (MustDisable()) st = State.DISABLED;
+                        else if (!MustHide()) st = State.VISIBLE;
                     }
                     break;
                 case State.VISIBLE:
                     {
                         if (MustDisable()) st = State.DISABLED;
-                        if (MustHide()) st = State.HIDDEN;
+                        else if (MustHide()) st = State.HIDDEN;
                     }
                     break;
             }
@@ -95,16 +123,22 @@ namespace cynofield.mods
             if (oldState == st)
                 return;
 
+            //Debug.Log($"{ToString()} {oldState} -> {st}");
+
             switch (st)
             {
                 case State.DISABLED:
                     { }
                     break;
                 case State.HIDDEN:
-                    { }
+                    {
+                        OnHide();
+                    }
                     break;
                 case State.VISIBLE:
-                    { }
+                    {
+                        OnShow();
+                    }
                     break;
             }
         }
@@ -116,21 +150,22 @@ namespace cynofield.mods
 
         private bool MustHide()
         {
+            //Debug.Log($"{ToString()} MustHide 1");
             var human = playerProvider.GetPlayerAvatar();
             if (!human || human.State != EntityState.Alive)
-                return false;
+                return true;
 
             var glasses = human.GlassesSlot.Occupant;
             if (glasses == null)
-                return false;
+                return true;
 
             if (!(glasses is SensorLenses))
-                return false;
+                return true;
 
             var lenses = glasses as SensorLenses;
             // only check battery state and ignore inserted sensor:
             var power = (lenses.Battery == null) ? 0 : lenses.Battery.PowerStored;
-            return lenses.OnOff && power > 0;
+            return !lenses.OnOff || power <= 0;
         }
     }
 }

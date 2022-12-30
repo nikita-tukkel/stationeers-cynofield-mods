@@ -1,10 +1,7 @@
 using Assets.Scripts;
-using Stationeers.Addons;
-using UnityEngine;
-using UnityEngine.UI;
-using cynofield.mods.utils;
-using TMPro;
 using cynofield.mods.ee;
+using cynofield.mods.utils;
+using Stationeers.Addons;
 
 namespace cynofield.mods
 {
@@ -13,7 +10,7 @@ namespace cynofield.mods
         void IPlugin.OnLoad()
         {
             ConsoleWindow.Print($"{ToString()}: loaded!" );
-            PlayerProvider.DebugInfo();
+            //PlayerProvider.DebugInfo();
             
             WorldManager.OnWorldStarted += OnWorldStartedHandler;
             WorldManager.OnWorldExit += OnWorldExitHandler;

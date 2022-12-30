@@ -8,40 +8,29 @@ namespace cynofield.mods.ui
 {
     public class AugmentedUiManager : IHierarchy
     {
-        public static AugmentedUiManager Create()
+        public static AugmentedUiManager Create(PlayerProvider playerProvider)
         {
             ThingsUi thingsUi = new ThingsUi();
-            AREnabler enabler = new AREnabler();
-            return new AugmentedUiManager(thingsUi, enabler);
+            return new AugmentedUiManager(thingsUi, playerProvider);
         }
 
-        private AugmentedUiManager(ThingsUi thingsUi, AREnabler enabler)
+        private AugmentedUiManager(ThingsUi thingsUi, PlayerProvider playerProvider)
         {
             this.thingsUi = thingsUi;
-            this.enabler = enabler;
-            this.rightHud = AugmentedDisplayRight.Create();
+            rightHud = AugmentedDisplayRight.Create();
             components.Add(rightHud);
-            this.inworldUi = AugmentedDisplayInWorld.Create(thingsUi);
+            inworldUi = AugmentedDisplayInWorld.Create(thingsUi, playerProvider);
             components.Add(inworldUi);
-
-            // TODO activation from plugin lifecycle
-            // TODO `Human` provider and enable/disable state managers
-            Utils.Show(inworldUi);
         }
 
-        AugmentedDisplayRight rightHud;
-        AugmentedDisplayInWorld inworldUi;
-        AREnabler enabler;
-        ThingsUi thingsUi;
-
-        Thing lookingAt = null;
-        Thing pointingAt = null;
+        private readonly AugmentedDisplayRight rightHud;
+        private readonly AugmentedDisplayInWorld inworldUi;
+        private readonly ThingsUi thingsUi;
+        private Thing lookingAt = null;
+        private Thing pointingAt = null;
 
         internal void EyesOn(Thing thing)
         {
-            if (!enabler.IsEnabled())
-                return;
-
             if (lookingAt != thing)
             {
                 lookingAt = thing;
@@ -60,9 +49,6 @@ namespace cynofield.mods.ui
 
         internal void MouseOn(Thing thing)
         {
-            if (!enabler.IsEnabled())
-                return;
-
             if (pointingAt != thing)
             {
                 pointingAt = thing;
