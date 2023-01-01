@@ -72,6 +72,7 @@ namespace cynofield.mods.ui
         private readonly Dictionary<string, InWorldAnnotation> staticAnnotations = new Dictionary<string, InWorldAnnotation>(1000);
         private readonly Queue staticAnnotationsPool = new Queue();
         private float periodicUpdateCounter;
+        private Thing currentCursorThing = null;
         void Update()
         {
             if (nearbyObjects == null)
@@ -102,15 +103,21 @@ namespace cynofield.mods.ui
 
             bool isShiftKeyDown = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
             if (!isShiftKeyDown)
+            {
+                currentCursorThing = null;
                 return;
+            }
 
-            var thing = CursorManager.CursorThing;
+            if (currentCursorThing == null)
+            {
+                currentCursorThing = CursorManager.CursorThing;
+            }
             var hit = CursorManager.CursorHit;
 
-            if (!thingsUi.Supports(thing))
+            if (!thingsUi.Supports(currentCursorThing))
                 return;
 
-            Show(thing, hit);
+            Show(currentCursorThing, hit);
         }
 
         private void PeriodicUpdate()
