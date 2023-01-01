@@ -76,125 +76,123 @@ namespace cynofield.mods.utils
             var l2 = Utils.VL(l0);
             l2.spacing = 0;
             l2.padding = new RectOffset(400, 0, 0, 0);
+            string demoStr = "\nHello! Привет! \u03940123456789"; // \u0394 = greek Delta
             {
                 var text = CreateDemoText(l1, width, height);
                 SetFont.superstar(20, text);
-                text.text = "superstar\nHello! Привет! \u03940123456789";
+                text.text = "superstar" + demoStr;
             }
             {
                 var text = CreateDemoText(l1, width, height);
                 SetFont.cubecavern(20, text);
-                text.text = "cubecavern\nHello! Привет! \u03940123456789";
+                text.text = "cubecavern" + demoStr;
             }
             {
                 var text = CreateDemoText(l1, width, 80);
                 SetFont.publicpixel(20, text);
-                text.text = "publicpixel\nHello! Привет! \u03940123456789";
+                text.text = "publicpixel" + demoStr;
             }
             {
-                var text = CreateDemoText(l1, width, 80);
+                var text = CreateDemoText(l1, width, 90);
                 SetFont.retro_gaming(20, text);
-                text.text = "retro_gaming\nHello! Привет! \u03940123456789";
+                text.text = "retro_gaming" + demoStr;
             }
             {
                 var text = CreateDemoText(l1, width, 80);
                 SetFont.minecraftia_regular(20, text);
-                text.text = "minecraftia_regular\nHello! Привет! \u03940123456789";
+                text.text = "minecraftia_regular" + demoStr;
             }
             {
                 var text = CreateDemoText(l1, width, height);
                 SetFont.smallest_pixel_7(20, text);
-                text.text = "smallest_pixel_7\nHello! Привет! \u03940123456789";
+                text.text = "smallest_pixel_7" + demoStr;
             }
             {
                 var text = CreateDemoText(l1, width, height);
                 SetFont.small_pixel_7(20, text);
-                text.text = "small_pixel_7\nHello! Привет! \u03940123456789";
+                text.text = "small_pixel_7" + demoStr;
             }
             {
                 var text = CreateDemoText(l1, width, 80);
                 SetFont.modern_lcd_7(20, text);
-                text.text = "modern_lcd_7\nHello! Привет! \u03940123456789";
-                text.lineSpacing = 20;
+                text.text = "modern_lcd_7" + demoStr;
             }
             {
                 var text = CreateDemoText(l1, width, 80);
                 SetFont.light_pixel_7(20, text);
-                text.text = "light_pixel_7\nHello! Привет! \u03940123456789";
-                text.lineSpacing = 20;
+                text.text = "light_pixel_7" + demoStr;
             }
             {
                 var text = CreateDemoText(l1, width, height);
                 SetFont.upheavalpro(20, text);
-                text.text = "upheavalpro\nHello! Привет! \u03940123456789";
-                text.lineSpacing = 20;
+                text.text = "upheavalpro" + demoStr;
             }
             {
                 var text = CreateDemoText(l1, width, 100);
                 SetFont.pixel_unicode(40, text);
-                text.text = "pixel_unicode\nHello! Привет! \u03940123456789";
+                text.text = "pixel_unicode" + demoStr;
             }
             {
                 var text = CreateDemoText(l1, width, 100);
                 text.font = Localization.CurrentFont;
                 text.fontSize = 20;
-                text.text = "Localization.CurrentFont\nHello! Привет! \u03940123456789";
+                text.text = "Localization.CurrentFont" + demoStr;
             }
             {
                 var text = CreateDemoText(l2, width, 80);
                 SetFont.half_bold_pixel_7(20, text);
-                text.text = "half_bold_pixel_7\nHello! Привет! \u03940123456789";
+                text.text = "half_bold_pixel_7" + demoStr;
             }
             {
                 var text = CreateDemoText(l2, width, 100);
                 SetFont.sgk100(30, text);
-                text.text = "sgk100\nHello! Привет! \u03940123456789";
+                text.text = "sgk100" + demoStr;
             }
             {
                 var text = CreateDemoText(l2, width, 80);
                 SetFont.wide_pixel_7(20, text);
-                text.text = "wide_pixel_7\nHello! Привет! \u03940123456789";
+                text.text = "wide_pixel_7" + demoStr;
             }
             {
                 var text = CreateDemoText(l2, width, height);
                 SetFont.thin_pixel_7(20, text);
-                text.text = "thin_pixel_7\nHello! Привет! \u03940123456789";
+                text.text = "thin_pixel_7" + demoStr;
             }
             {
                 var text = CreateDemoText(l2, width, height);
                 SetFont.zx_spectrum_7(10, text);
-                text.text = "zx_spectrum_7\nHello! Привет! \u03940123456789";
+                text.text = "zx_spectrum_7" + demoStr;
             }
             {
                 var text = CreateDemoText(l2, width, height);
                 SetFont.zx_spectrum_7_bold(10, text);
-                text.text = "zx_spectrum_7_bold\nHello! Привет! \u03940123456789";
+                text.text = "zx_spectrum_7_bold" + demoStr;
             }
             {
                 var text = CreateDemoText(l2, width, 90);
                 SetFont.cloude_regular(20, text);
-                text.text = "cloude_regular\nHello! Привет! \u03940123456789";
+                text.text = "cloude_regular" + demoStr;
             }
             {
                 var text = CreateDemoText(l2, width, 90);
                 SetFont.cloude_regular_bold(20, text);
-                text.text = "cloude_regular_bold\nHello! Привет! \u03940123456789";
+                text.text = "cloude_regular_bold" + demoStr;
             }
             {
                 var text = CreateDemoText(l2, width, 90);
                 SetFont.freepixel(30, text);
-                text.text = "freepixel\nHello! Привет! \u03940123456789";
+                text.text = "freepixel" + demoStr;
             }
             {
                 var text = CreateDemoText(l2, width, 90);
                 SetFont.pixeleum_48(20, text);
-                text.text = "pixeleum_48\nHello! Привет! \u03940123456789";
+                text.text = "pixeleum_48" + demoStr;
             }
             {
                 var text = CreateDemoText(l2, width, 90);
                 text.font = null;
                 text.fontSize = 20;
-                text.text = "LiberationSans SDF\nHello! Привет! \u03940123456789";
+                text.text = "LiberationSans SDF" + demoStr;
             }
         }
 
@@ -208,6 +206,9 @@ namespace cynofield.mods.utils
             text.overflowMode = TextOverflowModes.Truncate;
             text.enableWordWrapping = true;
             text.outlineWidth = 0;
+
+            //text.lineSpacing = 0;
+            text.lineSpacing = 1; // Set to zero and then to 1 to calibrate `Line Height` setting of Text Mesh Pro Font Asset
             return text;
         }
 

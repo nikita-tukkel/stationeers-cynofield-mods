@@ -35,7 +35,7 @@ namespace cynofield.mods.ui
             (var text2, var bkgd2) = lf.CreateText(layout, size);
             text2.text = "TEST TEST 0123456789\nTTTTWWWWAAAAOOOOEEEE\nПРИВЕТ привет";
 
-            Demo2d();
+            //Demo2d();
         }
 
         private void Demo2d()

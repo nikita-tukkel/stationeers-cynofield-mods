@@ -26,7 +26,6 @@ namespace cynofield.mods
             });
 
             var modDirLocator = new ModDirLocator("mod1332");
-
             AssetsLoader.SetConfig(bundleFiles: new List<string>
             {
                 $"{modDirLocator.GetContentDir()}/cynofieldmods.assetbundle",
