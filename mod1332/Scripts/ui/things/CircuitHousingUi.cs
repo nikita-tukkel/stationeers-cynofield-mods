@@ -26,7 +26,7 @@ no chip</color>";
                 return
 $@"{obj.DisplayName}
 <color=green><b>db={obj.Setting}</b><mspace=1em> </mspace>r15={registers[15]}</color>
-<mspace=0.65em>{DisplayRegisters(registers)}</mspace>
+{DisplayRegisters(registers)}
 ";
             }
         }

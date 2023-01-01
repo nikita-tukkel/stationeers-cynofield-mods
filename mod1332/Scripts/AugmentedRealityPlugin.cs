@@ -1,6 +1,5 @@
 using Assets.Scripts;
 using cynofield.mods.ee;
-using cynofield.mods.utils;
 using Stationeers.Addons;
 
 namespace cynofield.mods
@@ -9,9 +8,8 @@ namespace cynofield.mods
     {
         void IPlugin.OnLoad()
         {
-            ConsoleWindow.Print($"{ToString()}: loaded!" );
-            //PlayerProvider.DebugInfo();
-            
+            ConsoleWindow.Print($"{ToString()}: loaded!");
+
             WorldManager.OnWorldStarted += OnWorldStartedHandler;
             WorldManager.OnWorldExit += OnWorldExitHandler;
             AugmentedRealityEntry.Create();

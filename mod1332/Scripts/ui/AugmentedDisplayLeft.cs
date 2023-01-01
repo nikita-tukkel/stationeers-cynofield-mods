@@ -1,4 +1,3 @@
-using Assets.Scripts;
 using cynofield.mods.utils;
 using TMPro;
 using UnityEngine;
@@ -8,42 +7,74 @@ namespace cynofield.mods.ui
 {
     public class AugmentedDisplayLeft : MonoBehaviour
     {
-        public static AugmentedDisplayLeft Create()
+        private class Logger_ : CLogger { }
+        private static readonly CLogger Log = new Logger_();
+
+        public static AugmentedDisplayLeft Create(Fonts2d fonts2d)
         {
             var result = Utils.CreateGameObject<AugmentedDisplayLeft>();
-            result.Init();
+            result.Init(fonts2d);
             return result;
         }
 
+        private Fonts2d fonts2d;
+        private LayoutFactory lf;
         Canvas canvas;
-        private void Init()
+        private void Init(Fonts2d fonts2d)
         {
-            canvas = CreateCanvas(gameObject);
+            this.fonts2d = fonts2d;
+            this.lf = new LayoutFactory(fonts2d);
+            canvas = lf.CreateCanvas(gameObject);
 
             var size = new Vector2(300f, 300f);
             var layout = Utils.VL(canvas);
+            layout.transform.SetParent(canvas.transform, false);
             layout.padding = new RectOffset(100, 0, 100, 0);
-            (var text1, var bkgd1) = CreateText(layout, size);
+            (var text1, var bkgd1) = lf.CreateText(layout, size);
             text1.text = "testtesttesttesttesttesttesttesttest";
-            (var text2, var bkgd2) = CreateText(layout, size);
-            text2.text = "test2test2test2test2test2test2test2test2";
+            (var text2, var bkgd2) = lf.CreateText(layout, size);
+            text2.text = "TEST TEST 0123456789\nTTTTWWWWAAAAOOOOEEEE\nПРИВЕТ привет";
+
+            Demo2d();
         }
 
-        public static Canvas CreateCanvas(GameObject parent)
+        private void Demo2d()
+        {
+            var subparent = Utils.CreateGameObject(gameObject);
+            var demoCanvas = Utils.CreateGameObject<Canvas>(subparent);
+            demoCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            demoCanvas.pixelPerfect = true;
+            demoCanvas.scaleFactor = 1;
+
+            fonts2d.Demo(demoCanvas, lf);
+        }
+    }
+
+    public class LayoutFactory
+    {
+        private class Logger_ : CLogger { }
+        private static readonly CLogger Log = new Logger_();
+
+        private readonly Fonts2d fonts2d;
+        public LayoutFactory(Fonts2d fonts2d)
+        {
+            this.fonts2d = fonts2d;
+        }
+
+        public Canvas CreateCanvas(GameObject parent)
         {
             // Sizes and coordinates here are calculated in pixels, not in in-game meters.
             //  So don't get surprised by large numbers.
             // See canvas.renderingDisplaySize
             var canvas = parent.AddComponent<Canvas>();
-            // also try https://forum.unity.com/threads/pixel-art-font-sizing-issues.635422/#post-5693926
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.pixelPerfect = true;
             canvas.scaleFactor = 1;
-            // ConsoleWindow.Print($"{ToString()} renderingDisplaySize={canvas.renderingDisplaySize}");
+            //Log.Debug(() => $"renderingDisplaySize={canvas.renderingDisplaySize}");
             return canvas;
         }
 
-        public static (TextMeshProUGUI, RawImage) CreateText(Component parent, Vector2 size)
+        public (TextMeshProUGUI, RawImage) CreateText(Component parent, Vector2 size)
         {
             var bkgd = Utils.CreateGameObject<RawImage>(parent);
             bkgd.rectTransform.sizeDelta = size;
@@ -57,10 +88,33 @@ namespace cynofield.mods.ui
             text.richText = true;
             text.overflowMode = TextOverflowModes.Truncate;
             text.enableWordWrapping = true;
-            text.font = Localization.CurrentFont;
-            text.fontStyle = FontStyles.Bold;
-            text.fontSize = 20f;
-            text.color = new Color(1f, 1f, 1f, 0.2f);
+
+            fonts2d.SetFont.superstar(20, text); // 5/5
+            //fonts2d.SetFont.cubecavern(20, text); // 5/5
+            //fonts2d.SetFont.publicpixel(10,text); // 5/5
+            //fonts2d.SetFont.retro_gaming(10,text); // 4/5
+            //fonts2d.SetFont.minecraftia_regular(20, text); // 5/5
+            //fonts2d.SetFont.smallest_pixel_7(20,text); // 4/5
+            //fonts2d.SetFont.small_pixel_7(20,text); // 4/5
+            //fonts2d.SetFont.modern_lcd_7(20,text); // 5/5
+            //fonts2d.SetFont.light_pixel_7(10, text); // 4/5
+            //fonts2d.SetFont.upheavalpro(20,text); // 3/5
+            //fonts2d.SetFont.pixel_unicode(40,text); // 3/5
+            //fonts2d.SetFont.half_bold_pixel_7(20, text); // 3/5
+            //fonts2d.SetFont.sgk100(40,text); // 3/5
+            //fonts2d.SetFont.wide_pixel_7(20,text); // 3/5
+            //fonts2d.SetFont.thin_pixel_7(40,text); // 3/5
+            //fonts2d.SetFont.zx_spectrum_7(20,text); // 3/5
+            //fonts2d.SetFont.cloude_regular(40,text); // 3/5
+            //fonts2d.SetFont.freepixel(20, text);  // 2/5
+            //fonts2d.SetFont.cloude_regular_bold(60,text); // 2/5
+            //fonts2d.SetFont.pixeleum_48(20,text); // 2/5
+            //fonts2d.SetFont.webpixel_bitmap_medium(20,text); // 2/5
+            //fonts2d.SetFont.zx_spectrum_7_bold(20,text); // 3/5
+
+            //text.lineSpacing = 20;
+
+            text.color = new Color(1f, 1f, 1f, 1f);
             return (text, bkgd);
         }
     }

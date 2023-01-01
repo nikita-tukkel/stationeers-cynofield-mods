@@ -8,20 +8,20 @@ namespace cynofield.mods.ui
 {
     public class AugmentedUiManager : IHierarchy
     {
-        public static AugmentedUiManager Create(PlayerProvider playerProvider)
+        public static AugmentedUiManager Create(PlayerProvider playerProvider, Fonts2d fonts2d)
         {
             ThingsUi thingsUi = new ThingsUi();
-            return new AugmentedUiManager(thingsUi, playerProvider);
+            return new AugmentedUiManager(thingsUi, playerProvider, fonts2d);
         }
 
-        private AugmentedUiManager(ThingsUi thingsUi, PlayerProvider playerProvider)
+        private AugmentedUiManager(ThingsUi thingsUi, PlayerProvider playerProvider, Fonts2d fonts2d)
         {
             this.thingsUi = thingsUi;
-            rightHud = AugmentedDisplayRight.Create();
+            rightHud = AugmentedDisplayRight.Create(fonts2d);
             components.Add(rightHud);
             inworldUi = AugmentedDisplayInWorld.Create(thingsUi, playerProvider);
             components.Add(inworldUi);
-            leftHud = AugmentedDisplayLeft.Create();
+            leftHud = AugmentedDisplayLeft.Create(fonts2d);
             components.Add(leftHud);
         }
 
@@ -32,6 +32,7 @@ namespace cynofield.mods.ui
         private Thing lookingAt = null;
         private Thing pointingAt = null;
 
+        // TODO move Describe call into rightHud to have hud updated in runtime
         internal void EyesOn(Thing thing)
         {
             if (lookingAt != thing)

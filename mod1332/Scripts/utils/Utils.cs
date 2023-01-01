@@ -14,6 +14,9 @@ namespace cynofield.mods.utils
 
     public static class HierarchyExtensions
     {
+        private class Logger_ : CLogger { }
+        private static readonly CLogger Log = new Logger_();
+
         public static void Destroy(this IHierarchy hierarchy)
         {
             if (hierarchy == null)
@@ -138,7 +141,7 @@ namespace cynofield.mods.utils
                 }
             }
 
-            //Debug.Log($"{typeof(HierarchyExtensions)} Traverse iterations={watchdogCount}, method calls={methodCalls}");
+            //Log.Debug(() => $"Traverse iterations={watchdogCount}, method calls={methodCalls}");
         }
     }
 
@@ -153,6 +156,14 @@ namespace cynofield.mods.utils
             result.gameObject.SetActive(false);
             if (parent != null)
                 result.transform.SetParent(parent, false);
+            return result;
+        }
+        public static GameObject CreateGameObject(GameObject parent)
+        {
+            var result = new GameObject();
+            result.SetActive(false);
+            if (parent != null)
+                result.transform.SetParent(parent.transform, false);
             return result;
         }
 
@@ -186,10 +197,59 @@ namespace cynofield.mods.utils
 
         public string GetId(Thing thing) { return thing == null ? "" : thing.ReferenceId.ToString(); }
 
-        public static VerticalLayoutGroup VL(Component parent) => VL(parent.gameObject);
+        public static VerticalLayoutGroup VL(Component parent)
+        {
+            VerticalLayoutGroup layout;
+            if (parent is Canvas)
+            {
+                // Don't create intermediate GameObject when adding into Canvas
+                layout = parent.gameObject.AddComponent<VerticalLayoutGroup>();
+            }
+            else
+            {
+                layout = VL(parent.gameObject);
+            }
+            return VLInit(layout);
+        }
         public static VerticalLayoutGroup VL(GameObject parent)
         {
-            var layout = parent.AddComponent<VerticalLayoutGroup>();
+            var layout = CreateGameObject<VerticalLayoutGroup>(parent);
+            return VLInit(layout);
+        }
+        private static VerticalLayoutGroup VLInit(VerticalLayoutGroup layout)
+        {
+            layout.childAlignment = TextAnchor.UpperLeft;
+            layout.childControlWidth = false;
+            layout.childControlHeight = false;
+            layout.childForceExpandWidth = false;
+            layout.childForceExpandHeight = false;
+            layout.childScaleWidth = false;
+            layout.childScaleHeight = false;
+            layout.spacing = 10;
+            layout.padding = new RectOffset(5, 5, 5, 5);
+            return layout;
+        }
+        public static HorizontalLayoutGroup HL(Component parent)
+        {
+            HorizontalLayoutGroup layout;
+            if (parent is Canvas)
+            {
+                // Don't create intermediate GameObject when adding into Canvas
+                layout = parent.gameObject.AddComponent<HorizontalLayoutGroup>();
+            }
+            else
+            {
+                layout = HL(parent.gameObject);
+            }
+            return HLInit(layout);
+        }
+        public static HorizontalLayoutGroup HL(GameObject parent)
+        {
+            var layout = CreateGameObject<HorizontalLayoutGroup>(parent);
+            return HLInit(layout);
+        }
+        private static HorizontalLayoutGroup HLInit(HorizontalLayoutGroup layout)
+        {
             layout.childAlignment = TextAnchor.UpperLeft;
             layout.childControlWidth = false;
             layout.childControlHeight = false;

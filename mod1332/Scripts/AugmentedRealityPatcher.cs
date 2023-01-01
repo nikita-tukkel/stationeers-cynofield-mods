@@ -23,7 +23,7 @@ namespace cynofield.mods
         static void Postfix(ref Assets.Scripts.CursorManager __instance)
         {
             var view = AugmentedRealityEntry.Instance;
-            view.EyesOn(__instance.FoundThing);
+            view?.EyesOn(__instance.FoundThing);
         }
     }
 
@@ -33,7 +33,7 @@ namespace cynofield.mods
         static void Postfix(ref Assets.Scripts.UI.InputMouse __instance)
         {
             var view = AugmentedRealityEntry.Instance;
-            view.MouseOn(__instance.CursorThing);
+            view?.MouseOn(__instance.CursorThing);
         }
     }
 }

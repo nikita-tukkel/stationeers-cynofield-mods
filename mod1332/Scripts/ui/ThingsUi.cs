@@ -1,5 +1,6 @@
 using Assets.Scripts.Objects;
 using cynofield.mods.ui.things;
+using cynofield.mods.utils;
 using Objects.Pipes;
 using System;
 using System.Collections.Generic;
@@ -10,6 +11,9 @@ namespace cynofield.mods.ui
 {
     public class ThingsUi
     {
+        private class Logger_ : CLogger { }
+        private static readonly CLogger Log = new Logger_();
+
         public ThingsUi()
         {
             alluis.Add(new TransformerUi());
@@ -40,9 +44,9 @@ namespace cynofield.mods.ui
 
         public void RenderArAnnotation(Thing thing, Canvas canvas, TextMeshProUGUI textMesh)
         {
-            //Debug.Log($"ThingsUi.RenderArAnnotation thing={thing}, canvas={canvas}, text={textMesh}");
+            // Log.Debug(() => $"RenderArAnnotation thing={thing}, canvas={canvas}, text={textMesh}");
             var ui = GetUi(thing);
-            //Debug.Log($"ThingsUi.RenderArAnnotation ui={ui}");
+            // Log.Debug(() => $"RenderArAnnotation ui={ui}");
             if (ui is IThingArRenderer)
             {
                 // TODO more complex rendering

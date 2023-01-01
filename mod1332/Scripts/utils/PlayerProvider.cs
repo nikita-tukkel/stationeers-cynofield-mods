@@ -11,6 +11,9 @@ namespace cynofield.mods.utils
 {
     public class PlayerProvider
     {
+        private class Logger_ : CLogger { }
+        private static readonly CLogger Log = new Logger_();
+
         public Human GetPlayerAvatar()
         {
             return Human.LocalHuman;
@@ -33,36 +36,36 @@ namespace cynofield.mods.utils
 
         public static void DebugInfo()
         {
-            ConsoleWindow.Print($"InventoryManager={InventoryManager.Instance}");
+            Log.Info(() => $"InventoryManager={InventoryManager.Instance}");
             var inventoryHuman = InventoryManager.ParentHuman;
-            ConsoleWindow.Print($"InventoryManager.ParentHuman={inventoryHuman}");
+            Log.Info(() => $"InventoryManager.ParentHuman={inventoryHuman}");
             if (inventoryHuman != null)
             {
-                ConsoleWindow.Print($"InventoryManager.GlassesSlot={inventoryHuman.GlassesSlot}");
+                Log.Info(() => $"InventoryManager.GlassesSlot={inventoryHuman.GlassesSlot}");
             }
-            ConsoleWindow.Print($"PlayerStateWindow={PlayerStateWindow.Instance}");
-            ConsoleWindow.Print($"PlayerStateWindow.Parent={PlayerStateWindow.Instance.Parent}");
-            ConsoleWindow.Print($"WorldManager={WorldManager.Instance}");
-            ConsoleWindow.Print($"Humans={Human.AllHumans.Count}");
+            Log.Info(() => $"PlayerStateWindow={PlayerStateWindow.Instance}");
+            Log.Info(() => $"PlayerStateWindow.Parent={PlayerStateWindow.Instance.Parent}");
+            Log.Info(() => $"WorldManager={WorldManager.Instance}");
+            Log.Info(() => $"Humans={Human.AllHumans.Count}");
             var human = Human.LocalHuman;
-            ConsoleWindow.Print($"Human={Human.LocalHuman}");
+            Log.Info(() => $"Human={Human.LocalHuman}");
             if (human != null)
             {
-                ConsoleWindow.Print($"GlassesSlot={human.GlassesSlot}");
-                ConsoleWindow.Print($"Glasses={human.GlassesSlot?.Occupant}");
+                Log.Info(() => $"GlassesSlot={human.GlassesSlot}");
+                Log.Info(() => $"Glasses={human.GlassesSlot?.Occupant}");
             }
-            ConsoleWindow.Print($"AllThings={Thing.AllThings.Count}");
+            Log.Info(() => $"AllThings={Thing.AllThings.Count}");
 
             var gameManager = GameManager.Instance;
             var menuCutscene = gameManager ? gameManager.MenuCutscene : null;
-            ConsoleWindow.Print($"GameManager={gameManager}");
-            ConsoleWindow.Print($"MenuCutscene={menuCutscene}");
+            Log.Info(() => $"GameManager={gameManager}");
+            Log.Info(() => $"MenuCutscene={menuCutscene}");
             if (menuCutscene != null)
             {
-                ConsoleWindow.Print($"MenuCutscene.Components={menuCutscene.GetComponentsInChildren<Component>().Length}");
+                Log.Info(() => $"MenuCutscene.Components={menuCutscene.GetComponentsInChildren<Component>().Length}");
                 var helmets = GameManager.Instance.MenuCutscene.GetComponentsInChildren<Transform>()
                     .Where((o) => o.name.Equals("helmet", StringComparison.InvariantCultureIgnoreCase));
-                ConsoleWindow.Print($"MenuCutscene.Helmets={string.Join("\n", helmets)}");
+                Log.Info(() => $"MenuCutscene.Helmets={string.Join("\n", helmets)}");
             }
         }
     }

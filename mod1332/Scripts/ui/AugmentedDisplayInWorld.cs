@@ -10,6 +10,9 @@ namespace cynofield.mods.ui
 {
     public class AugmentedDisplayInWorld : MonoBehaviour
     {
+        private class Logger_ : CLogger { }
+        private static readonly CLogger Log = new Logger_();
+
         public static readonly string AR_TAG = "#AR";
 
         public static AugmentedDisplayInWorld Create(ThingsUi thingsUi, PlayerProvider playerProvider)
@@ -175,7 +178,7 @@ namespace cynofield.mods.ui
 
         private void OnTrackedAdded(string thingId, Thing thing)
         {
-            //Debug.Log($"New tracked {thing.DisplayName}");
+            //Log.Info(() => $"New tracked {thing.DisplayName}");
             var colorSchemeId = ParseColorSchemeId(thing.DisplayName);
             var ann = CreateStaticAnnotation(colorSchemeId);
             staticAnnotations.Add(thingId, ann);
@@ -204,7 +207,7 @@ namespace cynofield.mods.ui
 
         private void OnTrackedRemoved(string thingId, Thing thing)
         {
-            //Debug.Log($"Removed tracked {thing.DisplayName}");
+            //Log.Info(() => $"Removed tracked {thing.DisplayName}");
             if (!staticAnnotations.TryGetValue(thingId, out InWorldAnnotation ann))
                 return;
 

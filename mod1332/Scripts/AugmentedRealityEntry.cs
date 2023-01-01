@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System;
 using Assets.Scripts.Objects;
 using Assets.Scripts.Objects.Entities;
 using Assets.Scripts.Objects.Items;
@@ -8,10 +10,28 @@ namespace cynofield.mods
 {
     public class AugmentedRealityEntry
     {
+        private class Logger_ : CLogger { }
+        private static readonly CLogger Log = new Logger_();
+
         public static AugmentedRealityEntry Instance;
 
         static public void Create()
         {
+            CLogger.SetConfig(new Dictionary<string, (LoggerConfig.LogLevel, bool)>
+            {
+                ["cynofield.mods.utils.ModDirLocator"] = (LoggerConfig.LogLevel.WARN, true),
+                ["cynofield.mods.utils.AssetsLoader"] = (LoggerConfig.LogLevel.DEBUG, false),
+                ["cynofield.mods.utils.PlayerProvider"] = (LoggerConfig.LogLevel.DEBUG, true),
+                ["cynofield.mods.ArStateManager"] = (LoggerConfig.LogLevel.WARN, true),
+            });
+
+            var modDirLocator = new ModDirLocator("mod1332");
+
+            AssetsLoader.SetConfig(bundleFiles: new List<string>
+            {
+                $"{modDirLocator.GetContentDir()}/cynofieldmods.assetbundle",
+            });
+
             Instance?.Destroy();
             Instance = new AugmentedRealityEntry();
         }
@@ -20,17 +40,35 @@ namespace cynofield.mods
         private readonly ArStateManager stateManager;
         public AugmentedRealityEntry()
         {
-            PlayerProvider playerProvider = new PlayerProvider();
-            stateManager = new ArStateManager(playerProvider);
-            uiManager = AugmentedUiManager.Create(playerProvider);
-            stateManager.OnHide += OnHideHandler;
-            stateManager.OnShow += OnShowHandler;
+            AssetsLoader assetsLoader;
+            try
+            {
+                assetsLoader = AssetsLoader.Load();
+                assetsLoader.DebugInfo();
+                var fonts2d = new Fonts2d(assetsLoader);
+
+                PlayerProvider playerProvider = new PlayerProvider();
+                //PlayerProvider.DebugInfo();
+                stateManager = new ArStateManager(playerProvider);
+                uiManager = AugmentedUiManager.Create(playerProvider, fonts2d);
+                stateManager.OnHide += OnHideHandler;
+                stateManager.OnShow += OnShowHandler;
+
+                Log.Info(() => "started successfully");
+            }
+            catch (Exception e)
+            {
+                Log.Error(e);
+                AssetsLoader.Destroy();
+            }
         }
 
         public void Destroy()
         {
             uiManager.Destroy();
+            AssetsLoader.Destroy();
             Instance = null;
+            Log.Info(() => "unloaded");
         }
 
         void OnHideHandler()
@@ -45,27 +83,26 @@ namespace cynofield.mods
 
         public void EyesOn(Thing thing)
         {
-            if (!stateManager.IsVisible())
+            if (stateManager == null || uiManager == null || !stateManager.IsVisible())
                 return;
 
-            // var thingName = thing ? thing.DisplayName : null;
-            // Debug.Log($"{ToString()} EyesOn {thingName}");
             uiManager.EyesOn(thing);
         }
 
         public void MouseOn(Thing thing)
         {
-            if (!stateManager.IsVisible())
+            if (stateManager == null || uiManager == null || !stateManager.IsVisible())
                 return;
 
-            // var thingName = thing ? thing.DisplayName : null;
-            // Debug.Log($"{ToString()} MouseOn {thingName}");
             uiManager.MouseOn(thing);
         }
     }
 
     public class ArStateManager
     {
+        private class Logger_ : CLogger { }
+        private static readonly CLogger Log = new Logger_();
+
         public ArStateManager(PlayerProvider playerProvider)
         {
             this.playerProvider = playerProvider;
@@ -98,7 +135,6 @@ namespace cynofield.mods
             {
                 case State.DISABLED:
                     {
-                        //Debug.Log($"{ToString()} 1 {st}");
                         if (!MustDisable())
                         {
                             if (MustHide()) st = State.HIDDEN;
@@ -123,7 +159,7 @@ namespace cynofield.mods
             if (oldState == st)
                 return;
 
-            //Debug.Log($"{ToString()} {oldState} -> {st}");
+            Log.Info(() => $"{oldState} -> {st}");
 
             switch (st)
             {
@@ -150,7 +186,7 @@ namespace cynofield.mods
 
         private bool MustHide()
         {
-            //Debug.Log($"{ToString()} MustHide 1");
+            //Log.Debug(() => $"MustHide 1");
             var human = playerProvider.GetPlayerAvatar();
             if (!human || human.State != EntityState.Alive)
                 return true;

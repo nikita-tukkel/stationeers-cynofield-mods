@@ -9,6 +9,9 @@ namespace cynofield.mods.ui
 {
     public class InWorldAnnotation : MonoBehaviour
     {
+        private class Logger_ : CLogger { }
+        private static readonly CLogger Log = new Logger_();
+
         public static InWorldAnnotation Create(Transform parent,
             ThingsUi thingsUi, PlayerProvider playerProvider,
             int _colorSchemeId = -1)
@@ -48,7 +51,7 @@ namespace cynofield.mods.ui
             this.playerProvider = playerProvider;
             this._colorSchemeId = _colorSchemeId;
 
-            //ConsoleWindow.Print($"InWorldAnnotation Start");
+            //Log.Info(() => "started");
             canvas = gameObject.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.WorldSpace;
             //canvas.pixelPerfect = true; // for RenderMode.ScreenSpaceOverlay
@@ -71,11 +74,6 @@ namespace cynofield.mods.ui
             text.overflowMode = TextOverflowModes.Truncate;
             text.enableWordWrapping = true;
 
-            // Resources.Load<TMP_FontAsset>(string.Format("UI/{0}", this.FontName))
-            // Font font = new Font("StreamingAssets/Fonts/3270-Regular.ttf");
-            // var tfont = TMP_FontAsset.CreateFontAsset(font);
-            // text.font = tfont;
-            //ConsoleWindow.Print($"{text.font.name}");
             text.font = Localization.CurrentFont;
             //0.08f for default font used by TextMeshProUGUI without font specified;
             //0.06f when using Localization.CurrentFont
@@ -250,12 +248,12 @@ namespace cynofield.mods.ui
             var pos = transform.position;
             if (y2 > limit2)
             {
-                // ConsoleWindow.Print($"ShowNear {y2} > {posHead.y} ; pos.y={pos.y}, y1={y1}, y2={y2}; head={posHead.y}, legs={posLegs.y}");
+                // Log.Debug(() => $"ShowNear {y2} > {posHead.y} ; pos.y={pos.y}, y1={y1}, y2={y2}; head={posHead.y}, legs={posLegs.y}");
                 transform.position = new Vector3(pos.x, limit2, pos.z);
             }
             else if (y1 < limit1)
             {
-                // ConsoleWindow.Print($"ShowNear {y1} < {posLegs.y} ; pos.y={pos.y}, y1={y1}, y2={y2}; head={posHead.y}, legs={posLegs.y}");
+                // Log.Debug(() => $"ShowNear {y1} < {posLegs.y} ; pos.y={pos.y}, y1={y1}, y2={y2}; head={posHead.y}, legs={posLegs.y}");
                 transform.position = new Vector3(posHit.x, limit1 + height, posHit.z);
             }
             transform.Translate(Camera.main.transform.forward * 0.5f, Space.World);
