@@ -29,7 +29,6 @@ namespace cynofield.mods.utils
 
             if (periodicUpdateCounter < 2f)
                 return;
-
             periodicUpdateCounter = 0;
 
             int collidersCount = Physics.OverlapSphereNonAlloc(
@@ -44,7 +43,7 @@ namespace cynofield.mods.utils
                     if (thing.isActiveAndEnabled && thing.DisplayName.Contains(AugmentedDisplayInWorld.AR_TAG,
                     StringComparison.InvariantCultureIgnoreCase))
                     {
-                        nearbyThings[utils.GetId(thing)] = thing;
+                        nearbyThings[Utils.GetId(thing)] = thing;
                     }
                 }
             }

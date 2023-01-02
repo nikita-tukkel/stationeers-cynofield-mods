@@ -11,8 +11,32 @@ namespace cynofield.mods.ui.styles
     public class BaseSkin
     {
         protected readonly Fonts2d fonts2d;
+        protected readonly BaseSkin2d _skin2d;
 
         public BaseSkin(Fonts2d fonts2d)
+        {
+            this.fonts2d = fonts2d;
+            this._skin2d = new BaseSkin2d(fonts2d);
+        }
+
+        virtual public BaseSkin2d skin2d { get => _skin2d; }
+
+        virtual public string MathDisplay(float v)
+        {
+            return Math.Round(v, 3).ToString();
+        }
+
+        virtual public string MathDisplay(double v)
+        {
+            return Math.Round(v, 3).ToString();
+        }
+    }
+
+    public class BaseSkin2d
+    {
+        protected readonly Fonts2d fonts2d;
+
+        public BaseSkin2d(Fonts2d fonts2d)
         {
             this.fonts2d = fonts2d;
         }
@@ -26,16 +50,6 @@ namespace cynofield.mods.ui.styles
         {
             fonts2d.SetFont.superstar(20, text);
         }
-
-        virtual public string MathDisplay(float v)
-        {
-            return Math.Round(v, 3).ToString();
-        }
-
-        virtual public string MathDisplay(double v)
-        {
-            return Math.Round(v, 3).ToString();
-        }
     }
 
     public class CustomizedSkin : BaseSkin
@@ -43,10 +57,7 @@ namespace cynofield.mods.ui.styles
         public CustomizedSkin(Fonts2d fonts2d) : base(fonts2d)
         { }
 
-        override public StyleHud2d Hud2d(StyleRefinement refinement = null)
-        {
-            return base.Hud2d();
-        }
+        override public BaseSkin2d skin2d { get => _skin2d; }
     }
 
     public class StyleRefinement

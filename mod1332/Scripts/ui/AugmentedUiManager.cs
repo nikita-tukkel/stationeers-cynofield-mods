@@ -56,7 +56,7 @@ namespace cynofield.mods.ui
         {
             // https://stackoverflow.com/questions/66759954/unity-ui-how-to-make-a-composite-layout-group-to-combine-multiple-images-in
 
-            var hudSkin = skin.Hud2d();
+            var hudSkin = skin.skin2d.Hud2d();
             var leftPanelWidth = hudSkin.leftPanelWidth;
             var rightPanelWidth = hudSkin.rightPanelWidth;
             var horizontalPadding = hudSkin.horizontalPaddingLeft;
@@ -138,7 +138,7 @@ namespace cynofield.mods.ui
                     text.richText = true;
                     text.overflowMode = TextOverflowModes.Truncate;
                     text.enableWordWrapping = true;
-                    skin.MainFont(text);
+                    skin.skin2d.MainFont(text);
                     text.text = $"Text {i} Text {i} Text {i} Text {i} Text {i}\naaaa\nbbbb";
 
                     var textFitter = text.gameObject.AddComponent<ContentSizeFitter>();
@@ -184,7 +184,7 @@ namespace cynofield.mods.ui
                     text.richText = true;
                     text.overflowMode = TextOverflowModes.Truncate;
                     text.enableWordWrapping = true;
-                    skin.MainFont(text);
+                    skin.skin2d.MainFont(text);
                     text.text = $"Text {i} Text {i} Text {i} Text {i} Text {i}\naaaa\nbbbb";
 
                     var textFitter = text.gameObject.AddComponent<ContentSizeFitter>();

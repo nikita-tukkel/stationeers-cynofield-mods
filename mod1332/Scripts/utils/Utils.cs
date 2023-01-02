@@ -219,7 +219,7 @@ namespace cynofield.mods.utils
                 obj.SetActiveRecursively(false);
         }
 
-        public string GetId(Thing thing) { return thing == null ? "" : thing.ReferenceId.ToString(); }
+        public static string GetId(Thing thing) { return thing == null ? "" : thing.ReferenceId.ToString(); }
 
         public static VerticalLayoutGroup VL(Component parent)
         {

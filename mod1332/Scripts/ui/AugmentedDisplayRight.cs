@@ -80,6 +80,7 @@ namespace cynofield.mods.ui
             periodicUpdateCounter += Time.deltaTime;
             if (periodicUpdateCounter < 0.5f)
                 return;
+            periodicUpdateCounter = 0;
             if (currentThing == null)
             {
                 rootComponent.gameObject.SetActive(false);
@@ -101,6 +102,7 @@ namespace cynofield.mods.ui
                 objectsPool.TryGetValue(maybeCache.name, out GameObject oldValue);
                 if (oldValue != null && oldValue != maybeCache)
                 {
+                    //Log.Debug(() => $"replacing cached {oldValue.name} with {maybeCache.name} {maybeCache}");
                     Utils.Destroy(oldValue);
                 }
 

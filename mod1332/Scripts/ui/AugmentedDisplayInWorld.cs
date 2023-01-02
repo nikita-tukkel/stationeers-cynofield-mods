@@ -251,7 +251,7 @@ namespace cynofield.mods.ui
             if (thing == null)
                 return;
 
-            var thingId = utils.GetId(thing);
+            var thingId = Utils.GetId(thing);
 
             InWorldAnnotation existing = null;
             foreach (var obj in annotations)

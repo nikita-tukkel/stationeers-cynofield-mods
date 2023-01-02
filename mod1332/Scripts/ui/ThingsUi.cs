@@ -25,11 +25,11 @@ namespace cynofield.mods.ui
         {
             this.skin = skin;
             this.fonts2d = fonts2d;
-            this.defaultArUi = new UiDefault(skin, fonts2d);
+            this.defaultArUi = new UiDefault(skin);
 
             alluis.Add(new TransformerUi());
             alluis.Add(new CableUi());
-            alluis.Add(new CircuitHousingUi(skin, fonts2d));
+            alluis.Add(new CircuitHousingUi(skin));
             foreach (var ui in alluis)
             {
                 uis.Add(ui.SupportedType(), ui);

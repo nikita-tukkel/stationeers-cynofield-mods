@@ -4,6 +4,7 @@ using cynofield.mods.ui.styles;
 using cynofield.mods.utils;
 using HarmonyLib;
 using System;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -12,15 +13,50 @@ namespace cynofield.mods.ui.things
 {
     class CircuitHousingUi : IThingDescriber, IThingDetailsRenderer
     {
+        private class Logger_ : CLogger { }
+        private static readonly CLogger Log = new Logger_();
+
         Type IThingDescriber.SupportedType() { return typeof(CircuitHousing); }
 
         private readonly BaseSkin skin;
-        private readonly Fonts2d fonts2d;
-
-        public CircuitHousingUi(BaseSkin skin, Fonts2d fonts2d)
+        private readonly HistoricalData<ICHistoricalData> allhistory = new HistoricalData<ICHistoricalData>(10);
+        public CircuitHousingUi(BaseSkin skin)
         {
             this.skin = skin;
-            this.fonts2d = fonts2d;
+        }
+
+        public class ICHistoricalData
+        {
+            public double db;
+            public double[] registers;
+
+            public override bool Equals(object obj)
+            {
+                return obj is ICHistoricalData data &&
+                       db == data.db &&
+                       EqualityComparer<double[]>.Default.Equals(registers, data.registers);
+            }
+
+#pragma warning disable IDE0070
+            public override int GetHashCode()
+            {
+                int hash = 17;
+                hash = hash * 31 + db.GetHashCode();
+                hash = hash * 31 + registers.GetHashCode();
+                return hash;
+            }
+
+            public override String ToString()
+            {
+                if (registers == null || registers.Length < 15)
+                {
+                    return $"{db}";
+                }
+                else
+                {
+                    return $"{db}/{registers[15]}/{registers[14]}";
+                }
+            }
         }
 
         public string Describe(Thing thing)
@@ -49,26 +85,35 @@ $@"{obj.DisplayName}
             RectTransform parentRect,
             GameObject poolreuse)
         {
-            GameObject view = null;
-            TextMeshProUGUI text = null;
-            if (poolreuse != null)
-                poolreuse.TryGetComponent(out text);
-            if (text == null)
-            {
-                (view, text) = CreateDetailsView(thing, parentRect);
-            }
-            //text.text = Describe(thing);
-            LayoutRebuilder.ForceRebuildLayoutImmediate(view.GetComponent<RectTransform>());
-            LayoutRebuilder.ForceRebuildLayoutImmediate(text.gameObject.GetComponent<RectTransform>());
-            foreach (RectTransform rt in view.GetComponentInChildren<RectTransform>())
-            {
-                if (rt != null)
-                    LayoutRebuilder.ForceRebuildLayoutImmediate(rt);
-            }
+            // don't use cached object for now... :-(
+            //history
+
+            var thingc = thing as CircuitHousing;
+            var chip = thingc._ProgrammableChipSlot.Occupant as ProgrammableChip;
+            var data = ReadData(thingc, chip);
+
+            var history = allhistory.Get(Utils.GetId(thing));
+            var last = history.Last();
+            history.Add(data);
+            var changes = history.ChangesInLast(5);
+            var size = history.Size();
+            //Log.Debug(() => $"{Utils.GetId(thing)} changes {changes}, size {size}");
+
+            GameObject view = CreateDetailsView(thing, last, data, parentRect);
             return view;
         }
 
-        private (GameObject, TextMeshProUGUI) CreateDetailsView(Thing thing, RectTransform parent)
+        private ICHistoricalData ReadData(CircuitHousing thing, ProgrammableChip chip)
+        {
+            return new ICHistoricalData()
+            {
+                db = thing.Setting,
+                registers = chip == null ? null : ((double[])GetRegisters(chip).Clone())
+            };
+        }
+
+        private GameObject CreateDetailsView(Thing thing,
+            ICHistoricalData prev, ICHistoricalData curr, RectTransform parent)
         {
             var layout = Utils.CreateGameObject<VerticalLayoutGroup>(parent);
             layout.padding = new RectOffset(1, 1, 1, 1);
@@ -84,13 +129,9 @@ $@"{obj.DisplayName}
             fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
             fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
-            var thingc = thing as CircuitHousing;
-            var chip = thingc._ProgrammableChipSlot.Occupant as ProgrammableChip;
-            double[] registers = GetRegisters(chip);
-
-            var text = Text1(layout.gameObject, thingc.DisplayName);
-            NameValuePair(layout.gameObject, $"<color=green>db</color>", $"{skin.MathDisplay(thingc.Setting)}");
-            if (chip == null)
+            Text1(layout.gameObject, thing.DisplayName);
+            NameValuePair(layout.gameObject, $"<color=green>db</color>", $"{skin.MathDisplay(curr.db)}");
+            if (curr.registers == null)
             {
                 Text2(layout.gameObject, "NO CHIP", Color.red);
             }
@@ -115,11 +156,22 @@ $@"{obj.DisplayName}
                     hlfitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
                     hlfitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
-                    NameValuePair(hl.gameObject, $"r{n}", $"{skin.MathDisplay(registers[n])}");
-                    NameValuePair2(hl.gameObject, $"r{m}", $"{skin.MathDisplay(registers[m])}");
+                    double v, p;
+                    v = curr.registers[n];
+                    p = prev == null ? 0 : prev.registers[n];
+                    if (v == p)
+                        NameValuePair2(hl.gameObject, $"r{n}", $"{skin.MathDisplay(v)}");
+                    else
+                        NameValuePair2(hl.gameObject, $"r{n}", $"{skin.MathDisplay(v)}", valueBkgd: new Color(0, 1, 0, 0.2f));
+                    v = curr.registers[m];
+                    p = prev == null ? 0 : prev.registers[m];
+                    if (v == p)
+                        NameValuePair2(hl.gameObject, $"r{m}", $"{skin.MathDisplay(v)}");
+                    else
+                        NameValuePair2(hl.gameObject, $"r{m}", $"{skin.MathDisplay(v)}", valueBkgd: new Color(0, 1, 0, 0.2f));
                 }
             }
-            return (layout.gameObject, text.GetComponent<TextMeshProUGUI>());
+            return layout.gameObject;
         }
 
         private GameObject NameValuePair(GameObject parent, string name, string value)
@@ -144,7 +196,7 @@ $@"{obj.DisplayName}
             return layout.gameObject;
         }
 
-        private GameObject NameValuePair2(GameObject parent, string name, string value)
+        private GameObject NameValuePair2(GameObject parent, string name, string value, Color valueBkgd = default)
         {
             var layout = Utils.CreateGameObject<HorizontalLayoutGroup>(parent);
             layout.padding = new RectOffset(1, 1, 1, 1);
@@ -161,7 +213,7 @@ $@"{obj.DisplayName}
             fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
             Text2(layout.gameObject, name, width: 25);
-            Text2(layout.gameObject, value, bkgd: Color.red, width: 80);
+            Text2(layout.gameObject, value, bkgd: valueBkgd, width: 80);
 
             return layout.gameObject;
         }
@@ -175,7 +227,7 @@ $@"{obj.DisplayName}
             tmp.richText = true;
             tmp.overflowMode = TextOverflowModes.Truncate;
             tmp.enableWordWrapping = false;
-            skin.MainFont(tmp);
+            skin.skin2d.MainFont(tmp);
             tmp.color = new Color(1f, 1f, 1f, 1f);
             tmp.text = text;
             var nameFitter = tmp.gameObject.AddComponent<ContentSizeFitter>();

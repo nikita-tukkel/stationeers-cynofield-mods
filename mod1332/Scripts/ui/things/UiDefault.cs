@@ -11,12 +11,10 @@ namespace cynofield.mods.ui.things
     class UiDefault : IThingCompleteUi
     {
         private readonly BaseSkin skin;
-        private readonly Fonts2d fonts2d;
 
-        public UiDefault(BaseSkin skin, Fonts2d fonts2d)
+        public UiDefault(BaseSkin skin)
         {
             this.skin = skin;
-            this.fonts2d = fonts2d;
         }
 
         Type IThingDescriber.SupportedType() { return null; }
@@ -70,7 +68,7 @@ please <color=red><b>don't</b></color> play with me";
             text.richText = true;
             text.overflowMode = TextOverflowModes.Truncate;
             text.enableWordWrapping = true;
-            skin.MainFont(text);
+            skin.skin2d.MainFont(text);
 
             var textFitter = text.gameObject.AddComponent<ContentSizeFitter>();
             textFitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
