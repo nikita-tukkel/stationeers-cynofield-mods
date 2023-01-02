@@ -90,13 +90,17 @@ namespace cynofield.mods.ui
         {
             if (currentThing == null)
                 return;
-            //var desc = thingsUi.Describe(currentThing);
             var maybeCache = thingsUi.RenderDetailView(currentThing, rootComponent, objectsPool);
             if (maybeCache != null && maybeCache.name != null)
             {
-                // add created object into objects pool for ThingsUi to reuse.
+                // destroy the old one if a new one was created
+                objectsPool.TryGetValue(maybeCache.name, out GameObject oldValue);
+                if (oldValue != null && oldValue != maybeCache)
+                {
+                    Utils.Destroy(oldValue);
+                }
 
-                // TODO destroy the old one if a new one was created
+                // add created object into objects pool for ThingsUi to reuse.
                 objectsPool[maybeCache.name] = maybeCache;
             }
 

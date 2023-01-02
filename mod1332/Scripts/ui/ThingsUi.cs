@@ -26,7 +26,7 @@ namespace cynofield.mods.ui
 
             alluis.Add(new TransformerUi());
             alluis.Add(new CableUi());
-            alluis.Add(new CircuitHousingUi());
+            alluis.Add(new CircuitHousingUi(fonts2d));
             foreach (var ui in alluis)
             {
                 uis.Add(ui.SupportedType(), ui);
@@ -66,11 +66,6 @@ namespace cynofield.mods.ui
             }
         }
 
-        public string Describe(Thing thing)
-        {
-            return GetUi(thing).Describe(thing);
-        }
-
         public GameObject RenderDetailView(Thing thing, Component parent,
             ConcurrentDictionary<string, GameObject> objectsPool)
         {
@@ -80,11 +75,12 @@ namespace cynofield.mods.ui
                 return null;
 
             var ui = GetUi(thing);
+            //Log.Debug(() => $"{thing} to {ui}");
             var name = ui.ToString(); // use thing ui class name as caching key
             objectsPool.TryGetValue(name, out GameObject gameObject);
-            if (ui is IThingAnnotationRenderer)
+            if (ui is IThingDetailsRenderer)
             {
-                gameObject = defaultArUi.RenderDetails(thing, parentRect, gameObject);
+                gameObject = (ui as IThingDetailsRenderer).RenderDetails(thing, parentRect, gameObject);
             }
             else if (ui is IThingDescriber)
             {

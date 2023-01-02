@@ -37,7 +37,15 @@ namespace cynofield.mods.utils
         {
             foreach (var bundle in bundles)
             {
-                bundle.Unload(true);
+                try
+                {
+                    bundle.Unload(true);
+                }
+                catch (Exception e)
+                {
+                    // Sometimes Unity crashes inside Unload method, ignore it.
+                    Log.Debug(e, () => $"exception unloading {bundle}");
+                }
             }
             bundles.Clear();
             bundleSources.Clear();
