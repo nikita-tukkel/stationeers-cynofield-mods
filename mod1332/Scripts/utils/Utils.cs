@@ -147,6 +147,30 @@ namespace cynofield.mods.utils
 
     public class Utils
     {
+        public static string PrintHierarchy(GameObject root, string ident = "")
+        {
+            string result = "";
+            result += PrintComponents(root, ident);
+            for (var i = 0; i < root.transform.childCount; i++)
+            {
+                var child = root.transform.GetChild(i).gameObject;
+                var childIdent = ident + "\t";
+                result += childIdent + "---" + child + "\n";
+                result += PrintHierarchy(child, childIdent);
+            }
+            return result;
+        }
+
+        public static string PrintComponents(GameObject root, string ident = "")
+        {
+            string result = "";
+            foreach (var c in root.GetComponents<Component>())
+            {
+                result += ident + c.GetType() + "\n";
+            }
+            return result;
+        }
+
         public static T CreateGameObject<T>() where T : Component => CreateGameObject<T>((Transform)null);
         public static T CreateGameObject<T>(GameObject parent) where T : Component => CreateGameObject<T>(parent ? parent.transform : null);
         public static T CreateGameObject<T>(Component parent) where T : Component => CreateGameObject<T>(parent ? parent.transform : null);

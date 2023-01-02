@@ -24,30 +24,42 @@ namespace cynofield.mods.ui
         {
             this.fonts2d = fonts2d;
             this.lf = new LayoutFactory(fonts2d);
-            canvas = lf.CreateCanvas(gameObject);
 
-            var size = new Vector2(300f, 300f);
-            var layout = Utils.VL(canvas);
-            layout.transform.SetParent(canvas.transform, false);
-            layout.padding = new RectOffset(100, 0, 100, 0);
-            (var text1, var bkgd1) = lf.CreateText(layout, size);
-            text1.text = "testtesttesttesttesttesttesttesttest";
-            (var text2, var bkgd2) = lf.CreateText(layout, size);
-            text2.text = "TEST TEST 0123456789\nTTTTWWWWAAAAOOOOEEEE\nПРИВЕТ привет";
+            // https://stackoverflow.com/questions/66759954/unity-ui-how-to-make-a-composite-layout-group-to-combine-multiple-images-in
+            // canvas = lf.CreateCanvas(gameObject); // root game object = Canvas + VerticalLayoutGroup
+            // var rootLayout = Utils.VL(canvas);
+            // rootLayout.padding = new RectOffset(100, 0, 100, 0);
+
+            // var size = new Vector2(300f, 300f);
+
+            // var bkgd = Utils.CreateGameObject<RawImage>(rootLayout);
+            // bkgd.rectTransform.sizeDelta = size;
+            // bkgd.color = new Color(0, 0, 0, 0.6f);
+            
+            // var layout = Utils.VL(rootLayout.gameObject);
+            // var bkgd5 = Utils.CreateGameObject<RawImage>(layout);
+            // bkgd5.color = Color.green;
+
+            // var layout = Utils.VL(bkgd);
+            // layout.padding = new RectOffset(0, 0, 0, 0);
+            // (var text1, var bkgd1) = lf.CreateText(layout, size);
+            // text1.text = "testtesttesttesttesttesttesttesttest";
+            // (var text2, var bkgd2) = lf.CreateText(layout, size);
+            // text2.text = "TEST TEST 0123456789\nTTTTWWWWAAAAOOOOEEEE\nПРИВЕТ привет";
 
             //Demo2d();
         }
 
-        private void Demo2d()
-        {
-            var subparent = Utils.CreateGameObject(gameObject);
-            var demoCanvas = Utils.CreateGameObject<Canvas>(subparent);
-            demoCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            demoCanvas.pixelPerfect = true;
-            demoCanvas.scaleFactor = 1;
+        // private void Demo2d()
+        // {
+        //     var subparent = Utils.CreateGameObject(gameObject);
+        //     var demoCanvas = Utils.CreateGameObject<Canvas>(subparent);
+        //     demoCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        //     demoCanvas.pixelPerfect = true;
+        //     demoCanvas.scaleFactor = 1;
 
-            fonts2d.Demo(demoCanvas, lf);
-        }
+        //     fonts2d.Demo(demoCanvas, lf);
+        // }
     }
 
     public class LayoutFactory
@@ -61,7 +73,7 @@ namespace cynofield.mods.ui
             this.fonts2d = fonts2d;
         }
 
-        public Canvas CreateCanvas(GameObject parent)
+        public Canvas CreateCanvas2d(GameObject parent)
         {
             // Sizes and coordinates here are calculated in pixels, not in in-game meters.
             //  So don't get surprised by large numbers.
@@ -79,9 +91,10 @@ namespace cynofield.mods.ui
             var bkgd = Utils.CreateGameObject<RawImage>(parent);
             bkgd.rectTransform.sizeDelta = size;
             //bkgd.color = new Color(0, 0, 0.1f, 0.6f);
-            bkgd.color = new Color(0, 0, 0, 0.6f);
+            // bkgd.color = new Color(0, 0, 0, 0.6f);
+            bkgd.color = Color.red;
 
-            var text = Utils.CreateGameObject<TextMeshProUGUI>(bkgd);
+            var text = Utils.CreateGameObject<TextMeshProUGUI>(parent);
             text.rectTransform.sizeDelta = size;
             text.alignment = TextAlignmentOptions.TopLeft;
             text.margin = new Vector4(15f, 15f, 15f, 15f);
@@ -115,7 +128,7 @@ namespace cynofield.mods.ui
             //text.lineSpacing = 20;
 
             text.color = new Color(1f, 1f, 1f, 1f);
-            return (text, bkgd);
+            return (text, null);
         }
     }
 }

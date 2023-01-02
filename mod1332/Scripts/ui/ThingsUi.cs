@@ -63,6 +63,10 @@ namespace cynofield.mods.ui
             return GetUi(thing).Describe(thing);
         }
 
+        public void RenderDetailView() {
+            
+        }
+
         private readonly IThingArDescriber defaultArUi = new UiDefault();
         private readonly List<IThingArDescriber> alluis = new List<IThingArDescriber>();
         private readonly Dictionary<Type, IThingArDescriber> uis = new Dictionary<Type, IThingArDescriber>();
