@@ -15,7 +15,7 @@ namespace cynofield.mods.ui
 
         public static AugmentedUiManager Create(PlayerProvider playerProvider, Fonts2d fonts2d)
         {
-            ThingsUi thingsUi = new ThingsUi();
+            ThingsUi thingsUi = new ThingsUi(fonts2d);
             return new AugmentedUiManager(thingsUi, playerProvider, fonts2d);
         }
 
@@ -24,17 +24,31 @@ namespace cynofield.mods.ui
             this.thingsUi = thingsUi;
 
             var mainPanel = CreateMainPanel(fonts2d, demoMode: false);
-            components.Add(mainPanel);
+            components.Add(mainPanel.canvas);
 
-            leftHud = AugmentedDisplayLeft.Create(fonts2d);
+            leftHud = AugmentedDisplayLeft.Create(mainPanel.layoutLeft, thingsUi, fonts2d);
             components.Add(leftHud);
-            rightHud = AugmentedDisplayRight.Create(fonts2d);
+            rightHud = AugmentedDisplayRight.Create(mainPanel.layoutRight, thingsUi, fonts2d);
             components.Add(rightHud);
             inworldUi = AugmentedDisplayInWorld.Create(thingsUi, playerProvider);
             components.Add(inworldUi);
         }
 
-        private Component CreateMainPanel(Fonts2d fonts2d, bool demoMode)
+        private class MainPanelComponents
+        {
+            public Canvas canvas;
+            public VerticalLayoutGroup layoutLeft;
+            public VerticalLayoutGroup layoutRight;
+
+            public MainPanelComponents(Canvas canvas, VerticalLayoutGroup layoutLeft, VerticalLayoutGroup layoutRight)
+            {
+                this.canvas = canvas;
+                this.layoutLeft = layoutLeft;
+                this.layoutRight = layoutRight;
+            }
+        }
+
+        private MainPanelComponents CreateMainPanel(Fonts2d fonts2d, bool demoMode)
         {
             // https://stackoverflow.com/questions/66759954/unity-ui-how-to-make-a-composite-layout-group-to-combine-multiple-images-in
 
@@ -181,7 +195,7 @@ namespace cynofield.mods.ui
 
             //Log.Debug(() => $"Hierarchy of {rootObj}:\n{Utils.PrintHierarchy(rootObj)}");
 
-            return canvas;
+            return new MainPanelComponents(canvas, layout1, layout3);
         }
 
         private void Demo2d(RectTransform parent, Rect clippingRect, Fonts2d fonts2d)
@@ -209,11 +223,7 @@ namespace cynofield.mods.ui
                 lookingAt = thing;
                 if (lookingAt != null)
                 {
-                    var desc = thingsUi.Describe(lookingAt);
-                    rightHud.Display(
-                        $"<color=white><color=green><b>eyes on</b></color>: {desc}</color>");
-
-                    thingsUi.RenderDetailView();
+                    rightHud.Display(lookingAt);
                 }
                 else
                 {
@@ -229,9 +239,7 @@ namespace cynofield.mods.ui
                 pointingAt = thing;
                 if (pointingAt != null)
                 {
-                    var desc = thingsUi.Describe(pointingAt);
-                    rightHud.Display(
-                        $"<color=white><color=green><b>mouse on</b></color>: {desc}</color>");
+                    rightHud.Display(pointingAt);
                 }
                 else
                 {

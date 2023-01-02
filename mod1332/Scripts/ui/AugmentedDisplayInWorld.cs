@@ -75,6 +75,9 @@ namespace cynofield.mods.ui
         private Thing currentCursorThing = null;
         void Update()
         {
+            if (WorldManager.IsGamePaused)
+                return;
+
             if (nearbyObjects == null)
             {
                 // late init in case Human object was not available on early calls to Update.

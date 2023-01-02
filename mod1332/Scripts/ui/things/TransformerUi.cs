@@ -4,11 +4,11 @@ using Assets.Scripts.Objects.Electrical;
 
 namespace cynofield.mods.ui.things
 {
-    class TransformerUi : IThingArDescriber
+    class TransformerUi : IThingDescriber
     {
-        Type IThingArDescriber.SupportedType() { return typeof(Transformer); }
+        Type IThingDescriber.SupportedType() { return typeof(Transformer); }
 
-        string IThingArDescriber.Describe(Thing thing)
+        string IThingDescriber.Describe(Thing thing)
         {
             var obj = thing as Transformer;
             var color = obj.Powered ? "green" : "red";

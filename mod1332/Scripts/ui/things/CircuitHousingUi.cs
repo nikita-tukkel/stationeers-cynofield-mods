@@ -5,11 +5,11 @@ using HarmonyLib;
 
 namespace cynofield.mods.ui.things
 {
-    class CircuitHousingUi : IThingArDescriber
+    class CircuitHousingUi : IThingDescriber
     {
-        Type IThingArDescriber.SupportedType() { return typeof(CircuitHousing); }
+        Type IThingDescriber.SupportedType() { return typeof(CircuitHousing); }
 
-        string IThingArDescriber.Describe(Thing thing)
+        string IThingDescriber.Describe(Thing thing)
         {
             var obj = thing as CircuitHousing;
             var chip = obj._ProgrammableChipSlot.Occupant as ProgrammableChip;

@@ -22,6 +22,9 @@ namespace cynofield.mods.utils
         private float periodicUpdateCounter = 1.5f; // start not from 0 to have first update sooner
         void Update()
         {
+            if (WorldManager.IsGamePaused)
+                return;
+
             periodicUpdateCounter += Time.deltaTime;
 
             if (periodicUpdateCounter < 2f)

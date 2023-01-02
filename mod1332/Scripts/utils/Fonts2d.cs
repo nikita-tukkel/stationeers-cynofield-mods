@@ -23,6 +23,28 @@ namespace cynofield.mods.utils
         }
 
         public FontSetter1 SetFont { get => fontSetter1; }
+        //fonts2d.SetFont.superstar(20, text); // 5/5
+        //fonts2d.SetFont.cubecavern(20, text); // 5/5
+        //fonts2d.SetFont.publicpixel(10,text); // 5/5
+        //fonts2d.SetFont.retro_gaming(10,text); // 4/5
+        //fonts2d.SetFont.minecraftia_regular(20, text); // 5/5
+        //fonts2d.SetFont.smallest_pixel_7(20,text); // 4/5
+        //fonts2d.SetFont.small_pixel_7(20,text); // 4/5
+        //fonts2d.SetFont.modern_lcd_7(20,text); // 5/5
+        //fonts2d.SetFont.light_pixel_7(10, text); // 4/5
+        //fonts2d.SetFont.upheavalpro(20,text); // 3/5
+        //fonts2d.SetFont.pixel_unicode(40,text); // 3/5
+        //fonts2d.SetFont.half_bold_pixel_7(20, text); // 3/5
+        //fonts2d.SetFont.sgk100(40,text); // 3/5
+        //fonts2d.SetFont.wide_pixel_7(20,text); // 3/5
+        //fonts2d.SetFont.thin_pixel_7(40,text); // 3/5
+        //fonts2d.SetFont.zx_spectrum_7(20,text); // 3/5
+        //fonts2d.SetFont.cloude_regular(40,text); // 3/5
+        //fonts2d.SetFont.freepixel(20, text);  // 2/5
+        //fonts2d.SetFont.cloude_regular_bold(60,text); // 2/5
+        //fonts2d.SetFont.pixeleum_48(20,text); // 2/5
+        //fonts2d.SetFont.webpixel_bitmap_medium(20,text); // 2/5
+        //fonts2d.SetFont.zx_spectrum_7_bold(20,text); // 3/5
 
         private TMP_FontAsset LoadOrDefault(string fontName, int size, TextMeshProUGUI text)
         {

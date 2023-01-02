@@ -4,11 +4,11 @@ using Assets.Scripts.Objects.Electrical;
 
 namespace cynofield.mods.ui.things
 {
-    class CableUi : IThingArDescriber
+    class CableUi : IThingDescriber
     {
-        Type IThingArDescriber.SupportedType() { return typeof(Cable); }
+        Type IThingDescriber.SupportedType() { return typeof(Cable); }
 
-        string IThingArDescriber.Describe(Thing thing)
+        string IThingDescriber.Describe(Thing thing)
         {
             var obj = thing as Cable;
             var net = obj.CableNetwork;
