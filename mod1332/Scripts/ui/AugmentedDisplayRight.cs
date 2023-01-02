@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using Assets.Scripts.Objects;
+using cynofield.mods.ui.styles;
 using cynofield.mods.utils;
 using TMPro;
 using UnityEngine;
@@ -12,24 +13,27 @@ namespace cynofield.mods.ui
         private class Logger_ : CLogger { }
         private static readonly CLogger Log = new Logger_();
 
-        public static AugmentedDisplayRight Create(VerticalLayoutGroup layoutRight, ThingsUi thingsUi, Fonts2d fonts2d)
+        public static AugmentedDisplayRight Create(VerticalLayoutGroup layoutRight, ThingsUi thingsUi,
+            BaseSkin skin, Fonts2d fonts2d)
         {
             var result = Utils.CreateGameObject<AugmentedDisplayRight>();
-            result.Init(layoutRight, thingsUi, fonts2d);
+            result.Init(layoutRight, thingsUi, skin, fonts2d);
             return result;
         }
 
         private Component rootComponent;
         private RectTransform rootRect;
         private ThingsUi thingsUi;
+        private BaseSkin skin;
         private Fonts2d fonts2d;
         TextMeshProUGUI text1;
         TextMeshProUGUI text2;
-        private void Init(VerticalLayoutGroup root, ThingsUi thingsUi, Fonts2d fonts2d)
+        private void Init(VerticalLayoutGroup root, ThingsUi thingsUi, BaseSkin skin, Fonts2d fonts2d)
         {
             this.rootComponent = root;
             this.rootRect = rootComponent.gameObject.GetComponent<RectTransform>();
             this.thingsUi = thingsUi;
+            this.skin = skin;
             this.fonts2d = fonts2d;
         }
 
@@ -106,6 +110,5 @@ namespace cynofield.mods.ui
 
             LayoutRebuilder.ForceRebuildLayoutImmediate(rootRect); // Needed to process possible changes in text heights
         }
-
     }
 }

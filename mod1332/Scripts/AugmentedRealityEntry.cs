@@ -5,6 +5,7 @@ using Assets.Scripts.Objects.Entities;
 using Assets.Scripts.Objects.Items;
 using cynofield.mods.ui;
 using cynofield.mods.utils;
+using cynofield.mods.ui.styles;
 
 namespace cynofield.mods
 {
@@ -45,11 +46,13 @@ namespace cynofield.mods
                 assetsLoader = AssetsLoader.Load();
                 assetsLoader.DebugInfo();
                 var fonts2d = new Fonts2d(assetsLoader);
+                
+                var skin = new BaseSkin(fonts2d);
 
                 PlayerProvider playerProvider = new PlayerProvider();
                 //PlayerProvider.DebugInfo();
                 stateManager = new ArStateManager(playerProvider);
-                uiManager = AugmentedUiManager.Create(playerProvider, fonts2d);
+                uiManager = AugmentedUiManager.Create(playerProvider, skin, fonts2d);
                 stateManager.OnHide += OnHideHandler;
                 stateManager.OnShow += OnShowHandler;
 

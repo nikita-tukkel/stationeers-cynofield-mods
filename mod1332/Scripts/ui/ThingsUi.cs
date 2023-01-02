@@ -1,4 +1,5 @@
 using Assets.Scripts.Objects;
+using cynofield.mods.ui.styles;
 using cynofield.mods.ui.things;
 using cynofield.mods.utils;
 using Objects.Pipes;
@@ -15,18 +16,20 @@ namespace cynofield.mods.ui
         private class Logger_ : CLogger { }
         private static readonly CLogger Log = new Logger_();
 
+        private readonly BaseSkin skin;
         private readonly Fonts2d fonts2d;
         private readonly UiDefault defaultArUi;
         private readonly List<IThingDescriber> alluis = new List<IThingDescriber>();
         private readonly Dictionary<Type, IThingDescriber> uis = new Dictionary<Type, IThingDescriber>();
-        public ThingsUi(Fonts2d fonts2d)
+        public ThingsUi(BaseSkin skin, Fonts2d fonts2d)
         {
+            this.skin = skin;
             this.fonts2d = fonts2d;
-            this.defaultArUi = new UiDefault(fonts2d);
+            this.defaultArUi = new UiDefault(skin, fonts2d);
 
             alluis.Add(new TransformerUi());
             alluis.Add(new CableUi());
-            alluis.Add(new CircuitHousingUi(fonts2d));
+            alluis.Add(new CircuitHousingUi(skin, fonts2d));
             foreach (var ui in alluis)
             {
                 uis.Add(ui.SupportedType(), ui);

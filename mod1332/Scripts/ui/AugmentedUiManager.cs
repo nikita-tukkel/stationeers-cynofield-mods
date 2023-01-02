@@ -1,4 +1,5 @@
 using Assets.Scripts.Objects;
+using cynofield.mods.ui.styles;
 using cynofield.mods.utils;
 using System.Collections;
 using System.Collections.Generic;
@@ -13,22 +14,25 @@ namespace cynofield.mods.ui
         private class Logger_ : CLogger { }
         private static readonly CLogger Log = new Logger_();
 
-        public static AugmentedUiManager Create(PlayerProvider playerProvider, Fonts2d fonts2d)
+        public static AugmentedUiManager Create(PlayerProvider playerProvider,
+            BaseSkin skin, Fonts2d fonts2d)
         {
-            ThingsUi thingsUi = new ThingsUi(fonts2d);
-            return new AugmentedUiManager(thingsUi, playerProvider, fonts2d);
+            ThingsUi thingsUi = new ThingsUi(skin, fonts2d);
+            return new AugmentedUiManager(thingsUi, playerProvider, skin, fonts2d);
         }
 
-        private AugmentedUiManager(ThingsUi thingsUi, PlayerProvider playerProvider, Fonts2d fonts2d)
+        private AugmentedUiManager(ThingsUi thingsUi, PlayerProvider playerProvider,
+            BaseSkin skin, Fonts2d fonts2d)
         {
             this.thingsUi = thingsUi;
+            this.skin = skin;
 
-            var mainPanel = CreateMainPanel(fonts2d, demoMode: false);
+            var mainPanel = CreateMainPanel(skin, fonts2d, demoMode: false);
             components.Add(mainPanel.canvas);
 
             leftHud = AugmentedDisplayLeft.Create(mainPanel.layoutLeft, thingsUi, fonts2d);
             components.Add(leftHud);
-            rightHud = AugmentedDisplayRight.Create(mainPanel.layoutRight, thingsUi, fonts2d);
+            rightHud = AugmentedDisplayRight.Create(mainPanel.layoutRight, thingsUi, skin, fonts2d);
             components.Add(rightHud);
             inworldUi = AugmentedDisplayInWorld.Create(thingsUi, playerProvider);
             components.Add(inworldUi);
@@ -48,18 +52,19 @@ namespace cynofield.mods.ui
             }
         }
 
-        private MainPanelComponents CreateMainPanel(Fonts2d fonts2d, bool demoMode)
+        private MainPanelComponents CreateMainPanel(BaseSkin skin, Fonts2d fonts2d, bool demoMode)
         {
             // https://stackoverflow.com/questions/66759954/unity-ui-how-to-make-a-composite-layout-group-to-combine-multiple-images-in
 
-            var leftPanelWidth = 350;
-            var rightPanelWidth = 350;
-            var horizontalPadding = 100;
-            var verticalPaddingTop = 100;
-            var verticalPaddingBottom = 200;
+            var hudSkin = skin.Hud2d();
+            var leftPanelWidth = hudSkin.leftPanelWidth;
+            var rightPanelWidth = hudSkin.rightPanelWidth;
+            var horizontalPadding = hudSkin.horizontalPaddingLeft;
+            var verticalPaddingTop = hudSkin.verticalPaddingTop;
+            var verticalPaddingBottom = hudSkin.verticalPaddingBottom;
             var centerWidth = Screen.width - leftPanelWidth - rightPanelWidth - 2 * horizontalPadding;
-            var panelWidth = Screen.width - 2 * horizontalPadding;
-            var panelHeight = Screen.height - verticalPaddingTop - verticalPaddingBottom;
+            var hudWidth = Screen.width - 2 * horizontalPadding;
+            var hudHeight = Screen.height - verticalPaddingTop - verticalPaddingBottom;
 
             //===================
             // Root panel: Canvas + HorizontalLayoutGroup
@@ -74,8 +79,8 @@ namespace cynofield.mods.ui
             var clippingRect = new Rect(
                 -Screen.width / 2 + horizontalPadding,     // bottom left corner X from screen center
                 -Screen.height / 2 + verticalPaddingBottom,// bottom left corner Y from screen center
-                panelWidth,
-                panelHeight
+                hudWidth,
+                hudHeight
             );
             //Log.Debug(() => $"clippingRect = {clippingRect}");
 
@@ -99,8 +104,8 @@ namespace cynofield.mods.ui
             //===================
             // Left panel: RawImage + (optional) ContentSizeFitter + VerticalLayoutGroup
             var bkgd1 = Utils.CreateGameObject<RawImage>(rootLayout);
-            bkgd1.color = demoMode ? new Color(1, 0, 0, 0.1f) : new Color(0, 0, 0, 0.6f);
-            bkgd1.rectTransform.sizeDelta = new Vector2(leftPanelWidth, panelHeight);
+            bkgd1.color = demoMode ? new Color(1, 0, 0, 0.1f) : hudSkin.leftPanelBkgd;
+            bkgd1.rectTransform.sizeDelta = new Vector2(leftPanelWidth, hudHeight);
             //bkgd1.rectTransform.pivot = Vector2.zero;
             // add ContentSizeFitter to RawImage for resize
             // var fitter1 = bkgd1.gameObject.AddComponent<ContentSizeFitter>();
@@ -133,7 +138,7 @@ namespace cynofield.mods.ui
                     text.richText = true;
                     text.overflowMode = TextOverflowModes.Truncate;
                     text.enableWordWrapping = true;
-                    fonts2d.SetFont.superstar(20, text);
+                    skin.MainFont(text);
                     text.text = $"Text {i} Text {i} Text {i} Text {i} Text {i}\naaaa\nbbbb";
 
                     var textFitter = text.gameObject.AddComponent<ContentSizeFitter>();
@@ -147,11 +152,11 @@ namespace cynofield.mods.ui
 
             var bkgd2 = Utils.CreateGameObject<RawImage>(rootLayout);
             bkgd2.color = demoMode ? new Color(0, 1, 0, 0.1f) : new Color(0, 0, 0, 0f);
-            bkgd2.rectTransform.sizeDelta = new Vector2(centerWidth, panelHeight);
+            bkgd2.rectTransform.sizeDelta = new Vector2(centerWidth, hudHeight);
 
             var bkgd3 = Utils.CreateGameObject<RawImage>(rootLayout);
-            bkgd3.color = demoMode ? new Color(0, 0, 1, 0.1f) : new Color(0, 0, 0, 0.6f);
-            bkgd3.rectTransform.sizeDelta = new Vector2(rightPanelWidth, panelHeight);
+            bkgd3.color = demoMode ? new Color(0, 0, 1, 0.1f) : hudSkin.rightPanelBkgd;
+            bkgd3.rectTransform.sizeDelta = new Vector2(rightPanelWidth, hudHeight);
             // add ContentSizeFitter to RawImage for resize
             // var fitter3 = bkgd3.gameObject.AddComponent<ContentSizeFitter>();
             // fitter3.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
@@ -179,7 +184,7 @@ namespace cynofield.mods.ui
                     text.richText = true;
                     text.overflowMode = TextOverflowModes.Truncate;
                     text.enableWordWrapping = true;
-                    fonts2d.SetFont.superstar(20, text);
+                    skin.MainFont(text);
                     text.text = $"Text {i} Text {i} Text {i} Text {i} Text {i}\naaaa\nbbbb";
 
                     var textFitter = text.gameObject.AddComponent<ContentSizeFitter>();
@@ -213,6 +218,7 @@ namespace cynofield.mods.ui
         private readonly AugmentedDisplayRight rightHud;
         private readonly AugmentedDisplayInWorld inworldUi;
         private readonly ThingsUi thingsUi;
+        private readonly BaseSkin skin;
         private Thing lookingAt = null;
         private Thing pointingAt = null;
 

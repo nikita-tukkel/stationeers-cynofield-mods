@@ -1,6 +1,7 @@
-using System;
 using Assets.Scripts.Objects;
+using cynofield.mods.ui.styles;
 using cynofield.mods.utils;
+using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -9,9 +10,12 @@ namespace cynofield.mods.ui.things
 {
     class UiDefault : IThingCompleteUi
     {
+        private readonly BaseSkin skin;
         private readonly Fonts2d fonts2d;
-        public UiDefault(Fonts2d fonts2d)
+
+        public UiDefault(BaseSkin skin, Fonts2d fonts2d)
         {
+            this.skin = skin;
             this.fonts2d = fonts2d;
         }
 
@@ -66,7 +70,7 @@ please <color=red><b>don't</b></color> play with me";
             text.richText = true;
             text.overflowMode = TextOverflowModes.Truncate;
             text.enableWordWrapping = true;
-            fonts2d.SetFont.superstar(20, text);
+            skin.MainFont(text);
 
             var textFitter = text.gameObject.AddComponent<ContentSizeFitter>();
             textFitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;

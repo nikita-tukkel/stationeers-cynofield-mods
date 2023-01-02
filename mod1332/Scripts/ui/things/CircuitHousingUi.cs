@@ -1,8 +1,9 @@
-using System;
 using Assets.Scripts.Objects;
 using Assets.Scripts.Objects.Electrical;
+using cynofield.mods.ui.styles;
 using cynofield.mods.utils;
 using HarmonyLib;
+using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -13,9 +14,12 @@ namespace cynofield.mods.ui.things
     {
         Type IThingDescriber.SupportedType() { return typeof(CircuitHousing); }
 
+        private readonly BaseSkin skin;
         private readonly Fonts2d fonts2d;
-        public CircuitHousingUi(Fonts2d fonts2d)
+
+        public CircuitHousingUi(BaseSkin skin, Fonts2d fonts2d)
         {
+            this.skin = skin;
             this.fonts2d = fonts2d;
         }
 
@@ -27,16 +31,15 @@ namespace cynofield.mods.ui.things
             {
                 return
 $@"{obj.DisplayName}
-<color=red><b>db={obj.Setting}</b>
-no chip</color>";
+<color=red><b>db={skin.MathDisplay(obj.Setting)}</b>
+NO CHIP</color>";
             }
             else
             {
                 var registers = GetRegisters(chip);
                 return
-$@"{obj.DisplayName} abba abba abba abba abba
-<color=green><b>db={obj.Setting}</b><mspace=1em> </mspace>r15={registers[15]}</color>
-{DisplayRegisters(registers)}
+$@"{obj.DisplayName}
+<color=green><b>db={skin.MathDisplay(obj.Setting)}</b> r15={registers[15]}</color>
 ";
             }
         }
@@ -86,7 +89,7 @@ $@"{obj.DisplayName} abba abba abba abba abba
             double[] registers = GetRegisters(chip);
 
             var text = Text1(layout.gameObject, thingc.DisplayName);
-            NameValuePair(layout.gameObject, $"<color=green>db</color>", $"{Math.Round(thingc.Setting, 3)}");
+            NameValuePair(layout.gameObject, $"<color=green>db</color>", $"{skin.MathDisplay(thingc.Setting)}");
             if (chip == null)
             {
                 Text2(layout.gameObject, "NO CHIP", Color.red);
@@ -112,8 +115,8 @@ $@"{obj.DisplayName} abba abba abba abba abba
                     hlfitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
                     hlfitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
-                    NameValuePair(hl.gameObject, $"r{n}", $"{Math.Round(registers[n], 3)}");
-                    NameValuePair2(hl.gameObject, $"r{m}", $"{Math.Round(registers[m], 3)}");
+                    NameValuePair(hl.gameObject, $"r{n}", $"{skin.MathDisplay(registers[n])}");
+                    NameValuePair2(hl.gameObject, $"r{m}", $"{skin.MathDisplay(registers[m])}");
                 }
             }
             return (layout.gameObject, text.GetComponent<TextMeshProUGUI>());
@@ -163,7 +166,6 @@ $@"{obj.DisplayName} abba abba abba abba abba
             return layout.gameObject;
         }
 
-
         private GameObject Text1(GameObject parent, string text, int width = 0)
         {
             var tmp = Utils.CreateGameObject<TextMeshProUGUI>(parent);
@@ -173,7 +175,7 @@ $@"{obj.DisplayName} abba abba abba abba abba
             tmp.richText = true;
             tmp.overflowMode = TextOverflowModes.Truncate;
             tmp.enableWordWrapping = false;
-            fonts2d.SetFont.superstar(20, tmp);
+            skin.MainFont(tmp);
             tmp.color = new Color(1f, 1f, 1f, 1f);
             tmp.text = text;
             var nameFitter = tmp.gameObject.AddComponent<ContentSizeFitter>();
@@ -216,139 +218,6 @@ $@"{obj.DisplayName} abba abba abba abba abba
                 img.color = bkgd;
             }
             return tmp.gameObject;
-        }
-
-        private void NameValuePairDisplay2(Component parent, string name, string value)
-        {
-            var layout = Utils.CreateGameObject<HorizontalLayoutGroup>(parent);
-            layout.padding = new RectOffset(1, 1, 1, 1);
-            layout.spacing = 0;
-            layout.childAlignment = TextAnchor.UpperLeft;
-            layout.childControlWidth = true;
-            layout.childForceExpandWidth = false;
-            layout.childScaleWidth = false;
-            layout.childControlHeight = true;
-            layout.childForceExpandHeight = false;
-            layout.childScaleHeight = false;
-            var fitter = layout.gameObject.AddComponent<ContentSizeFitter>();
-            fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
-            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-
-            var nameLayout = Utils.CreateGameObject<HorizontalLayoutGroup>(layout);
-            nameLayout.padding = new RectOffset(0, 0, 0, 0);
-            nameLayout.spacing = 0;
-            nameLayout.childAlignment = TextAnchor.UpperLeft;
-            nameLayout.childControlWidth = true;
-            nameLayout.childForceExpandWidth = false;
-            nameLayout.childScaleWidth = false;
-            nameLayout.childControlHeight = true;
-            nameLayout.childForceExpandHeight = false;
-            nameLayout.childScaleHeight = false;
-            //var nameText = Utils.CreateGameObject<TextMeshProUGUI>(nameLayout);
-            var nameText = nameLayout.gameObject.AddComponent<TextMeshProUGUI>();
-            nameText.rectTransform.sizeDelta = new Vector2(0, 0);
-            nameText.alignment = TextAlignmentOptions.TopLeft;
-            nameText.margin = new Vector4(0f, 0f, 0f, 0f);
-            nameText.richText = true;
-            nameText.overflowMode = TextOverflowModes.Truncate;
-            nameText.enableWordWrapping = true;
-            fonts2d.SetFont.superstar(20, nameText);
-            nameText.color = new Color(1f, 1f, 1f, 1f);
-            nameText.text = name;
-            var nameFitter = nameText.gameObject.AddComponent<ContentSizeFitter>();
-            nameFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
-            nameFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-
-            var valueLayout = Utils.CreateGameObject<HorizontalLayoutGroup>(layout);
-            valueLayout.padding = new RectOffset(0, 0, 0, 0);
-            valueLayout.spacing = 0;
-            valueLayout.childAlignment = TextAnchor.UpperLeft;
-            valueLayout.childControlWidth = true;
-            valueLayout.childForceExpandWidth = false;
-            valueLayout.childScaleWidth = false;
-            valueLayout.childControlHeight = true;
-            valueLayout.childForceExpandHeight = false;
-            valueLayout.childScaleHeight = false;
-            //var valueText = Utils.CreateGameObject<TextMeshProUGUI>(valueLayout);
-            var valueText = valueLayout.gameObject.AddComponent<TextMeshProUGUI>();
-            valueText.rectTransform.sizeDelta = new Vector2(0, 0);
-            valueText.alignment = TextAlignmentOptions.TopLeft;
-            valueText.margin = new Vector4(0f, 0f, 0f, 0f);
-            valueText.richText = true;
-            valueText.overflowMode = TextOverflowModes.Truncate;
-            valueText.enableWordWrapping = true;
-            fonts2d.SetFont.superstar(20, valueText);
-            valueText.color = new Color(1f, 1f, 1f, 1f);
-            valueText.text = value;
-            var valueFitter = valueText.gameObject.AddComponent<ContentSizeFitter>();
-            valueFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
-            valueFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-        }
-
-        private void NameValuePairDisplay(Component parent, string name, string value)
-        {
-            var layout = Utils.CreateGameObject<HorizontalLayoutGroup>(parent);
-            layout.padding = new RectOffset(1, 1, 1, 1);
-            layout.spacing = 0;
-            layout.childAlignment = TextAnchor.UpperLeft;
-            layout.childControlWidth = false;
-            layout.childForceExpandWidth = false;
-            layout.childScaleWidth = false;
-            layout.childControlHeight = true;
-            layout.childForceExpandHeight = false;
-            layout.childScaleHeight = false;
-            var layoutTransform = layout.gameObject.GetComponent<RectTransform>();
-            layoutTransform.sizeDelta = new Vector2(20, 0);
-
-            var fitter = layout.gameObject.AddComponent<ContentSizeFitter>();
-            fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
-            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-
-            var nameText = Utils.CreateGameObject<TextMeshProUGUI>(layout);
-            nameText.rectTransform.sizeDelta = new Vector2(50, 0);
-            nameText.alignment = TextAlignmentOptions.TopLeft;
-            nameText.margin = new Vector4(0f, 0f, 0f, 0f);
-            nameText.richText = true;
-            nameText.overflowMode = TextOverflowModes.Truncate;
-            nameText.enableWordWrapping = true;
-            fonts2d.SetFont.superstar(20, nameText);
-            nameText.color = new Color(1f, 1f, 1f, 1f);
-            nameText.text = name;
-            var valueText = Utils.CreateGameObject<TextMeshProUGUI>(layout);
-            valueText.rectTransform.sizeDelta = new Vector2(50, 0);
-            valueText.alignment = TextAlignmentOptions.TopLeft;
-            valueText.margin = new Vector4(0f, 0f, 0f, 0f);
-            valueText.richText = true;
-            valueText.overflowMode = TextOverflowModes.Truncate;
-            valueText.enableWordWrapping = true;
-            fonts2d.SetFont.superstar(20, valueText);
-            valueText.color = new Color(1f, 1f, 1f, 1f);
-            valueText.text = value;
-
-            var textFitter = nameText.gameObject.AddComponent<ContentSizeFitter>();
-            textFitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
-            textFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-            var textFitter2 = valueText.gameObject.AddComponent<ContentSizeFitter>();
-            textFitter2.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
-            textFitter2.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-        }
-
-        private string DisplayRegisters(double[] registers)
-        {
-            string result = "";
-            int count = 0;
-            for (int i = 0; i < 16; i++)
-            {
-                if (registers[i] == 0)
-                    continue;
-                count++;
-                result += $"r{i}={Math.Round(registers[i], 2)}";
-                if (count > 0 && count % 2 == 0)
-                    result += "\n";
-                else
-                    result += " ";//result += "<mspace=1em> </mspace>";
-            }
-            return result;
         }
 
         private double[] GetRegisters(ProgrammableChip chip)
