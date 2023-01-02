@@ -77,7 +77,7 @@ namespace cynofield.mods.utils
                 new StreamReader(path).Close();
                 return true;
             }
-            catch (Exception _) { return false; }
+            catch (Exception) { return false; }
         }
 
         public void DebugInfo()

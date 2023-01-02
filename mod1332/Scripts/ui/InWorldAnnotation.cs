@@ -211,7 +211,7 @@ namespace cynofield.mods.ui
             }
         }
 
-        public void ShowNear(Thing thing, string id, RaycastHit hit)
+        public void ShowNear(Thing thing, string id)
         {
             this.anchor = thing;
             this.id = id;
@@ -230,7 +230,6 @@ namespace cynofield.mods.ui
 
             // Fine tune coordinates only after content is rendered.
             // Expect that `bkgd` is here and covers whole annotation.
-            var posHit = hit.point;
             var human = playerProvider.GetPlayerAvatar();
             //var posHead = human.HeadBone.transform.position;
             var posHead = human.GlassesSlot.Occupant.transform.position;
@@ -246,6 +245,7 @@ namespace cynofield.mods.ui
             var y2 = corners[2].y; // top right
             var height = y2 - y1;
             var pos = transform.position;
+            // these fine tuning is not actually needed anymore, since annotation is anchored closer to the head
             if (y2 > limit2)
             {
                 // Log.Debug(() => $"ShowNear {y2} > {posHead.y} ; pos.y={pos.y}, y1={y1}, y2={y2}; head={posHead.y}, legs={posLegs.y}");
@@ -254,7 +254,7 @@ namespace cynofield.mods.ui
             else if (y1 < limit1)
             {
                 // Log.Debug(() => $"ShowNear {y1} < {posLegs.y} ; pos.y={pos.y}, y1={y1}, y2={y2}; head={posHead.y}, legs={posLegs.y}");
-                transform.position = new Vector3(posHit.x, limit1 + height, posHit.z);
+                transform.position = new Vector3(pos.x, limit1 + height, pos.z);
             }
             transform.Translate(Camera.main.transform.forward * 0.5f, Space.World);
 

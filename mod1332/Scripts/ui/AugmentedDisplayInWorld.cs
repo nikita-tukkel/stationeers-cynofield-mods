@@ -112,12 +112,11 @@ namespace cynofield.mods.ui
             {
                 currentCursorThing = CursorManager.CursorThing;
             }
-            var hit = CursorManager.CursorHit;
-
+            
             if (!thingsUi.Supports(currentCursorThing))
                 return;
 
-            Show(currentCursorThing, hit);
+            Show(currentCursorThing);
         }
 
         private void PeriodicUpdate()
@@ -244,7 +243,7 @@ namespace cynofield.mods.ui
             return InWorldAnnotation.Create(null, thingsUi, playerProvider, colorSchemeId);
         }
 
-        public void Show(Thing thing, RaycastHit hit)
+        public void Show(Thing thing)
         {
             if (thing == null)
                 return;
@@ -274,7 +273,7 @@ namespace cynofield.mods.ui
                 ann = existing;
             }
 
-            ann.ShowNear(thing, thingId, hit);
+            ann.ShowNear(thing, thingId);
         }
     }
 }
