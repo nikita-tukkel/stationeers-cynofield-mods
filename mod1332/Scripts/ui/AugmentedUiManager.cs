@@ -101,6 +101,7 @@ namespace cynofield.mods.ui
             var bkgd1 = Utils.CreateGameObject<RawImage>(rootLayout);
             bkgd1.color = demoMode ? new Color(1, 0, 0, 0.1f) : new Color(0, 0, 0, 0.6f);
             bkgd1.rectTransform.sizeDelta = new Vector2(leftPanelWidth, panelHeight);
+            //bkgd1.rectTransform.pivot = Vector2.zero;
             // add ContentSizeFitter to RawImage for resize
             // var fitter1 = bkgd1.gameObject.AddComponent<ContentSizeFitter>();
             // fitter1.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;

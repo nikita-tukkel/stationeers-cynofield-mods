@@ -76,6 +76,7 @@ namespace cynofield.mods.ui
 
             var ui = GetUi(thing);
             //Log.Debug(() => $"{thing} to {ui}");
+            //Log.Debug(() => $"parentRect.sizeDelta {parentRect.sizeDelta}");
             var name = ui.ToString(); // use thing ui class name as caching key
             objectsPool.TryGetValue(name, out GameObject gameObject);
             if (ui is IThingDetailsRenderer)
