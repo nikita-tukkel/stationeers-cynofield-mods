@@ -24,6 +24,7 @@ namespace cynofield.mods.ui
         private Component rootComponent;
         private RectTransform rootRect;
         private VerticalLayoutGroup detailsLayout;
+        private RectTransform detailsLayoutRect;
         private ThingsUi thingsUi;
         private BaseSkin skin;
         private Fonts2d fonts2d;
@@ -35,7 +36,7 @@ namespace cynofield.mods.ui
             this.skin = skin;
             this.fonts2d = fonts2d;
 
-            detailsLayout = Utils.CreateGameObject<VerticalLayoutGroup>();
+            detailsLayout = Utils.CreateGameObject<VerticalLayoutGroup>(rootComponent);
             detailsLayout.padding = new RectOffset(0, 0, 0, 0);
             detailsLayout.spacing = 0;
             detailsLayout.childAlignment = TextAnchor.UpperLeft;
@@ -45,7 +46,8 @@ namespace cynofield.mods.ui
             detailsLayout.childControlHeight = false;
             detailsLayout.childForceExpandHeight = false;
             detailsLayout.childScaleHeight = false;
-
+            detailsLayoutRect = rootComponent.gameObject.GetComponent<RectTransform>();
+            Utils.Show(detailsLayout);
         }
 
         public void Display(Thing thing)
@@ -56,29 +58,22 @@ namespace cynofield.mods.ui
             // Because currentThing is changed,
             //  need to hide current childs of rootComponent.
             //  Then things UI will render a new one, or reuse one of existing.
-            HideWholePool();
+            Utils.Hide(detailsLayout);
 
             currentThing = thing;
-            RenderThingDetails();
             rootComponent.gameObject.SetActive(true);
+            detailsLayout.gameObject.SetActive(true);
+            RenderThingDetails();
         }
 
         public void Hide()
         {
             currentThing = null;
-            HideWholePool();
-            rootComponent.gameObject.SetActive(false);
-        }
-
-        private void HideWholePool()
-        {
             // We are not destroying what ThingsUi rendered,
             //  so there is a pool of objects ThingsUi will reuse.
-            var children = rootComponent.GetComponentsInChildren<Transform>();
-            foreach (var child in children)
-            {
-                Utils.Hide(child);
-            }
+            Utils.Hide(detailsLayout);
+            rootComponent.gameObject.SetActive(false);
+            detailsLayout.gameObject.SetActive(false);
         }
 
         private float periodicUpdateCounter;
@@ -106,7 +101,7 @@ namespace cynofield.mods.ui
         {
             if (currentThing == null)
                 return;
-            var maybeCache = thingsUi.RenderDetailView(currentThing, rootComponent, objectsPool);
+            var maybeCache = thingsUi.RenderDetailView(currentThing, detailsLayout, objectsPool);
             if (maybeCache != null && maybeCache.name != null)
             {
                 // destroy the old one if a new one was created
@@ -121,7 +116,7 @@ namespace cynofield.mods.ui
                 objectsPool[maybeCache.name] = maybeCache;
             }
 
-            LayoutRebuilder.ForceRebuildLayoutImmediate(rootRect); // Needed to process possible changes in text heights
+            LayoutRebuilder.ForceRebuildLayoutImmediate(detailsLayoutRect); // Needed to process possible changes in text heights
         }
     }
 }

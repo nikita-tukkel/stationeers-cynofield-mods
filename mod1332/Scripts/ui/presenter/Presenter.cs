@@ -18,9 +18,6 @@ namespace cynofield.mods.ui.presenter
 
         virtual public void Present(T data)
         {
-            if (!isActiveAndEnabled)
-                return;
-
             foreach (var binding in bindings)
             {
                 binding.Present(data);
@@ -29,6 +26,12 @@ namespace cynofield.mods.ui.presenter
 
         public void AddBinding(IPresenterBinding<T> presenterBinding)
         {
+            bindings.Add(presenterBinding);
+        }
+
+        public void AddBinding(PresenterAction<T> action)
+        {
+            var presenterBinding = new PresenterBindingBase<T>(action);
             bindings.Add(presenterBinding);
         }
     }
@@ -50,4 +53,7 @@ namespace cynofield.mods.ui.presenter
 
         public void Present(T data) => action(data);
     }
+
+    // For now it is only a marker interface. Reconsider if it is usefull later.
+    public interface IView { }
 }

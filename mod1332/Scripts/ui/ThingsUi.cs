@@ -1,4 +1,5 @@
 using Assets.Scripts.Objects;
+using cynofield.mods.ui.presenter;
 using cynofield.mods.ui.styles;
 using cynofield.mods.ui.things;
 using cynofield.mods.utils;
@@ -25,11 +26,12 @@ namespace cynofield.mods.ui
         {
             this.skin = skin;
             this.fonts2d = fonts2d;
-            this.defaultArUi = new UiDefault(skin);
+            var lf = new ViewLayoutFactory(skin);
+            this.defaultArUi = new UiDefault(lf);
 
             alluis.Add(new TransformerUi());
             alluis.Add(new CableUi());
-            alluis.Add(new CircuitHousingUi(skin));
+            alluis.Add(new CircuitHousingUi(lf, skin));
             foreach (var ui in alluis)
             {
                 uis.Add(ui.SupportedType(), ui);
@@ -89,7 +91,7 @@ namespace cynofield.mods.ui
             else if (ui is IThingDescriber)
             {
                 var desc = ui.Describe(thing);
-                gameObject = defaultArUi.RenderDetailsOther(desc, parentRect, gameObject);
+                gameObject = defaultArUi.RenderDetails(thing, parentRect, gameObject, desc);
             }
 
             if (gameObject == null)

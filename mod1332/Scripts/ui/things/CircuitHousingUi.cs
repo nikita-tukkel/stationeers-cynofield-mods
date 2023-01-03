@@ -19,10 +19,12 @@ namespace cynofield.mods.ui.things
 
         Type IThingDescriber.SupportedType() { return typeof(CircuitHousing); }
 
+        private readonly ViewLayoutFactory lf;
         private readonly BaseSkin skin;
         private readonly ICDataModel icdata = new ICDataModel();
-        public CircuitHousingUi(BaseSkin skin)
+        public CircuitHousingUi(ViewLayoutFactory lf, BaseSkin skin)
         {
+            this.lf = lf;
             this.skin = skin;
         }
 
@@ -40,10 +42,7 @@ namespace cynofield.mods.ui.things
                 poolreuse.TryGetComponent(out presenter);
 
             if (presenter == null)
-            {
-                presenter = CreateDetailsView(thing, data, parentRect).GetComponent<ICPresenter>();
-                presenter.gameObject.SetActive(true);
-            }
+                presenter = CreateDetailsView(thing, parentRect).GetComponent<ICPresenter>();
 
             presenter.Present(data);
             return presenter.gameObject;
@@ -94,8 +93,9 @@ namespace cynofield.mods.ui.things
                 var thingc = thing as CircuitHousing;
                 if (thingc == null)
                     return null;
-                var thingId = Utils.GetId(thing);
                 var chip = thingc._ProgrammableChipSlot.Occupant as ProgrammableChip;
+                var thingId = Utils.GetId(thing);
+                //Log.Debug(() => $"thingId={thingId}");
                 var now = Time.time;
                 var data = Get(thingId);
                 data.name.Add(thingc.DisplayName, now);
@@ -114,8 +114,7 @@ namespace cynofield.mods.ui.things
         }
 
         public class ICPresenter : PresenterBase<ICDataModel.RecordView>
-        {
-        }
+        { }
 
         public string Describe(Thing thing)
         {
@@ -138,8 +137,7 @@ $@"{obj.DisplayName}
             }
         }
 
-        private GameObject CreateDetailsView(Thing thing,
-            ICDataModel.RecordView data, RectTransform parent)
+        private GameObject CreateDetailsView(Thing thing, RectTransform parent)
         {
             var layout = Utils.CreateGameObject<VerticalLayoutGroup>(parent);
             var presenter = layout.gameObject.AddComponent<ICPresenter>();
@@ -158,123 +156,64 @@ $@"{obj.DisplayName}
             fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
             {
-                var view = Text1(layout.gameObject, thing.DisplayName);
-                presenter.AddBinding(new PresenterBindingBase<ICDataModel.RecordView>((d) =>
-                {
-                    view.value.text = d.name.Current;
-                }));
+                var view = lf.Text1(layout.gameObject, thing.DisplayName);
+                presenter.AddBinding((d) => view.value.text = d.name.Current);
             }
             {
                 var view = NameValuePair2(layout.gameObject, "<color=green>db</color>", "0000");
-                presenter.AddBinding(new PresenterBindingBase<ICDataModel.RecordView>((d) =>
+                presenter.AddBinding((d) =>
                 {
                     var v = d.db.Current;
                     view.value.text = skin.MathDisplay(v);
                     var lastChangeAge = d.db.ChangeAge();
                     var alpha = (10 - Mathf.Clamp(lastChangeAge, 0, 10)) / 10f;
                     view.valueBkgd.color = new Color(0, 0.5f, 0, alpha);
-                }));
+                });
             }
             {
                 var view = Text2(layout.gameObject, "NO CHIP", Color.red, visible: false);
-                presenter.AddBinding(new PresenterBindingBase<ICDataModel.RecordView>((d) =>
-                {
-                    view.visiblility.SetVisible(!d.hasChip.Current);
-                }));
+                presenter.AddBinding((d) => view.visiblility.SetVisible(!d.hasChip.Current));
             }
 
-            if (data.hasChip.Current)
+            for (var i = 0; i < 8; i++)
             {
-                for (var i = 0; i < 8; i++)
-                {
-                    var n = i * 2;
-                    var m = n + 1;
+                var n = i * 2;
+                var m = n + 1;
 
-                    var hl = Utils.CreateGameObject<HorizontalLayoutGroup>(layout.gameObject);
-                    hl.padding = new RectOffset(1, 1, 1, 1);
-                    hl.spacing = 20;
-                    hl.childAlignment = TextAnchor.UpperLeft;
-                    hl.childControlWidth = false;
-                    hl.childForceExpandWidth = false;
-                    hl.childScaleWidth = false;
-                    hl.childControlHeight = true;
-                    hl.childForceExpandHeight = true;
-                    hl.childScaleHeight = false;
-                    var hlfitter = hl.gameObject.AddComponent<ContentSizeFitter>();
-                    hlfitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
-                    hlfitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+                var hl = Utils.CreateGameObject<HorizontalLayoutGroup>(layout.gameObject);
+                hl.padding = new RectOffset(1, 1, 1, 1);
+                hl.spacing = 20;
+                hl.childAlignment = TextAnchor.UpperLeft;
+                hl.childControlWidth = false;
+                hl.childForceExpandWidth = false;
+                hl.childScaleWidth = false;
+                hl.childControlHeight = true;
+                hl.childForceExpandHeight = true;
+                hl.childScaleHeight = false;
+                var hlfitter = hl.gameObject.AddComponent<ContentSizeFitter>();
+                hlfitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+                hlfitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
-                    var view1 = NameValuePair2(hl.gameObject, $"r{n}", "0000", visible: false);
-                    presenter.AddBinding(new PresenterBindingBase<ICDataModel.RecordView>((d) =>
-                    {
-                        view1.visiblility.SetVisible(d.hasChip.Current);
-                        var regData = d.r[n];
-                        var v = regData.Current;
-                        view1.value.text = skin.MathDisplay(v);
-                        var lastChangeAge = regData.ChangeAge();
-                        var alpha = (10 - Mathf.Clamp(lastChangeAge, 0, 10)) / 10f;
-                        view1.valueBkgd.color = new Color(0, 0.5f, 0, alpha);
-                    }));
-
-                    var view2 = NameValuePair2(hl.gameObject, $"r{m}", "0000", visible: false);
-                    presenter.AddBinding(new PresenterBindingBase<ICDataModel.RecordView>((d) =>
-                    {
-                        view2.visiblility.SetVisible(d.hasChip.Current);
-                        var regData = d.r[m];
-                        var v = regData.Current;
-                        view2.value.text = skin.MathDisplay(v);
-                        var lastChangeAge = regData.ChangeAge();
-                        var alpha = (10 - Mathf.Clamp(lastChangeAge, 0, 10)) / 10f;
-                        view2.valueBkgd.color = new Color(0, 0.5f, 0, alpha);
-                    }));
-                }
+                CreateForRegister(presenter, hl.gameObject, n);
+                CreateForRegister(presenter, hl.gameObject, m);
             }
 
             return layout.gameObject;
         }
 
-        public interface IView { }
-
-        public class NameValuePairView : ValueView
+        private void CreateForRegister(ICPresenter presenter, GameObject parent, int registerNumber)
         {
-            public TextMeshProUGUI name;
-
-            public NameValuePairView(LayoutGroup layout, TextMeshProUGUI name, ValueView value) : base(value)
+            var view = NameValuePair2(parent, $"r{registerNumber}", "0000", visible: false);
+            presenter.AddBinding((d) =>
             {
-                this.name = name;
-                this.layout = layout;
-                if (layout != null)
-                {
-                    layout.TryGetComponent<HiddenPoolComponent>(out HiddenPoolComponent hpool);
-                    this.visiblility = hpool;
-                }
-            }
-        }
-
-        public class ValueView : IView
-        {
-            public LayoutGroup layout;
-            public HiddenPoolComponent visiblility;
-            public TextMeshProUGUI value;
-            public RawImage valueBkgd;
-            public ValueView(ValueView prototype)
-            {
-                this.layout = prototype.layout;
-                this.visiblility = prototype.visiblility;
-                this.value = prototype.value;
-                this.valueBkgd = prototype.valueBkgd;
-            }
-            public ValueView(LayoutGroup layout, TextMeshProUGUI value, RawImage valueBkgd)
-            {
-                this.layout = layout;
-                if (layout != null)
-                {
-                    layout.TryGetComponent(out HiddenPoolComponent hpool);
-                    this.visiblility = hpool;
-                }
-                this.value = value;
-                this.valueBkgd = valueBkgd;
-            }
+                view.visiblility.SetVisible(d.hasChip.Current);
+                var regData = d.r[registerNumber];
+                var v = regData.Current;
+                view.value.text = skin.MathDisplay(v);
+                var lastChangeAge = regData.ChangeAge();
+                var alpha = (10 - Mathf.Clamp(lastChangeAge, 0, 10)) / 10f;
+                view.valueBkgd.color = new Color(0, 0.5f, 0, alpha);
+            });
         }
 
         private NameValuePairView NameValuePair2(GameObject parent, string name, string value,
@@ -300,27 +239,6 @@ $@"{obj.DisplayName}
             var valueView = Text2(layout.gameObject, value, bkgd: valueBkgd, width: 80);
 
             return new NameValuePairView(layout, name: nameView.value, value: valueView);
-        }
-
-        private ValueView Text1(GameObject parent, string text, int width = 0)
-        {
-            var tmp = Utils.CreateGameObject<TextMeshProUGUI>(parent);
-            tmp.rectTransform.sizeDelta = new Vector2(width, 0);
-            tmp.alignment = TextAlignmentOptions.TopLeft;
-            tmp.margin = new Vector4(0f, 0f, 0f, 0f);
-            tmp.richText = true;
-            tmp.overflowMode = TextOverflowModes.Truncate;
-            tmp.enableWordWrapping = false;
-            skin.skin2d.MainFont(tmp);
-            tmp.color = new Color(1f, 1f, 1f, 1f);
-            tmp.text = text;
-            var nameFitter = tmp.gameObject.AddComponent<ContentSizeFitter>();
-            if (width <= 0)
-                nameFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
-            else
-                nameFitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
-            nameFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-            return new ValueView(null, tmp, null);
         }
 
         private ValueView Text2(GameObject parent, string text,
@@ -350,7 +268,7 @@ $@"{obj.DisplayName}
             var hpool = layout.gameObject.AddComponent<HiddenPoolComponent>();
             hpool.SetVisible(visible);
 
-            var tmp = Text1(layout.gameObject, text, width);
+            var tmp = lf.Text1(layout.gameObject, text, width);
             RawImage img = null;
             if (bkgd != null)
             {
