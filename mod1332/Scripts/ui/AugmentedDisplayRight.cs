@@ -23,11 +23,10 @@ namespace cynofield.mods.ui
 
         private Component rootComponent;
         private RectTransform rootRect;
+        private VerticalLayoutGroup detailsLayout;
         private ThingsUi thingsUi;
         private BaseSkin skin;
         private Fonts2d fonts2d;
-        TextMeshProUGUI text1;
-        TextMeshProUGUI text2;
         private void Init(VerticalLayoutGroup root, ThingsUi thingsUi, BaseSkin skin, Fonts2d fonts2d)
         {
             this.rootComponent = root;
@@ -35,6 +34,18 @@ namespace cynofield.mods.ui
             this.thingsUi = thingsUi;
             this.skin = skin;
             this.fonts2d = fonts2d;
+
+            detailsLayout = Utils.CreateGameObject<VerticalLayoutGroup>();
+            detailsLayout.padding = new RectOffset(0, 0, 0, 0);
+            detailsLayout.spacing = 0;
+            detailsLayout.childAlignment = TextAnchor.UpperLeft;
+            detailsLayout.childControlWidth = false;
+            detailsLayout.childForceExpandWidth = false;
+            detailsLayout.childScaleWidth = false;
+            detailsLayout.childControlHeight = false;
+            detailsLayout.childForceExpandHeight = false;
+            detailsLayout.childScaleHeight = false;
+
         }
 
         public void Display(Thing thing)
@@ -102,7 +113,7 @@ namespace cynofield.mods.ui
                 objectsPool.TryGetValue(maybeCache.name, out GameObject oldValue);
                 if (oldValue != null && oldValue != maybeCache)
                 {
-                    //Log.Debug(() => $"replacing cached {oldValue.name} with {maybeCache.name} {maybeCache}");
+                    Log.Warn(() => $"replacing cached {oldValue.name} with {maybeCache.name} {maybeCache}");
                     Utils.Destroy(oldValue);
                 }
 

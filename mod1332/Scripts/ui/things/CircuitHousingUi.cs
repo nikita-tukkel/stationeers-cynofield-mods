@@ -26,6 +26,29 @@ namespace cynofield.mods.ui.things
             this.skin = skin;
         }
 
+        public GameObject RenderDetails(
+            Thing thing,
+            RectTransform parentRect,
+            GameObject poolreuse)
+        {
+            var data = icdata.Snapshot(thing);
+            if (data == null)
+                return null;
+
+            ICPresenter presenter = null;
+            if (poolreuse != null)
+                poolreuse.TryGetComponent(out presenter);
+
+            if (presenter == null)
+            {
+                presenter = CreateDetailsView(thing, data, parentRect).GetComponent<ICPresenter>();
+                presenter.gameObject.SetActive(true);
+            }
+
+            presenter.Present(data);
+            return presenter.gameObject;
+        }
+
         public class ICDataModel
         {
             private readonly TimeSeriesDb db = new TimeSeriesDb();
@@ -34,6 +57,7 @@ namespace cynofield.mods.ui.things
             public class RecordView
             {
 #pragma warning disable IDE1006
+                public readonly TimeSeriesBuffer<string> name;
                 public readonly TimeSeriesBuffer<double> db;
                 public readonly TimeSeriesBuffer<double> ra;
                 public readonly TimeSeriesBuffer<double> sp;
@@ -45,6 +69,7 @@ namespace cynofield.mods.ui.things
                     var resolutionSeconds = 0.5f;
                     var historyDepthSeconds = 120;
                     var bufferSize = Mathf.RoundToInt(historyDepthSeconds / resolutionSeconds);
+                    name = tsr.Add("name", new TimeSeriesBuffer<string>(new string[2], 1));
                     db = tsr.Add("db", new TimeSeriesBuffer<double>(new double[bufferSize], resolutionSeconds));
                     ra = tsr.Add("ra", new TimeSeriesBuffer<double>(new double[bufferSize], resolutionSeconds));
                     sp = tsr.Add("sp", new TimeSeriesBuffer<double>(new double[bufferSize], resolutionSeconds));
@@ -73,6 +98,7 @@ namespace cynofield.mods.ui.things
                 var chip = thingc._ProgrammableChipSlot.Occupant as ProgrammableChip;
                 var now = Time.time;
                 var data = Get(thingId);
+                data.name.Add(thingc.DisplayName, now);
                 data.db.Add(thingc.Setting, now);
                 data.hasChip.Add(chip != null, now);
                 if (chip != null)
@@ -112,25 +138,6 @@ $@"{obj.DisplayName}
             }
         }
 
-        public GameObject RenderDetails(
-            Thing thing,
-            RectTransform parentRect,
-            GameObject poolreuse)
-        {
-            // don't use cached object for now... :-(
-
-            var data = icdata.Snapshot(thing);
-            if (data == null)
-                return null;
-            GameObject view = CreateDetailsView(thing, data, parentRect);
-
-            var presenter = view.GetComponent<ICPresenter>();
-            presenter.gameObject.SetActive(true);
-            presenter.Present(data);
-
-            return view;
-        }
-
         private GameObject CreateDetailsView(Thing thing,
             ICDataModel.RecordView data, RectTransform parent)
         {
@@ -150,7 +157,13 @@ $@"{obj.DisplayName}
             fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
             fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
-            Text1(layout.gameObject, thing.DisplayName);
+            {
+                var view = Text1(layout.gameObject, thing.DisplayName);
+                presenter.AddBinding(new PresenterBindingBase<ICDataModel.RecordView>((d) =>
+                {
+                    view.value.text = d.name.Current;
+                }));
+            }
             {
                 var view = NameValuePair2(layout.gameObject, "<color=green>db</color>", "0000");
                 presenter.AddBinding(new PresenterBindingBase<ICDataModel.RecordView>((d) =>
@@ -256,7 +269,7 @@ $@"{obj.DisplayName}
                 this.layout = layout;
                 if (layout != null)
                 {
-                    layout.TryGetComponent<HiddenPoolComponent>(out HiddenPoolComponent hpool);
+                    layout.TryGetComponent(out HiddenPoolComponent hpool);
                     this.visiblility = hpool;
                 }
                 this.value = value;
@@ -289,7 +302,7 @@ $@"{obj.DisplayName}
             return new NameValuePairView(layout, name: nameView.value, value: valueView);
         }
 
-        private TextMeshProUGUI Text1(GameObject parent, string text, int width = 0)
+        private ValueView Text1(GameObject parent, string text, int width = 0)
         {
             var tmp = Utils.CreateGameObject<TextMeshProUGUI>(parent);
             tmp.rectTransform.sizeDelta = new Vector2(width, 0);
@@ -307,7 +320,7 @@ $@"{obj.DisplayName}
             else
                 nameFitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
             nameFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-            return tmp;
+            return new ValueView(null, tmp, null);
         }
 
         private ValueView Text2(GameObject parent, string text,
@@ -345,7 +358,7 @@ $@"{obj.DisplayName}
                 img.rectTransform.sizeDelta = size;
                 img.color = bkgd;
             }
-            return new ValueView(layout, tmp, img);
+            return new ValueView(layout, tmp.value, img);
         }
 
         internal static double[] GetRegisters(ProgrammableChip chip)
