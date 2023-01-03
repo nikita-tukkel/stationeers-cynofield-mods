@@ -1,10 +1,10 @@
+using System.Collections.Concurrent;
 using Assets.Scripts.Objects;
 using Assets.Scripts.Objects.Electrical;
 using cynofield.mods.ui.styles;
 using cynofield.mods.utils;
 using HarmonyLib;
 using System;
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -19,43 +19,70 @@ namespace cynofield.mods.ui.things
         Type IThingDescriber.SupportedType() { return typeof(CircuitHousing); }
 
         private readonly BaseSkin skin;
-        private readonly HistoricalData<ICHistoricalData> allhistory = new HistoricalData<ICHistoricalData>(10);
+        private readonly ICDataModel icdata = new ICDataModel();
         public CircuitHousingUi(BaseSkin skin)
         {
             this.skin = skin;
         }
 
-        public class ICHistoricalData
+        public class ICDataModel
         {
-            public double db;
-            public double[] registers;
+            private readonly TimeSeriesDb db = new TimeSeriesDb();
+            private readonly ConcurrentDictionary<string, RecordView> views = new ConcurrentDictionary<string, RecordView>();
 
-            public override bool Equals(object obj)
+            public class RecordView
             {
-                return obj is ICHistoricalData data &&
-                       db == data.db &&
-                       EqualityComparer<double[]>.Default.Equals(registers, data.registers);
+#pragma warning disable IDE1006
+                public readonly TimeSeriesBuffer<double> db;
+                public readonly TimeSeriesBuffer<double> ra;
+                public readonly TimeSeriesBuffer<double> sp;
+                public readonly TimeSeriesBuffer<bool> hasChip;
+                public readonly TimeSeriesBuffer<double>[] r;
+
+                public RecordView(TimeSeriesRecord tsr)
+                {
+                    var resolutionSeconds = 0.5f;
+                    var historyDepthSeconds = 120;
+                    var bufferSize = Mathf.RoundToInt(historyDepthSeconds / resolutionSeconds);
+                    db = tsr.Add("db", new TimeSeriesBuffer<double>(new double[bufferSize], resolutionSeconds));
+                    ra = tsr.Add("ra", new TimeSeriesBuffer<double>(new double[bufferSize], resolutionSeconds));
+                    sp = tsr.Add("sp", new TimeSeriesBuffer<double>(new double[bufferSize], resolutionSeconds));
+                    hasChip = tsr.Add("hasChip", new TimeSeriesBuffer<bool>(new bool[5], 1));
+                    r = new TimeSeriesBuffer<double>[16];
+                    for (var i = 0; i < 16; i++)
+                        r[i] = tsr.Add($"r{i}", new TimeSeriesBuffer<double>(new double[bufferSize], resolutionSeconds));
+                }
             }
 
-#pragma warning disable IDE0070
-            public override int GetHashCode()
+            public RecordView Get(string thingId)
             {
-                int hash = 17;
-                hash = hash * 31 + db.GetHashCode();
-                hash = hash * 31 + registers.GetHashCode();
-                return hash;
+                return views.GetOrAdd(thingId, (string _) =>
+                {
+                    var hr = db.Get(thingId, () => new TimeSeriesRecord());
+                    return new RecordView(hr);
+                });
             }
 
-            public override String ToString()
+            public RecordView Snapshot(Thing thing)
             {
-                if (registers == null || registers.Length < 15)
+                var thingc = thing as CircuitHousing;
+                if (thingc == null)
+                    return null;
+                var thingId = Utils.GetId(thing);
+                var chip = thingc._ProgrammableChipSlot.Occupant as ProgrammableChip;
+                var now = Time.time;
+                var data = Get(thingId);
+                data.db.Add(thingc.Setting, now);
+                data.hasChip.Add(chip != null, now);
+                if (chip != null)
                 {
-                    return $"{db}";
+                    var registers = GetRegisters(chip);
+                    for (var i = 0; i < 16; i++)
+                    {
+                        data.r[i].Add(registers[i], now);
+                    }
                 }
-                else
-                {
-                    return $"{db}/{registers[15]}/{registers[14]}";
-                }
+                return data;
             }
         }
 
@@ -86,34 +113,16 @@ $@"{obj.DisplayName}
             GameObject poolreuse)
         {
             // don't use cached object for now... :-(
-            //history
 
-            var thingc = thing as CircuitHousing;
-            var chip = thingc._ProgrammableChipSlot.Occupant as ProgrammableChip;
-            var data = ReadData(thingc, chip);
-
-            var history = allhistory.Get(Utils.GetId(thing));
-            var last = history.Last();
-            history.Add(data);
-            var changes = history.ChangesInLast(5);
-            var size = history.Size();
-            //Log.Debug(() => $"{Utils.GetId(thing)} changes {changes}, size {size}");
-
-            GameObject view = CreateDetailsView(thing, last, data, parentRect);
+            var data = icdata.Snapshot(thing);
+            if (data == null)
+                return null;
+            GameObject view = CreateDetailsView(thing, data, parentRect);
             return view;
         }
 
-        private ICHistoricalData ReadData(CircuitHousing thing, ProgrammableChip chip)
-        {
-            return new ICHistoricalData()
-            {
-                db = thing.Setting,
-                registers = chip == null ? null : ((double[])GetRegisters(chip).Clone())
-            };
-        }
-
         private GameObject CreateDetailsView(Thing thing,
-            ICHistoricalData prev, ICHistoricalData curr, RectTransform parent)
+            ICDataModel.RecordView data, RectTransform parent)
         {
             var layout = Utils.CreateGameObject<VerticalLayoutGroup>(parent);
             layout.padding = new RectOffset(1, 1, 1, 1);
@@ -130,12 +139,9 @@ $@"{obj.DisplayName}
             fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
             Text1(layout.gameObject, thing.DisplayName);
-            NameValuePair(layout.gameObject, $"<color=green>db</color>", $"{skin.MathDisplay(curr.db)}");
-            if (curr.registers == null)
-            {
-                Text2(layout.gameObject, "NO CHIP", Color.red);
-            }
-            else
+            //NameValuePair(layout.gameObject, $"<color=green>db</color>", $"{skin.MathDisplay(data.db.Current)}");
+            NameValuePair3(layout.gameObject, $"<color=green>db</color>", data.db);
+            if (data.hasChip.Current)
             {
                 for (var i = 0; i < 8; i++)
                 {
@@ -156,22 +162,31 @@ $@"{obj.DisplayName}
                     hlfitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
                     hlfitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
-                    double v, p;
-                    v = curr.registers[n];
-                    p = prev == null ? 0 : prev.registers[n];
-                    if (v == p)
-                        NameValuePair2(hl.gameObject, $"r{n}", $"{skin.MathDisplay(v)}");
-                    else
-                        NameValuePair2(hl.gameObject, $"r{n}", $"{skin.MathDisplay(v)}", valueBkgd: new Color(0, 1, 0, 0.2f));
-                    v = curr.registers[m];
-                    p = prev == null ? 0 : prev.registers[m];
-                    if (v == p)
-                        NameValuePair2(hl.gameObject, $"r{m}", $"{skin.MathDisplay(v)}");
-                    else
-                        NameValuePair2(hl.gameObject, $"r{m}", $"{skin.MathDisplay(v)}", valueBkgd: new Color(0, 1, 0, 0.2f));
+                    NameValuePair3(hl.gameObject, $"r{n}", data.r[n]);
+                    NameValuePair3(hl.gameObject, $"r{m}", data.r[m]);
                 }
             }
+            else
+            {
+                Text2(layout.gameObject, "NO CHIP", Color.red);
+            }
+
             return layout.gameObject;
+        }
+
+        private void NameValuePair3(GameObject parent, string name, TimeSeriesBuffer<double> value)
+        {
+            var v = value.Current;
+            var lastChangeAge = value.ChangeAge();
+            if (lastChangeAge >= 0 && lastChangeAge < 10)
+            {
+                var alpha = (10 - Mathf.Clamp(lastChangeAge, 0, 10)) / 10f;
+                NameValuePair2(parent, name, $"{skin.MathDisplay(v)}", valueBkgd: new Color(0, 0.5f, 0, alpha));
+            }
+            else
+            {
+                NameValuePair2(parent, name, $"{skin.MathDisplay(v)}");
+            }
         }
 
         private GameObject NameValuePair(GameObject parent, string name, string value)
@@ -269,10 +284,10 @@ $@"{obj.DisplayName}
                 img.rectTransform.sizeDelta = size;
                 img.color = bkgd;
             }
-            return tmp.gameObject;
+            return tmp;
         }
 
-        private double[] GetRegisters(ProgrammableChip chip)
+        internal static double[] GetRegisters(ProgrammableChip chip)
         {
             return Traverse.Create(chip).Field("_Registers").GetValue() as double[];
         }
