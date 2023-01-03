@@ -2,7 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using UnityEngine;
 
-namespace cynofield.mods.ui.things
+namespace cynofield.mods.ui.presenter
 {
     public class TimeSeriesDb
     {

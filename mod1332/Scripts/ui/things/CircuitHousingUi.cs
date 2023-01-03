@@ -1,10 +1,11 @@
-using System.Collections.Concurrent;
 using Assets.Scripts.Objects;
 using Assets.Scripts.Objects.Electrical;
+using cynofield.mods.ui.presenter;
 using cynofield.mods.ui.styles;
 using cynofield.mods.utils;
 using HarmonyLib;
 using System;
+using System.Collections.Concurrent;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -86,6 +87,10 @@ namespace cynofield.mods.ui.things
             }
         }
 
+        public class ICPresenter : PresenterBase<ICDataModel.RecordView>
+        {
+        }
+
         public string Describe(Thing thing)
         {
             var obj = thing as CircuitHousing;
@@ -118,6 +123,11 @@ $@"{obj.DisplayName}
             if (data == null)
                 return null;
             GameObject view = CreateDetailsView(thing, data, parentRect);
+
+            var presenter = view.GetComponent<ICPresenter>();
+            presenter.gameObject.SetActive(true);
+            presenter.Present(data);
+
             return view;
         }
 
@@ -125,6 +135,8 @@ $@"{obj.DisplayName}
             ICDataModel.RecordView data, RectTransform parent)
         {
             var layout = Utils.CreateGameObject<VerticalLayoutGroup>(parent);
+            var presenter = layout.gameObject.AddComponent<ICPresenter>();
+
             layout.padding = new RectOffset(1, 1, 1, 1);
             layout.spacing = 0;
             layout.childAlignment = TextAnchor.UpperLeft;
@@ -139,8 +151,25 @@ $@"{obj.DisplayName}
             fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
             Text1(layout.gameObject, thing.DisplayName);
-            //NameValuePair(layout.gameObject, $"<color=green>db</color>", $"{skin.MathDisplay(data.db.Current)}");
-            NameValuePair3(layout.gameObject, $"<color=green>db</color>", data.db);
+            {
+                var view = NameValuePair2(layout.gameObject, "<color=green>db</color>", "0000");
+                presenter.AddBinding(new PresenterBindingBase<ICDataModel.RecordView>((d) =>
+                {
+                    var v = d.db.Current;
+                    view.value.text = skin.MathDisplay(v);
+                    var lastChangeAge = d.db.ChangeAge();
+                    var alpha = (10 - Mathf.Clamp(lastChangeAge, 0, 10)) / 10f;
+                    view.valueBkgd.color = new Color(0, 0.5f, 0, alpha);
+                }));
+            }
+            {
+                var view = Text2(layout.gameObject, "NO CHIP", Color.red, visible: false);
+                presenter.AddBinding(new PresenterBindingBase<ICDataModel.RecordView>((d) =>
+                {
+                    view.visiblility.SetVisible(!d.hasChip.Current);
+                }));
+            }
+
             if (data.hasChip.Current)
             {
                 for (var i = 0; i < 8; i++)
@@ -162,34 +191,81 @@ $@"{obj.DisplayName}
                     hlfitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
                     hlfitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
-                    NameValuePair3(hl.gameObject, $"r{n}", data.r[n]);
-                    NameValuePair3(hl.gameObject, $"r{m}", data.r[m]);
+                    var view1 = NameValuePair2(hl.gameObject, $"r{n}", "0000", visible: false);
+                    presenter.AddBinding(new PresenterBindingBase<ICDataModel.RecordView>((d) =>
+                    {
+                        view1.visiblility.SetVisible(d.hasChip.Current);
+                        var regData = d.r[n];
+                        var v = regData.Current;
+                        view1.value.text = skin.MathDisplay(v);
+                        var lastChangeAge = regData.ChangeAge();
+                        var alpha = (10 - Mathf.Clamp(lastChangeAge, 0, 10)) / 10f;
+                        view1.valueBkgd.color = new Color(0, 0.5f, 0, alpha);
+                    }));
+
+                    var view2 = NameValuePair2(hl.gameObject, $"r{m}", "0000", visible: false);
+                    presenter.AddBinding(new PresenterBindingBase<ICDataModel.RecordView>((d) =>
+                    {
+                        view2.visiblility.SetVisible(d.hasChip.Current);
+                        var regData = d.r[m];
+                        var v = regData.Current;
+                        view2.value.text = skin.MathDisplay(v);
+                        var lastChangeAge = regData.ChangeAge();
+                        var alpha = (10 - Mathf.Clamp(lastChangeAge, 0, 10)) / 10f;
+                        view2.valueBkgd.color = new Color(0, 0.5f, 0, alpha);
+                    }));
                 }
             }
-            else
-            {
-                Text2(layout.gameObject, "NO CHIP", Color.red);
-            }
 
             return layout.gameObject;
         }
 
-        private void NameValuePair3(GameObject parent, string name, TimeSeriesBuffer<double> value)
+        public interface IView { }
+
+        public class NameValuePairView : ValueView
         {
-            var v = value.Current;
-            var lastChangeAge = value.ChangeAge();
-            if (lastChangeAge >= 0 && lastChangeAge < 10)
+            public TextMeshProUGUI name;
+
+            public NameValuePairView(LayoutGroup layout, TextMeshProUGUI name, ValueView value) : base(value)
             {
-                var alpha = (10 - Mathf.Clamp(lastChangeAge, 0, 10)) / 10f;
-                NameValuePair2(parent, name, $"{skin.MathDisplay(v)}", valueBkgd: new Color(0, 0.5f, 0, alpha));
-            }
-            else
-            {
-                NameValuePair2(parent, name, $"{skin.MathDisplay(v)}");
+                this.name = name;
+                this.layout = layout;
+                if (layout != null)
+                {
+                    layout.TryGetComponent<HiddenPoolComponent>(out HiddenPoolComponent hpool);
+                    this.visiblility = hpool;
+                }
             }
         }
 
-        private GameObject NameValuePair(GameObject parent, string name, string value)
+        public class ValueView : IView
+        {
+            public LayoutGroup layout;
+            public HiddenPoolComponent visiblility;
+            public TextMeshProUGUI value;
+            public RawImage valueBkgd;
+            public ValueView(ValueView prototype)
+            {
+                this.layout = prototype.layout;
+                this.visiblility = prototype.visiblility;
+                this.value = prototype.value;
+                this.valueBkgd = prototype.valueBkgd;
+            }
+            public ValueView(LayoutGroup layout, TextMeshProUGUI value, RawImage valueBkgd)
+            {
+                this.layout = layout;
+                if (layout != null)
+                {
+                    layout.TryGetComponent<HiddenPoolComponent>(out HiddenPoolComponent hpool);
+                    this.visiblility = hpool;
+                }
+                this.value = value;
+                this.valueBkgd = valueBkgd;
+            }
+        }
+
+        private NameValuePairView NameValuePair2(GameObject parent, string name, string value,
+            Color valueBkgd = default, bool visible = true)
         {
             var layout = Utils.CreateGameObject<HorizontalLayoutGroup>(parent);
             layout.padding = new RectOffset(1, 1, 1, 1);
@@ -204,36 +280,16 @@ $@"{obj.DisplayName}
             var fitter = layout.gameObject.AddComponent<ContentSizeFitter>();
             fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
             fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            var hpool = layout.gameObject.AddComponent<HiddenPoolComponent>();
+            hpool.SetVisible(visible);
 
-            Text1(layout.gameObject, name, width: 25);
-            Text1(layout.gameObject, value, width: 80);
+            var nameView = Text2(layout.gameObject, name, width: 25);
+            var valueView = Text2(layout.gameObject, value, bkgd: valueBkgd, width: 80);
 
-            return layout.gameObject;
+            return new NameValuePairView(layout, name: nameView.value, value: valueView);
         }
 
-        private GameObject NameValuePair2(GameObject parent, string name, string value, Color valueBkgd = default)
-        {
-            var layout = Utils.CreateGameObject<HorizontalLayoutGroup>(parent);
-            layout.padding = new RectOffset(1, 1, 1, 1);
-            layout.spacing = 0;
-            layout.childAlignment = TextAnchor.UpperLeft;
-            layout.childControlWidth = false;
-            layout.childForceExpandWidth = false;
-            layout.childScaleWidth = false;
-            layout.childControlHeight = true;
-            layout.childForceExpandHeight = true;
-            layout.childScaleHeight = false;
-            var fitter = layout.gameObject.AddComponent<ContentSizeFitter>();
-            fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
-            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-
-            Text2(layout.gameObject, name, width: 25);
-            Text2(layout.gameObject, value, bkgd: valueBkgd, width: 80);
-
-            return layout.gameObject;
-        }
-
-        private GameObject Text1(GameObject parent, string text, int width = 0)
+        private TextMeshProUGUI Text1(GameObject parent, string text, int width = 0)
         {
             var tmp = Utils.CreateGameObject<TextMeshProUGUI>(parent);
             tmp.rectTransform.sizeDelta = new Vector2(width, 0);
@@ -251,10 +307,11 @@ $@"{obj.DisplayName}
             else
                 nameFitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
             nameFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-            return tmp.gameObject;
+            return tmp;
         }
 
-        private GameObject Text2(GameObject parent, string text, Color bkgd = default, int width = 0)
+        private ValueView Text2(GameObject parent, string text,
+            Color bkgd = default, int width = 0, bool visible = true)
         {
             var size = new Vector2(width, 0);
 
@@ -277,14 +334,18 @@ $@"{obj.DisplayName}
                 fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
             fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
+            var hpool = layout.gameObject.AddComponent<HiddenPoolComponent>();
+            hpool.SetVisible(visible);
+
             var tmp = Text1(layout.gameObject, text, width);
+            RawImage img = null;
             if (bkgd != null)
             {
-                var img = layout.gameObject.AddComponent<RawImage>();
+                img = layout.gameObject.AddComponent<RawImage>();
                 img.rectTransform.sizeDelta = size;
                 img.color = bkgd;
             }
-            return tmp;
+            return new ValueView(layout, tmp, img);
         }
 
         internal static double[] GetRegisters(ProgrammableChip chip)

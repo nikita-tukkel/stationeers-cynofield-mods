@@ -1,7 +1,7 @@
 using System;
 using Xunit;
 
-namespace cynofield.mods.ui.things
+namespace cynofield.mods.ui.presenter
 {
     public class TimeSeriesDbTest
     {

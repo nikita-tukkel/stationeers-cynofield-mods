@@ -52,6 +52,7 @@ namespace cynofield.mods
                 PlayerProvider playerProvider = new PlayerProvider();
                 //PlayerProvider.DebugInfo();
                 stateManager = new ArStateManager(playerProvider);
+                HiddenPool.Create();
                 uiManager = AugmentedUiManager.Create(playerProvider, skin, fonts2d);
                 stateManager.OnHide += OnHideHandler;
                 stateManager.OnShow += OnShowHandler;
@@ -67,6 +68,7 @@ namespace cynofield.mods
 
         public void Destroy()
         {
+            HiddenPool.Destroy();
             uiManager.Destroy();
             AssetsLoader.Destroy();
             Instance = null;

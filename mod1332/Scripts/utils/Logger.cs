@@ -41,10 +41,11 @@ namespace cynofield.mods.utils
         private readonly string typeName;
         private readonly LoggerConfig.LogLevel logLevel;
         private readonly bool useConsole;
+        private static readonly char[] separators = new char[] { '`', '+', '/' }; // delimeters between nested and parent class names
         public CLogger()
         {
             typeName = $"{GetType()}";
-            var index = typeName.LastIndexOf('+'); // '+' is a delimeter between nested and parent class names
+            var index = typeName.IndexOfAny(separators);
             if (index > 0) typeName = typeName.Substring(0, index);
             (logLevel, useConsole) = config.GetConfig(typeName);
         }
