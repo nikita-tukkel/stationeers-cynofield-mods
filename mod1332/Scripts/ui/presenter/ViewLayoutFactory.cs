@@ -26,12 +26,12 @@ namespace cynofield.mods.ui.presenter
             skin.skin2d.MainFont(tmp);
             tmp.color = new Color(1f, 1f, 1f, 1f);
             tmp.text = text;
-            var nameFitter = tmp.gameObject.AddComponent<ContentSizeFitter>();
+            var fitter = tmp.gameObject.AddComponent<ContentSizeFitter>();
             if (width <= 0)
-                nameFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+                fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
             else
-                nameFitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
-            nameFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+                fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
             return new ValueView(null, tmp, null);
         }
     }

@@ -1,10 +1,9 @@
-using System;
-using System.Collections.Generic;
-using Assets.Scripts;
+using System.Data;
 using Assets.Scripts.Objects;
 using cynofield.mods.ui.styles;
 using cynofield.mods.utils;
-using TMPro;
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -34,7 +33,8 @@ namespace cynofield.mods.ui
                 if (_colorSchemeId != value)
                 {
                     _colorSchemeId = value;
-                    colorScheme.SetColorScheme(GetCurrentColorScheme());
+                    if (colorScheme != null)
+                        colorScheme.SetColorScheme(GetCurrentColorScheme());
                 }
             }
         }
@@ -46,7 +46,7 @@ namespace cynofield.mods.ui
         private Canvas canvas;
         private VerticalLayoutGroup layout;
         private ColorSchemeComponent colorScheme;
-        private TextMeshProUGUI text;
+
         public string id;
         public Thing anchor;
 
@@ -80,21 +80,6 @@ namespace cynofield.mods.ui
                 bkgdBack.transform.Rotate(Vector3.up, 180);
             }
 
-            // https://docs.unity3d.com/Packages/com.unity.textmeshpro@4.0/manual/RichText.html
-            text = Utils.CreateGameObject<TextMeshProUGUI>(canvas);
-            //text.rectTransform.sizeDelta = size;
-            text.rectTransform.sizeDelta = Vector2.zero;
-            text.alignment = TextAlignmentOptions.TopLeft;
-            text.richText = true;
-            text.margin = new Vector4(0.05f, 0.05f, 0.05f, 0.05f);
-            text.overflowMode = TextOverflowModes.Truncate;
-            text.enableWordWrapping = true;
-
-            text.font = Localization.CurrentFont;
-            //0.08f for default font used by TextMeshProUGUI without font specified;
-            //0.06f when using Localization.CurrentFont
-            text.fontSize = 0.06f;
-
             //layout = canvas.gameObject.AddComponent<VerticalLayoutGroup>();
             layout = Utils.CreateGameObject<VerticalLayoutGroup>(canvas);
             //layout = bkgd.gameObject.AddComponent<VerticalLayoutGroup>();
@@ -126,7 +111,7 @@ namespace cynofield.mods.ui
                 ursa.SyncSizeIntoAnotherRect(bkgdBack.rectTransform);
 
                 // Pass color scheme information to children
-                var colorScheme = layout.gameObject.AddComponent<ColorSchemeComponent>();
+                colorScheme = layout.gameObject.AddComponent<ColorSchemeComponent>();
                 colorScheme.Add(bkgdFront);
                 colorScheme.Add(bkgdBack);
                 colorScheme.SetColorScheme(GetCurrentColorScheme());
@@ -276,6 +261,9 @@ namespace cynofield.mods.ui
                 return;
             // LoggerInYourRect.Debug(() => $"{gameObject} your rect is transformed to {myRect.sizeDelta}");
             // LoggerInYourRect.Debug(() => $"{Utils.PrintHierarchy(gameObject)}");
+
+            OnResize();
+
             foreach (var yourRect in controlledRects)
             {
                 yourRect.sizeDelta = myRect.sizeDelta;
@@ -283,5 +271,8 @@ namespace cynofield.mods.ui
 
             base.OnRectTransformDimensionsChange();
         }
+
+        public delegate void ResizeCallback();
+        public event ResizeCallback OnResize;
     }
 }

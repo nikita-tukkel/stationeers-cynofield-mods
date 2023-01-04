@@ -129,9 +129,17 @@ NO CHIP</color>";
             else
             {
                 var registers = GetRegisters(chip);
+                var registersStr = "";
+                for (int i = 0; i < registers.Length; i++)
+                {
+                    var v = registers[i];
+                    if (v != 0)
+                        registersStr += $" r{i}={skin.MathDisplay(v)}";
+                }
+
                 return
 $@"{obj.DisplayName}
-<color=green><b>db={skin.MathDisplay(obj.Setting)}</b> r15={registers[15]} r14={registers[14]}</color>
+<color=green><b>db={skin.MathDisplay(obj.Setting)}</b>{registersStr}</color>
 ";
             }
         }

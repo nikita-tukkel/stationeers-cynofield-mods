@@ -81,7 +81,6 @@ namespace cynofield.mods.ui
                 return;
 
             Utils.Show(gameObject);
-            LayoutRebuilder.ForceRebuildLayoutImmediate(parentRect); // Needed to process possible changes in text heights
         }
 
         public GameObject RenderDetailView(Thing thing, Component parent,
@@ -119,7 +118,17 @@ namespace cynofield.mods.ui
 
     interface IThingDescriber
     {
+        /// <summary>
+        /// What kind of `Thing`s are supported by this class. E.g., `CircuitHousing`.
+        /// </summary>
         Type SupportedType();
+
+        /// <summary>
+        /// This is a cheap alternative for creating a complex UI layouts with Render* methods, 
+        /// defined in the interfaces descendant to IThingDescriber. Just output a rich text you need.
+        /// 
+        /// This is a fallback method and it is not used when corresponding Render* method is available.
+        /// </summary>
         string Describe(Thing thing);
     }
 
