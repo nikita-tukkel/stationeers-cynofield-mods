@@ -175,12 +175,12 @@ namespace cynofield.mods
                     break;
                 case State.HIDDEN:
                     {
-                        OnHide();
+                        OnHide?.Invoke();
                     }
                     break;
                 case State.VISIBLE:
                     {
-                        OnShow();
+                        OnShow?.Invoke();
                     }
                     break;
             }

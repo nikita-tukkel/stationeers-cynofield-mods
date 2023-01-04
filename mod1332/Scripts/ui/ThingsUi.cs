@@ -28,11 +28,12 @@ namespace cynofield.mods.ui
             this.skin = skin;
             this.fonts2d = fonts2d;
             var lf = new ViewLayoutFactory(skin);
-            this.defaultArUi = new UiDefault(lf);
+            var lf3d = new ViewLayoutFactory3d(skin);
+            this.defaultArUi = new UiDefault(lf, lf3d);
 
             alluis.Add(new TransformerUi());
             alluis.Add(new CableUi());
-            alluis.Add(new CircuitHousingUi(lf, skin));
+            alluis.Add(new CircuitHousingUi(lf, lf3d, skin));
             foreach (var ui in alluis)
             {
                 uis.Add(ui.SupportedType(), ui);
@@ -69,7 +70,7 @@ namespace cynofield.mods.ui
             GameObject gameObject = null;
             if (ui is IThingAnnotationRenderer)
             {
-                // TODO more complex rendering
+                gameObject = (ui as IThingAnnotationRenderer).RenderAnnotation(thing, parentRect);
             }
             else if (ui is IThingDescriber)
             {

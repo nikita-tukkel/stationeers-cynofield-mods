@@ -251,6 +251,9 @@ namespace cynofield.mods.ui
 
         public void SyncSizeIntoAnotherRect(RectTransform otherRect)
         {
+            if (otherRect == null)
+                return;
+
             controlledRects.Add(otherRect);
         }
 
@@ -262,7 +265,7 @@ namespace cynofield.mods.ui
             // LoggerInYourRect.Debug(() => $"{gameObject} your rect is transformed to {myRect.sizeDelta}");
             // LoggerInYourRect.Debug(() => $"{Utils.PrintHierarchy(gameObject)}");
 
-            OnResize();
+            OnResize?.Invoke();
 
             foreach (var yourRect in controlledRects)
             {

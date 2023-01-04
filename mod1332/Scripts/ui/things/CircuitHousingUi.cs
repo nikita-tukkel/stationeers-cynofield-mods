@@ -1,3 +1,4 @@
+using Assets.Scripts;
 using Assets.Scripts.Objects;
 using Assets.Scripts.Objects.Electrical;
 using cynofield.mods.ui.presenter;
@@ -6,12 +7,13 @@ using cynofield.mods.utils;
 using HarmonyLib;
 using System;
 using System.Collections.Concurrent;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace cynofield.mods.ui.things
 {
-    class CircuitHousingUi : IThingDescriber, IThingDetailsRenderer
+    class CircuitHousingUi : IThingCompleteUi
     {
         private class Logger_ : CLogger { }
         private static readonly CLogger Log = new Logger_();
@@ -19,12 +21,32 @@ namespace cynofield.mods.ui.things
         public Type SupportedType() { return typeof(CircuitHousing); }
 
         private readonly ViewLayoutFactory lf;
+        private readonly ViewLayoutFactory3d lf3d;
         private readonly BaseSkin skin;
         private readonly ICDataModel icdata = new ICDataModel();
-        public CircuitHousingUi(ViewLayoutFactory lf, BaseSkin skin)
+        public CircuitHousingUi(ViewLayoutFactory lf, ViewLayoutFactory3d lf3d, BaseSkin skin)
         {
             this.lf = lf;
+            this.lf3d = lf3d;
             this.skin = skin;
+        }
+
+        public GameObject RenderAnnotation(Thing thing, RectTransform parentRect)
+        {
+            var data = icdata.Snapshot(thing);
+            if (data == null)
+                return null;
+
+            var presenter = parentRect.GetComponentInChildren<ICPresenter>();
+            if (presenter == null)
+            {
+                //Log.Debug(() => $"{Utils.GetId(thing)} creating new annotation view");
+                presenter = CreateAnnotationView(thing, parentRect).GetComponent<ICPresenter>();
+                LayoutRebuilder.ForceRebuildLayoutImmediate(parentRect); // Needed to process possible changes in text heights
+            }
+
+            presenter.Present(data);
+            return presenter.gameObject;
         }
 
         public GameObject RenderDetails(
@@ -144,6 +166,99 @@ $@"{obj.DisplayName}
             }
         }
 
+        private GameObject CreateAnnotationView(Thing thing, RectTransform parent)
+        {
+            parent.gameObject.TryGetComponent(out ColorSchemeComponent colorScheme);
+            var layout = lf3d.RootLayout(parent.gameObject, debug: false);
+            var presenter = layout.gameObject.AddComponent<ICPresenter>();
+
+            // When want to change parent resize behaviour:
+            var parentFitter = parent.gameObject.GetComponent<ContentSizeFitter>();
+            parentFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+            //parentFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            {
+                var view = lf3d.Text1(layout.gameObject, thing.DisplayName);
+                presenter.AddBinding((d) => view.value.text = d.name.Current);
+                view.value.margin = new Vector4(0.02f, 0.01f, 0.01f, 0);
+
+                if (colorScheme != null)
+                    colorScheme.Add(view.value);
+            }
+            {
+                var view = lf3d.NameValuePair(layout.gameObject, "<color=green>db</color>", "0000");
+                presenter.AddBinding((d) =>
+                {
+                    var v = d.db.Current;
+                    view.value.text = skin.MathDisplay(v);
+                    var lastChangeAge = d.db.ChangeAge();
+                    var alpha = (10 - Mathf.Clamp(lastChangeAge, 0, 10)) / 20f;
+                    view.valueBkgd.color = new Color(0.1f, 0.5f, 0.1f, alpha);
+                });
+
+                if (colorScheme != null)
+                    colorScheme.Add(view.value);
+
+                view.name.margin = new Vector4(0.02f, 0.01f, 0, 0);
+                view.name.color = new Color(0, 0.6f, 0, 0.2f);
+                view.name.fontStyle = FontStyles.UpperCase | FontStyles.Bold;
+                view.value.margin = new Vector4(0.02f, 0.01f, 0.02f, 0);
+            }
+
+            for (var i = 0; i < 8; i++)
+            {
+                var n = i * 2;
+                var m = n + 1;
+
+                var hl = Utils.CreateGameObject<HorizontalLayoutGroup>(layout.gameObject);
+                hl.padding = new RectOffset(0, 0, 0, 0);
+                hl.spacing = 0.01f;
+                hl.childAlignment = TextAnchor.UpperLeft;
+                hl.childControlWidth = false;
+                hl.childControlHeight = true;
+                hl.childForceExpandWidth = false;
+                hl.childForceExpandHeight = true;
+                hl.childScaleWidth = false;
+                hl.childScaleHeight = false;
+                var hlfitter = hl.gameObject.AddComponent<ContentSizeFitter>();
+                hlfitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+                hlfitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+                CreateForRegister3d(presenter, hl.gameObject, colorScheme, n);
+                CreateForRegister3d(presenter, hl.gameObject, colorScheme, m);
+            }
+
+            LayoutRebuilder.ForceRebuildLayoutImmediate(parent); // Needed to process possible changes in text heights
+            return layout.gameObject;
+        }
+
+        private void CreateForRegister3d(ICPresenter presenter, GameObject parent,
+         ColorSchemeComponent colorScheme, int registerNumber)
+        {
+            var view = lf3d.NameValuePair(parent, $"r{registerNumber}", "0000", visible: false);
+            presenter.AddBinding((d) =>
+            {
+                view.visiblility.SetVisible(d.hasChip.Current);
+                var regData = d.r[registerNumber];
+                var v = regData.Current;
+                view.value.text = skin.MathDisplay(v);
+                var lastChangeAge = regData.ChangeAge();
+                var alpha = (10 - Mathf.Clamp(lastChangeAge, 0, 10)) / 40f;
+                view.valueBkgd.color = new Color(0.1f, 0.5f, 0.1f, alpha);
+            });
+
+            if (colorScheme != null)
+            {
+                colorScheme.Add(view.name);
+                colorScheme.Add(view.value);
+            }
+
+            view.name.margin = new Vector4(0.02f, 0.01f, 0, 0.01f);
+            view.name.fontStyle = FontStyles.UpperCase | FontStyles.Bold;
+            view.value.margin = new Vector4(0.02f, 0.01f, 0.02f, 0.01f);
+            view.value.fontStyle = FontStyles.Bold;
+        }
+
         private GameObject CreateDetailsView(Thing thing, RectTransform parent)
         {
             var layout = Utils.CreateGameObject<VerticalLayoutGroup>(parent);
@@ -192,10 +307,10 @@ $@"{obj.DisplayName}
                 hl.spacing = 20;
                 hl.childAlignment = TextAnchor.UpperLeft;
                 hl.childControlWidth = false;
-                hl.childForceExpandWidth = false;
-                hl.childScaleWidth = false;
                 hl.childControlHeight = true;
+                hl.childForceExpandWidth = false;
                 hl.childForceExpandHeight = true;
+                hl.childScaleWidth = false;
                 hl.childScaleHeight = false;
                 var hlfitter = hl.gameObject.AddComponent<ContentSizeFitter>();
                 hlfitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;

@@ -17,10 +17,12 @@ namespace cynofield.mods.ui.things
         private static readonly CLogger Log = new Logger_();
 
         private readonly ViewLayoutFactory lf;
+        private readonly ViewLayoutFactory3d lf3d;
         private readonly DefaultDataModel dataModel = new DefaultDataModel();
-        public UiDefault(ViewLayoutFactory lf)
+        public UiDefault(ViewLayoutFactory lf, ViewLayoutFactory3d lf3d)
         {
             this.lf = lf;
+            this.lf3d = lf3d;
         }
 
         public Type SupportedType() { return null; }
@@ -46,7 +48,7 @@ please <color=red><b>don't</b></color> play with me";
             var presenter = parentRect.GetComponentInChildren<DefaultPresenter>();
             if (presenter == null)
             {
-                Log.Debug(() => $"{Utils.GetId(thing)} creating new");
+                //Log.Debug(() => $"{Utils.GetId(thing)} creating new annotation view");
                 presenter = CreateAnnotationView(thing, parentRect).GetComponent<DefaultPresenter>();
             }
 
@@ -134,60 +136,26 @@ please <color=red><b>don't</b></color> play with me";
         private GameObject CreateAnnotationView(Thing thing, RectTransform parent)
         {
             parent.gameObject.TryGetComponent(out ColorSchemeComponent colorScheme);
-            var layout = Utils.CreateGameObject<VerticalLayoutGroup>(parent);
+            var layout = lf3d.RootLayout(parent.gameObject);
             var presenter = layout.gameObject.AddComponent<DefaultPresenter>();
-            {
-                var rect = layout.GetComponent<RectTransform>();
-                rect.sizeDelta = parent.sizeDelta;
-
-                layout.childAlignment = TextAnchor.UpperLeft;
-                layout.childControlWidth = true;
-                layout.childControlHeight = true;
-                layout.childForceExpandWidth = false;
-                layout.childForceExpandHeight = false;
-                layout.childScaleWidth = false;
-                layout.childScaleHeight = false;
-
-                // var fitter = layout.gameObject.AddComponent<ContentSizeFitter>();
-                // fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
-                // fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-
-                // var bkgdDebug = layout.gameObject.AddComponent<RawImage>();
-                // bkgdDebug.color = new Color(0, 1, 0, 0.1f);
-            }
 
             // When want to change parent resize behaviour:
             // var parentFitter = parentRect.gameObject.GetComponent<ContentSizeFitter>();
             // parentFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
             {
-                var text = Utils.CreateGameObject<TextMeshProUGUI>(layout);
-                presenter.AddBinding((d) => text.text = d.name.Current);
-                text.rectTransform.sizeDelta = Vector2.zero;
-                text.alignment = TextAlignmentOptions.TopLeft;
-                text.richText = true;
-                text.margin = new Vector4(0.05f, 0.05f, 0.05f, 0.05f);
-                text.overflowMode = TextOverflowModes.Truncate;
-                text.enableWordWrapping = true;
-
-                text.font = Localization.CurrentFont;
-                text.fontSize = 0.06f;
-                text.text = thing.DisplayName;
+                var view = lf3d.Text1(layout.gameObject, thing.DisplayName);
+                presenter.AddBinding((d) => view.value.text = d.name.Current);
 
                 if (colorScheme != null)
-                    colorScheme.Add(text);
+                    colorScheme.Add(view.value);
 
-                var fitter = text.gameObject.AddComponent<ContentSizeFitter>();
-                // HF=Unconstrained will make text fit parent width and perform word wrapping
-                fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
-                fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-
-                // var ursa = text.gameObject.AddComponent<UnityRectSoundsAnal>();
+                // var ursa = view.value.gameObject.AddComponent<UnityRectSoundsAnal>();
                 // ursa.OnResize += delegate
                 // {
                 //     Log.Debug(() => $"0 {Utils.GetId(thing)} {parent.sizeDelta}");
                 //     Log.Debug(() => $"1 {Utils.GetId(thing)} {layout.GetComponent<RectTransform>().sizeDelta}");
-                //     Log.Debug(() => $"2 {Utils.GetId(thing)} {text.rectTransform.sizeDelta}");
+                //     Log.Debug(() => $"2 {Utils.GetId(thing)} {view.value.rectTransform.sizeDelta}");
                 // };
             }
 
