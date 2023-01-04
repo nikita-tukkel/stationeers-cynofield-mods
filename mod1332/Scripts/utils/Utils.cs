@@ -149,6 +149,13 @@ namespace cynofield.mods.utils
     {
         public static string PrintHierarchy(GameObject root, string ident = "")
         {
+            string result = ident + "---" + root + "\n";
+            result += PrintHierarchyInternal(root, ident);
+            return result;
+        }
+
+        private static string PrintHierarchyInternal(GameObject root, string ident = "")
+        {
             string result = "";
             result += PrintComponents(root, ident);
             for (var i = 0; i < root.transform.childCount; i++)
@@ -156,7 +163,7 @@ namespace cynofield.mods.utils
                 var child = root.transform.GetChild(i).gameObject;
                 var childIdent = ident + "\t";
                 result += childIdent + "---" + child + "\n";
-                result += PrintHierarchy(child, childIdent);
+                result += PrintHierarchyInternal(child, childIdent);
             }
             return result;
         }
@@ -177,6 +184,7 @@ namespace cynofield.mods.utils
         public static T CreateGameObject<T>(Transform parent) where T : Component
         {
             var result = new GameObject().AddComponent<T>();
+            result.name = $"{typeof(T)}";
             result.gameObject.SetActive(false);
             if (parent != null)
                 result.transform.SetParent(parent, false);

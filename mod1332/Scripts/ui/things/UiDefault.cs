@@ -1,8 +1,10 @@
+using Assets.Scripts;
 using Assets.Scripts.Objects;
 using cynofield.mods.ui.presenter;
 using cynofield.mods.utils;
 using System;
 using System.Collections.Concurrent;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -28,10 +30,42 @@ please <color=red><b>don't</b></color> play with me";
 
         public GameObject RenderAnnotation(
             Thing thing,
+            RectTransform parentRect) => RenderAnnotation(thing, parentRect, null);
+
+        public GameObject RenderAnnotation(
+            Thing thing,
             RectTransform parentRect,
-            GameObject poolreuse)
+            string description)
         {
-            throw new NotImplementedException();
+            var presenter = parentRect.GetComponentInChildren<DefaultPresenter>();
+
+            if (presenter == null)
+            {
+                var text = Utils.CreateGameObject<TextMeshProUGUI>(parentRect);
+                //var text = Utils.CreateGameObject<TextMeshProUGUI>();
+                presenter = text.gameObject.AddComponent<DefaultPresenter>();
+                text.rectTransform.sizeDelta = Vector2.zero;
+                text.alignment = TextAlignmentOptions.TopLeft;
+                text.richText = true;
+                text.margin = new Vector4(0.05f, 0.05f, 0.05f, 0.05f);
+                text.overflowMode = TextOverflowModes.Truncate;
+                text.enableWordWrapping = true;
+
+                text.font = Localization.CurrentFont;
+                text.fontSize = 0.06f;
+                text.text = description;
+
+                var fitter = text.gameObject.AddComponent<ContentSizeFitter>();
+                // HF=Unconstrained will make text fit parent width and perform word wrapping
+                fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained; 
+                fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+                // When want to change parent resize behaviour:
+                // var parentFitter = parentRect.gameObject.GetComponent<ContentSizeFitter>();
+                // parentFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            }
+
+            return presenter.gameObject;
         }
 
         public GameObject RenderDetails(

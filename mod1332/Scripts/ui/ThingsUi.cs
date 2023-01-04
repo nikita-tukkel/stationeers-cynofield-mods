@@ -9,6 +9,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace cynofield.mods.ui
 {
@@ -55,11 +56,17 @@ namespace cynofield.mods.ui
             return ui;
         }
 
-        public void RenderArAnnotation(Thing thing, Canvas canvas, TextMeshProUGUI textMesh)
+        public void RenderArAnnotation(Thing thing, Component parent)
         {
-            // Log.Debug(() => $"RenderArAnnotation thing={thing}, canvas={canvas}, text={textMesh}");
+            if (thing == null || parent == null || parent.gameObject == null)
+                return;
+            if (!parent.gameObject.TryGetComponent<RectTransform>(out var parentRect))
+                return;
+
+            // Log.Debug(() => $"RenderArAnnotation thing={thing}, parent={parent}");
             var ui = GetUi(thing);
             // Log.Debug(() => $"RenderArAnnotation ui={ui}");
+            GameObject gameObject = null;
             if (ui is IThingAnnotationRenderer)
             {
                 // TODO more complex rendering
@@ -67,8 +74,14 @@ namespace cynofield.mods.ui
             else if (ui is IThingDescriber)
             {
                 var desc = ui.Describe(thing);
-                textMesh.text = desc;
+                gameObject = defaultArUi.RenderAnnotation(thing, parentRect, desc);
             }
+
+            if (gameObject == null)
+                return;
+
+            Utils.Show(gameObject);
+            LayoutRebuilder.ForceRebuildLayoutImmediate(parentRect); // Needed to process possible changes in text heights
         }
 
         public GameObject RenderDetailView(Thing thing, Component parent,
@@ -112,7 +125,7 @@ namespace cynofield.mods.ui
 
     interface IThingAnnotationRenderer : IThingDescriber
     {
-        GameObject RenderAnnotation(Thing thing, RectTransform parentRect, GameObject poolreuse);
+        GameObject RenderAnnotation(Thing thing, RectTransform parentRect);
     }
 
     interface IThingDetailsRenderer : IThingDescriber

@@ -1,8 +1,10 @@
+using System.Collections.Generic;
 using Assets.Scripts;
 using Assets.Scripts.Objects;
 using cynofield.mods.utils;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace cynofield.mods.ui
@@ -36,6 +38,8 @@ namespace cynofield.mods.ui
         }
 
         private Canvas canvas;
+        private VerticalLayoutGroup layoutOuter;
+        private VerticalLayoutGroup layout;
         private RawImage bkgd;
         private RawImage bkgd2;
         private TextMeshProUGUI text;
@@ -52,22 +56,25 @@ namespace cynofield.mods.ui
             this._colorSchemeId = _colorSchemeId;
 
             //Log.Info(() => "started");
-            canvas = gameObject.AddComponent<Canvas>();
+            //canvas = gameObject.AddComponent<Canvas>();
+            canvas = Utils.CreateGameObject<Canvas>(gameObject);
             canvas.renderMode = RenderMode.WorldSpace;
-            //canvas.pixelPerfect = true; // for RenderMode.ScreenSpaceOverlay
-
             var size = new Vector2(0.7f, 0.7f);
+
             // Culling doesn't work for unknown reason, so have to duplicate the background for
             //  opposite side of the annotation.
             bkgd = Utils.CreateGameObject<RawImage>(canvas);
-            bkgd.rectTransform.sizeDelta = size;
             bkgd2 = Utils.CreateGameObject<RawImage>(canvas);
-            bkgd2.rectTransform.sizeDelta = size;
-            bkgd2.transform.Rotate(Vector3.up, 180);
+            {
+                bkgd.rectTransform.sizeDelta = size;
+                bkgd2.rectTransform.sizeDelta = size;
+                bkgd2.transform.Rotate(Vector3.up, 180);
+            }
 
             // https://docs.unity3d.com/Packages/com.unity.textmeshpro@4.0/manual/RichText.html
-            text = Utils.CreateGameObject<TextMeshProUGUI>(canvas);
-            text.rectTransform.sizeDelta = size;
+            text = Utils.CreateGameObject<TextMeshProUGUI>(layoutOuter);
+            //text.rectTransform.sizeDelta = size;
+            text.rectTransform.sizeDelta = Vector2.zero;
             text.alignment = TextAlignmentOptions.TopLeft;
             text.richText = true;
             text.margin = new Vector4(0.05f, 0.05f, 0.05f, 0.05f);
@@ -78,6 +85,37 @@ namespace cynofield.mods.ui
             //0.08f for default font used by TextMeshProUGUI without font specified;
             //0.06f when using Localization.CurrentFont
             text.fontSize = 0.06f;
+
+            //layout = canvas.gameObject.AddComponent<VerticalLayoutGroup>();
+            layout = Utils.CreateGameObject<VerticalLayoutGroup>(canvas);
+            //layout = bkgd.gameObject.AddComponent<VerticalLayoutGroup>();
+            {
+                var rect = layout.GetComponent<RectTransform>();
+                rect.sizeDelta = size;
+                layout.padding = new RectOffset(0, 0, 0, 0);
+                layout.spacing = 0;
+                layout.childAlignment = TextAnchor.UpperLeft;
+                // true => will set the children rect size; 
+                // false => children set the size of their rect by themselves;
+                layout.childControlWidth = true;
+                layout.childControlHeight = true;
+
+                // true => expand children rect size to all available space; 
+                // false => don't expand children rect;
+                layout.childForceExpandWidth = false;
+                layout.childForceExpandHeight = false;
+                
+                layout.childScaleWidth = false;
+                layout.childScaleHeight = false;
+
+                var fitter = layout.gameObject.AddComponent<ContentSizeFitter>();
+                // Some childs will change this resize rules to produce smaller/bigger annotations
+                fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+                fitter.verticalFit = ContentSizeFitter.FitMode.Unconstrained;
+                var ursa = layout.gameObject.AddComponent<UnityRectSoundsAnal>();
+                ursa.SyncSizeIntoAnotherRect(bkgd.rectTransform);
+                ursa.SyncSizeIntoAnotherRect(bkgd2.rectTransform);
+            }
 
             if (this._colorSchemeId < 0)
             {
@@ -303,7 +341,12 @@ namespace cynofield.mods.ui
 
         public void Render()
         {
-            thingsUi.RenderArAnnotation(anchor, canvas, text);
+            thingsUi.RenderArAnnotation(anchor, layout);
+            //Log.Debug(()=>$"{Utils.PrintHierarchy(gameObject)}");
+            // Log.Debug(() => $"bkgd {bkgd.rectTransform.sizeDelta}");
+            // Log.Debug(() => $"layoutInner {layoutInner.GetComponent<RectTransform>().sizeDelta}");
+            // Log.Debug(() => $"bkgd {bkgd.rectTransform.position}");
+            // Log.Debug(() => $"layoutInner {layoutInner.GetComponent<RectTransform>().position}");
         }
 
         public bool IsActive()
@@ -314,8 +357,44 @@ namespace cynofield.mods.ui
         public void Deactivate()
         {
             Utils.Hide(this);
+
+            // for now go without lower level objects reuse.
+            // once deactivated, all thingsUi objects are destroyed.
+            foreach (Transform child in layout.transform)
+            {
+                Utils.Destroy(child);
+            }
+
             anchor = null;
             id = null;
+        }
+    }
+
+    public class UnityRectSoundsAnal : UIBehaviour
+    {
+        private class Logger_ : CLogger { }
+        private static readonly CLogger LoggerInYourRect = new Logger_();
+
+        private readonly HashSet<RectTransform> controlledRects = new HashSet<RectTransform>();
+
+        public void SyncSizeIntoAnotherRect(RectTransform otherRect)
+        {
+            controlledRects.Add(otherRect);
+        }
+
+        protected override void OnRectTransformDimensionsChange()
+        {
+            gameObject.TryGetComponent(out RectTransform myRect);
+            if (myRect == null)
+                return;
+            // LoggerInYourRect.Debug(() => $"{gameObject} your rect is transformed to {myRect.sizeDelta}");
+            // LoggerInYourRect.Debug(() => $"{Utils.PrintHierarchy(gameObject)}");
+            foreach (var yourRect in controlledRects)
+            {
+                yourRect.sizeDelta = myRect.sizeDelta;
+            }
+
+            base.OnRectTransformDimensionsChange();
         }
     }
 }
