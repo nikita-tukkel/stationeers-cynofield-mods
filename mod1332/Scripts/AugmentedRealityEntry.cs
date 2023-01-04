@@ -46,14 +46,17 @@ namespace cynofield.mods
                 assetsLoader = AssetsLoader.Load();
                 assetsLoader.DebugInfo();
                 var fonts2d = new Fonts2d(assetsLoader);
-                
+
                 var skin = new BaseSkin(fonts2d);
+                var colorSchemes = new List<ColorScheme> {
+                    new ColorSchemeLightText(), new ColorSchemeDarkText()
+                };
 
                 PlayerProvider playerProvider = new PlayerProvider();
                 //PlayerProvider.DebugInfo();
                 stateManager = new ArStateManager(playerProvider);
                 HiddenPool.Create();
-                uiManager = AugmentedUiManager.Create(playerProvider, skin, fonts2d);
+                uiManager = AugmentedUiManager.Create(playerProvider, skin, colorSchemes, fonts2d);
                 stateManager.OnHide += OnHideHandler;
                 stateManager.OnShow += OnShowHandler;
 

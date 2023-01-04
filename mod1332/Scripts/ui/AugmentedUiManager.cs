@@ -15,14 +15,14 @@ namespace cynofield.mods.ui
         private static readonly CLogger Log = new Logger_();
 
         public static AugmentedUiManager Create(PlayerProvider playerProvider,
-            BaseSkin skin, Fonts2d fonts2d)
+            BaseSkin skin, List<ColorScheme> colorSchemes, Fonts2d fonts2d)
         {
             ThingsUi thingsUi = new ThingsUi(skin, fonts2d);
-            return new AugmentedUiManager(thingsUi, playerProvider, skin, fonts2d);
+            return new AugmentedUiManager(thingsUi, playerProvider, skin, colorSchemes, fonts2d);
         }
 
         private AugmentedUiManager(ThingsUi thingsUi, PlayerProvider playerProvider,
-            BaseSkin skin, Fonts2d fonts2d)
+            BaseSkin skin, List<ColorScheme> colorSchemes, Fonts2d fonts2d)
         {
             this.thingsUi = thingsUi;
             this.skin = skin;
@@ -34,7 +34,7 @@ namespace cynofield.mods.ui
             components.Add(leftHud);
             rightHud = AugmentedDisplayRight.Create(mainPanel.layoutRight, thingsUi, skin, fonts2d);
             components.Add(rightHud);
-            inworldUi = AugmentedDisplayInWorld.Create(thingsUi, playerProvider);
+            inworldUi = AugmentedDisplayInWorld.Create(thingsUi, playerProvider, colorSchemes);
             components.Add(inworldUi);
         }
 

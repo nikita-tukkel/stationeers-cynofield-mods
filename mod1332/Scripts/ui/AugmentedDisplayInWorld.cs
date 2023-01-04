@@ -1,5 +1,6 @@
 using Assets.Scripts;
 using Assets.Scripts.Objects;
+using cynofield.mods.ui.styles;
 using cynofield.mods.utils;
 using System;
 using System.Collections;
@@ -15,17 +16,19 @@ namespace cynofield.mods.ui
 
         public static readonly string AR_TAG = "#AR";
 
-        public static AugmentedDisplayInWorld Create(ThingsUi thingsUi, PlayerProvider playerProvider)
+        public static AugmentedDisplayInWorld Create(ThingsUi thingsUi, PlayerProvider playerProvider,
+            List<ColorScheme> colorSchemes)
         {
             var result = Utils.CreateGameObject<AugmentedDisplayInWorld>();
-            result.Init(thingsUi, playerProvider);
+            result.Init(thingsUi, playerProvider, colorSchemes);
             return result;
         }
 
-        private void Init(ThingsUi thingsUi, PlayerProvider playerProvider)
+        private void Init(ThingsUi thingsUi, PlayerProvider playerProvider, List<ColorScheme> colorSchemes)
         {
             this.thingsUi = thingsUi;
             this.playerProvider = playerProvider;
+            this.colorSchemes = colorSchemes;
             for (int i = 0; i < 3; i++)
             {
                 var ann = CreateAnnotation();
@@ -62,6 +65,7 @@ namespace cynofield.mods.ui
 
         private ThingsUi thingsUi;
         private PlayerProvider playerProvider;
+        private List<ColorScheme> colorSchemes;
         private readonly Queue annotations = new Queue();
         private readonly Utils utils = new Utils();
         private NearbyObjects nearbyObjects;
@@ -115,7 +119,7 @@ namespace cynofield.mods.ui
             {
                 currentCursorThing = CursorManager.CursorThing;
             }
-            
+
             if (!thingsUi.Supports(currentCursorThing))
                 return;
 
@@ -243,7 +247,7 @@ namespace cynofield.mods.ui
 
         private InWorldAnnotation CreateAnnotation(int colorSchemeId = -1)
         {
-            return InWorldAnnotation.Create(null, thingsUi, playerProvider, colorSchemeId);
+            return InWorldAnnotation.Create(null, thingsUi, playerProvider, colorSchemes, colorSchemeId);
         }
 
         public void Show(Thing thing)

@@ -1,6 +1,7 @@
 using Assets.Scripts;
 using Assets.Scripts.Objects;
 using cynofield.mods.ui.presenter;
+using cynofield.mods.ui.styles;
 using cynofield.mods.utils;
 using System;
 using System.Collections.Concurrent;
@@ -57,12 +58,19 @@ please <color=red><b>don't</b></color> play with me";
 
                 var fitter = text.gameObject.AddComponent<ContentSizeFitter>();
                 // HF=Unconstrained will make text fit parent width and perform word wrapping
-                fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained; 
+                fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
                 fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
                 // When want to change parent resize behaviour:
                 // var parentFitter = parentRect.gameObject.GetComponent<ContentSizeFitter>();
                 // parentFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+                parentRect.gameObject.TryGetComponent(out ColorSchemeComponent colorScheme);
+                if (colorScheme != null)
+                {
+                    // Apply parent color scheme
+                    colorScheme.Add(text);
+                }
             }
 
             return presenter.gameObject;
