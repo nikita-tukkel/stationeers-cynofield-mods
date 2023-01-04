@@ -2,7 +2,6 @@ using System.Collections.Concurrent;
 using Assets.Scripts.Objects;
 using cynofield.mods.ui.styles;
 using cynofield.mods.utils;
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -22,7 +21,6 @@ namespace cynofield.mods.ui
         }
 
         private Component rootComponent;
-        private RectTransform rootRect;
         private VerticalLayoutGroup detailsLayout;
         private RectTransform detailsLayoutRect;
         private ThingsUi thingsUi;
@@ -31,7 +29,6 @@ namespace cynofield.mods.ui
         private void Init(VerticalLayoutGroup root, ThingsUi thingsUi, BaseSkin skin, Fonts2d fonts2d)
         {
             this.rootComponent = root;
-            this.rootRect = rootComponent.gameObject.GetComponent<RectTransform>();
             this.thingsUi = thingsUi;
             this.skin = skin;
             this.fonts2d = fonts2d;

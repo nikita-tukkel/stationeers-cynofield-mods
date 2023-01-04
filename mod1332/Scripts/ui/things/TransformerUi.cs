@@ -6,9 +6,9 @@ namespace cynofield.mods.ui.things
 {
     class TransformerUi : IThingDescriber
     {
-        Type IThingDescriber.SupportedType() { return typeof(Transformer); }
+        public Type SupportedType() { return typeof(Transformer); }
 
-        string IThingDescriber.Describe(Thing thing)
+        public string Describe(Thing thing)
         {
             var obj = thing as Transformer;
             var color = obj.Powered ? "green" : "red";

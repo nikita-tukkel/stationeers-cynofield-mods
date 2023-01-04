@@ -8,6 +8,8 @@ namespace cynofield.mods.ui.presenter
     {
         private readonly ConcurrentDictionary<string, TimeSeriesRecord> db = new ConcurrentDictionary<string, TimeSeriesRecord>();
 
+        // TODO note tsr maximum history depth and keep track of latest update time for every tsr.
+        //  Remove tsr if it wasn't updated for too long.
         public void Add(string id, TimeSeriesRecord tsr)
         {
             if (id == null)

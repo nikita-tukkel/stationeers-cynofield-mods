@@ -18,6 +18,9 @@ namespace cynofield.mods.ui.presenter
 
         virtual public void Present(T data)
         {
+            // Presenter relies on external state control.
+            // If `Present` is called for non-existent, hidden or otherwise inconsistent objects,
+            //  it is the problem on the caller side.
             foreach (var binding in bindings)
             {
                 binding.Present(data);
@@ -55,5 +58,5 @@ namespace cynofield.mods.ui.presenter
     }
 
     // For now it is only a marker interface. Reconsider if it is usefull later.
-    public interface IView { }
+    public interface IPresenterView { }
 }

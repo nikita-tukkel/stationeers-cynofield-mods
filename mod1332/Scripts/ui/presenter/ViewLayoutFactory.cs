@@ -1,4 +1,3 @@
-
 using cynofield.mods.ui.styles;
 using cynofield.mods.utils;
 using TMPro;
@@ -53,7 +52,7 @@ namespace cynofield.mods.ui.presenter
         }
     }
 
-    public class ValueView : IView
+    public class ValueView : IPresenterView
     {
         public LayoutGroup layout;
         public HiddenPoolComponent visiblility;

@@ -6,7 +6,6 @@ using cynofield.mods.utils;
 using HarmonyLib;
 using System;
 using System.Collections.Concurrent;
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -17,7 +16,7 @@ namespace cynofield.mods.ui.things
         private class Logger_ : CLogger { }
         private static readonly CLogger Log = new Logger_();
 
-        Type IThingDescriber.SupportedType() { return typeof(CircuitHousing); }
+        public Type SupportedType() { return typeof(CircuitHousing); }
 
         private readonly ViewLayoutFactory lf;
         private readonly BaseSkin skin;
@@ -79,15 +78,6 @@ namespace cynofield.mods.ui.things
                 }
             }
 
-            public RecordView Get(string thingId)
-            {
-                return views.GetOrAdd(thingId, (string _) =>
-                {
-                    var hr = db.Get(thingId, () => new TimeSeriesRecord());
-                    return new RecordView(hr);
-                });
-            }
-
             public RecordView Snapshot(Thing thing)
             {
                 var thingc = thing as CircuitHousing;
@@ -111,6 +101,15 @@ namespace cynofield.mods.ui.things
                 }
                 return data;
             }
+
+            public RecordView Get(string thingId)
+            {
+                return views.GetOrAdd(thingId, (string _) =>
+                {
+                    var hr = db.Get(thingId, () => new TimeSeriesRecord());
+                    return new RecordView(hr);
+                });
+            }
         }
 
         public class ICPresenter : PresenterBase<ICDataModel.RecordView>
@@ -132,7 +131,7 @@ NO CHIP</color>";
                 var registers = GetRegisters(chip);
                 return
 $@"{obj.DisplayName}
-<color=green><b>db={skin.MathDisplay(obj.Setting)}</b> r15={registers[15]}</color>
+<color=green><b>db={skin.MathDisplay(obj.Setting)}</b> r15={registers[15]} r14={registers[14]}</color>
 ";
             }
         }

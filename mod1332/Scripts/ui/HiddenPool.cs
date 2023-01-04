@@ -3,6 +3,10 @@ using UnityEngine;
 
 namespace cynofield.mods.ui
 {
+    /// <summary>
+    /// Detached hidden objects for "reparent to hide" visibility control.
+    /// This approach allows to use recursive show/hide on the original hierarchy of the hidden object.
+    /// </summary>
     public class HiddenPool : MonoBehaviour
     {
         internal static HiddenPool Instance;

@@ -1,6 +1,5 @@
 using Assets.Scripts.Objects;
 using cynofield.mods.ui.presenter;
-using cynofield.mods.ui.styles;
 using cynofield.mods.utils;
 using System;
 using System.Collections.Concurrent;
@@ -18,7 +17,7 @@ namespace cynofield.mods.ui.things
             this.lf = lf;
         }
 
-        Type IThingDescriber.SupportedType() { return null; }
+        public Type SupportedType() { return null; }
 
         public string Describe(Thing thing)
         {
@@ -67,12 +66,10 @@ please <color=red><b>don't</b></color> play with me";
             {
 #pragma warning disable IDE1006
                 public readonly TimeSeriesBuffer<string> name;
-                public readonly TimeSeriesBuffer<string> description;
 
                 public RecordView(TimeSeriesRecord tsr)
                 {
                     name = tsr.Add("name", new TimeSeriesBuffer<string>(new string[2], 1));
-                    description = tsr.Add("description", new TimeSeriesBuffer<string>(new string[2], 1));
                 }
             }
 
@@ -90,9 +87,10 @@ please <color=red><b>don't</b></color> play with me";
                 var thingId = Utils.GetId(thing);
                 var now = Time.time;
                 var data = Get(thingId);
-                data.name.Add(thing.DisplayName, now);
-                if (description != null)
-                    data.description.Add(description, now);
+                if (description == null)
+                    data.name.Add(thing.DisplayName, now);
+                else
+                    data.name.Add(description, now);
                 return data;
             }
         }
@@ -108,10 +106,6 @@ please <color=red><b>don't</b></color> play with me";
             {
                 var view = lf.Text1(layout.gameObject, thing.DisplayName);
                 presenter.AddBinding((d) => view.value.text = d.name.Current);
-            }
-            {
-                var view = lf.Text1(layout.gameObject, "");
-                presenter.AddBinding((d) => view.value.text = d.description.Current);
             }
 
             return layout.gameObject;
