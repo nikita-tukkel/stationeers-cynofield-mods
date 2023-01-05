@@ -1,4 +1,5 @@
 
+using Assets.Scripts.Objects;
 using HarmonyLib;
 
 namespace cynofield.mods
@@ -33,7 +34,9 @@ namespace cynofield.mods
         static void Postfix(ref Assets.Scripts.UI.InputMouse __instance)
         {
             var view = AugmentedRealityEntry.Instance;
-            view?.MouseOn(__instance.CursorThing);
+            Interactable interactable = Traverse.Create(typeof(Assets.Scripts.UI.InputMouse))
+                .Field("WorldInteractable").GetValue() as Interactable;
+            view?.MouseOn(__instance.CursorThing, interactable);
         }
     }
 }

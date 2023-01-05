@@ -33,7 +33,7 @@ namespace cynofield.mods.ui
 
             alluis.Add(new TransformerUi());
             alluis.Add(new CableUi());
-            alluis.Add(new CircuitHousingUi(lf, lf3d, skin));
+            alluis.Add(new ProgrammableChipUi(lf, lf3d, skin));
             foreach (var ui in alluis)
             {
                 uis.Add(ui.SupportedType(), ui);

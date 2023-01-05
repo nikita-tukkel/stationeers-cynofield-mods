@@ -1,6 +1,9 @@
+using Assets.Scripts;
 using Assets.Scripts.Objects;
+using Assets.Scripts.UI;
 using cynofield.mods.ui.styles;
 using cynofield.mods.utils;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -222,12 +225,12 @@ namespace cynofield.mods.ui
         private Thing lookingAt = null;
         private Thing pointingAt = null;
 
-        // TODO move Describe call into rightHud to have hud updated in runtime
-        internal void EyesOn(Thing thing)
+        internal void EyesOn(CursorEventInfo eventInfo)
         {
-            if (lookingAt != thing)
+            var eventThing = eventInfo.Subject;
+            if (lookingAt != eventThing)
             {
-                lookingAt = thing;
+                lookingAt = eventThing;
                 if (lookingAt != null)
                 {
                     rightHud.Display(lookingAt);
@@ -239,11 +242,13 @@ namespace cynofield.mods.ui
             }
         }
 
-        internal void MouseOn(Thing thing)
+        internal void MouseOn(CursorEventInfo eventInfo)
         {
-            if (pointingAt != thing)
+            //Log.Debug(() => $"MouseOn {eventInfo}");
+            var eventThing = eventInfo.Subject;
+            if (pointingAt != eventThing)
             {
-                pointingAt = thing;
+                pointingAt = eventThing;
                 if (pointingAt != null)
                 {
                     rightHud.Display(pointingAt);
@@ -260,5 +265,66 @@ namespace cynofield.mods.ui
         IHierarchy IHierarchy.Parent => null;
 
         IEnumerator IEnumerable.GetEnumerator() => components.GetEnumerator();
+
+        public struct CursorEventInfo
+        {
+            public Thing thing;
+            public Thing slotThing;
+            public Collider collider;
+            public Interactable interactable;
+
+            public Thing Subject { get => slotThing == null ? thing : slotThing; }
+
+            internal static CursorEventInfo FromCursorManager(Thing foundThing)
+            {
+                if (foundThing == null)
+                    return new CursorEventInfo();
+
+                Collider collider = CursorManager.CursorHit.collider;
+                Interactable interactable = null;
+                Thing thing = CursorManager.CursorThing;
+                Thing slotThing = null;
+                if (collider != null && thing != null)
+                {
+                    interactable = thing.GetInteractable(collider);
+                    slotThing = interactable?.Slot?.Occupant;
+                }
+
+                return new CursorEventInfo
+                {
+                    thing = thing,
+                    slotThing = slotThing,
+                    collider = collider,
+                    interactable = interactable
+                };
+            }
+
+            internal static CursorEventInfo FromInputMouse(Thing mouseThing, Interactable interactable)
+            {
+                if (mouseThing == null)
+                    return new CursorEventInfo();
+
+                Collider collider = CursorManager.CursorHit.collider;
+                Thing slotThing = null;
+                if (interactable != null)
+                {
+                    slotThing = interactable?.Slot?.Occupant;
+                }
+
+                return new CursorEventInfo
+                {
+                    thing = mouseThing,
+                    slotThing = slotThing,
+                    collider = collider,
+                    interactable = interactable
+                };
+            }
+
+            public override string ToString()
+            {
+                if (slotThing == null) return $"{thing}";
+                return $"{slotThing} in {thing}";
+            }
+        }
     }
 }

@@ -32,7 +32,7 @@ namespace cynofield.mods.utils
             periodicUpdateCounter = 0;
 
             int collidersCount = Physics.OverlapSphereNonAlloc(
-                transform.parent.position, 5f, nearbyColliders);
+                transform.parent.position, 20f, nearbyColliders);
             nearbyThings.Clear();
             for (int i = 0; i < collidersCount; i++)
             {

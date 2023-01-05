@@ -1,11 +1,13 @@
-using System.Collections.Generic;
-using System;
 using Assets.Scripts.Objects;
 using Assets.Scripts.Objects.Entities;
 using Assets.Scripts.Objects.Items;
 using cynofield.mods.ui;
-using cynofield.mods.utils;
 using cynofield.mods.ui.styles;
+using cynofield.mods.utils;
+using System;
+using System.Collections.Generic;
+
+using static cynofield.mods.ui.AugmentedUiManager;
 
 namespace cynofield.mods
 {
@@ -103,15 +105,17 @@ namespace cynofield.mods
             if (stateManager == null || uiManager == null || !stateManager.IsVisible())
                 return;
 
-            uiManager.EyesOn(thing);
+            uiManager.EyesOn(CursorEventInfo.FromCursorManager(thing));
         }
 
-        public void MouseOn(Thing thing)
+        public void MouseOn(Thing thing, Interactable interactable)
         {
             if (stateManager == null || uiManager == null || !stateManager.IsVisible())
                 return;
 
-            uiManager.MouseOn(thing);
+            //Log.Debug(() => $"MouseOn thing={thing}, interactable={interactable}");
+
+            uiManager.MouseOn(CursorEventInfo.FromInputMouse(thing, interactable));
         }
     }
 

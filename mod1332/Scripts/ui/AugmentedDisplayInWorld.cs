@@ -7,6 +7,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static cynofield.mods.ui.AugmentedUiManager;
 
 namespace cynofield.mods.ui
 {
@@ -121,8 +122,10 @@ namespace cynofield.mods.ui
 
             if (currentCursorThing == null)
             {
-                currentCursorThing = CursorManager.CursorThing;
+                currentCursorThing = CursorEventInfo.FromCursorManager(CursorManager.Instance.FoundThing).Subject;
             }
+
+            //Log.Debug(() => $"currentCursorThing{currentCursorThing}");
 
             if (!thingsUi.Supports(currentCursorThing))
                 return;
@@ -256,6 +259,7 @@ namespace cynofield.mods.ui
 
         public void Show(Thing thing)
         {
+            //Log.Debug(() => $"Show {thing}");
             if (thing == null)
                 return;
 

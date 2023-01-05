@@ -1,4 +1,3 @@
-using Assets.Scripts;
 using Assets.Scripts.Objects;
 using Assets.Scripts.Objects.Electrical;
 using cynofield.mods.ui.presenter;
@@ -14,18 +13,18 @@ using UnityEngine.UI;
 
 namespace cynofield.mods.ui.things
 {
-    class CircuitHousingUi : IThingCompleteUi
+    class ProgrammableChipUi : IThingCompleteUi
     {
         private class Logger_ : CLogger { }
         private static readonly CLogger Log = new Logger_();
 
-        public Type SupportedType() { return typeof(CircuitHousing); }
+        public Type SupportedType() { return typeof(ProgrammableChip); }
 
         private readonly ViewLayoutFactory lf;
         private readonly ViewLayoutFactory3d lf3d;
         private readonly BaseSkin skin;
         private readonly ICDataModel icdata = new ICDataModel();
-        public CircuitHousingUi(ViewLayoutFactory lf, ViewLayoutFactory3d lf3d, BaseSkin skin)
+        public ProgrammableChipUi(ViewLayoutFactory lf, ViewLayoutFactory3d lf3d, BaseSkin skin)
         {
             this.lf = lf;
             this.lf3d = lf3d;
@@ -41,7 +40,7 @@ namespace cynofield.mods.ui.things
             var presenter = parentRect.GetComponentInChildren<ICPresenter>();
             if (presenter == null)
             {
-                //Log.Debug(() => $"{Utils.GetId(thing)} creating new annotation view");
+                Log.Debug(() => $"{Utils.GetId(thing)} creating new annotation view");
                 presenter = CreateAnnotationView(thing, parentRect).GetComponent<ICPresenter>();
                 LayoutRebuilder.ForceRebuildLayoutImmediate(parentRect); // Needed to process possible changes in text heights
             }
@@ -82,7 +81,6 @@ namespace cynofield.mods.ui.things
                 public readonly TimeSeriesBuffer<double> db;
                 public readonly TimeSeriesBuffer<double> ra;
                 public readonly TimeSeriesBuffer<double> sp;
-                public readonly TimeSeriesBuffer<bool> hasChip;
                 public readonly TimeSeriesBuffer<double>[] r;
 
                 public RecordView(TimeSeriesRecord tsr)
@@ -94,7 +92,6 @@ namespace cynofield.mods.ui.things
                     db = tsr.Add("db", new TimeSeriesBuffer<double>(new double[bufferSize], resolutionSeconds));
                     ra = tsr.Add("ra", new TimeSeriesBuffer<double>(new double[bufferSize], resolutionSeconds));
                     sp = tsr.Add("sp", new TimeSeriesBuffer<double>(new double[bufferSize], resolutionSeconds));
-                    hasChip = tsr.Add("hasChip", new TimeSeriesBuffer<bool>(new bool[5], 1));
                     r = new TimeSeriesBuffer<double>[16];
                     for (var i = 0; i < 16; i++)
                         r[i] = tsr.Add($"r{i}", new TimeSeriesBuffer<double>(new double[bufferSize], resolutionSeconds));
@@ -103,17 +100,15 @@ namespace cynofield.mods.ui.things
 
             public RecordView Snapshot(Thing thing)
             {
-                var thingc = thing as CircuitHousing;
-                if (thingc == null)
+                var chip = thing as ProgrammableChip;
+                if (chip == null)
                     return null;
-                var chip = thingc._ProgrammableChipSlot.Occupant as ProgrammableChip;
                 var thingId = Utils.GetId(thing);
                 //Log.Debug(() => $"thingId={thingId}");
                 var now = Time.time;
                 var data = Get(thingId);
-                data.name.Add(thingc.DisplayName, now);
-                data.db.Add(thingc.Setting, now);
-                data.hasChip.Add(chip != null, now);
+                data.name.Add(chip.DisplayName, now);
+                data.db.Add(GetSetting(chip), now);
                 if (chip != null)
                 {
                     var registers = GetRegisters(chip);
@@ -142,31 +137,20 @@ namespace cynofield.mods.ui.things
 
         public string Describe(Thing thing)
         {
-            var obj = thing as CircuitHousing;
-            var chip = obj._ProgrammableChipSlot.Occupant as ProgrammableChip;
-            if (chip == null)
+            var chip = thing as ProgrammableChip;
+            var registers = GetRegisters(chip);
+            var registersStr = "";
+            for (int i = 0; i < registers.Length; i++)
             {
-                return
-$@"{obj.DisplayName}
-<color=red><b>db={skin.MathDisplay(obj.Setting)}</b>
-NO CHIP</color>";
+                var v = registers[i];
+                if (v != 0)
+                    registersStr += $" r{i}={skin.MathDisplay(v)}";
             }
-            else
-            {
-                var registers = GetRegisters(chip);
-                var registersStr = "";
-                for (int i = 0; i < registers.Length; i++)
-                {
-                    var v = registers[i];
-                    if (v != 0)
-                        registersStr += $" r{i}={skin.MathDisplay(v)}";
-                }
 
-                return
-$@"{obj.DisplayName}
-<color=green><b>db={skin.MathDisplay(obj.Setting)}</b>{registersStr}</color>
+            return
+$@"{chip.DisplayName}
+<color=green><b>db={skin.MathDisplay(GetSetting(chip))}</b>{registersStr}</color>
 ";
-            }
         }
 
         private GameObject CreateAnnotationView(Thing thing, RectTransform parent)
@@ -299,10 +283,9 @@ $@"{obj.DisplayName}
                 case 17: name = "ra"; break;
             }
 
-            var view = lf3d.NameValuePair(parent, name, "0000", visible: false, nameWidth: nameWidth, valueWidth: valueWidth);
+            var view = lf3d.NameValuePair(parent, name, "0000", nameWidth: nameWidth, valueWidth: valueWidth);
             presenter.AddBinding((d) =>
             {
-                view.visiblility.SetVisible(d.hasChip.Current);
                 TimeSeriesBuffer<double> regData;
                 switch (registerNumber)
                 {
@@ -363,10 +346,6 @@ $@"{obj.DisplayName}
                     view.valueBkgd.color = new Color(0, 0.5f, 0, alpha);
                 });
             }
-            {
-                var view = Text2(layout.gameObject, "NO CHIP", Color.red, visible: false);
-                presenter.AddBinding((d) => view.visiblility.SetVisible(!d.hasChip.Current));
-            }
 
             for (var i = 0; i < 9; i++)
             {
@@ -402,10 +381,9 @@ $@"{obj.DisplayName}
                 case 16: name = "sp"; break;
                 case 17: name = "ra"; break;
             }
-            var view = NameValuePair2(parent, name, "0000", visible: false);
+            var view = NameValuePair2(parent, name, "0000");
             presenter.AddBinding((d) =>
             {
-                view.visiblility.SetVisible(d.hasChip.Current);
                 TimeSeriesBuffer<double> regData;
                 switch (registerNumber)
                 {
@@ -487,6 +465,18 @@ $@"{obj.DisplayName}
         internal static double[] GetRegisters(ProgrammableChip chip)
         {
             return Traverse.Create(chip).Field("_Registers").GetValue() as double[];
+        }
+
+        internal static double GetSetting(ProgrammableChip chip)
+        {
+            var housing = chip.CircuitHousing;
+            double db = 0;
+            switch (housing)
+            {
+                case LogicUnitBase o: db = o.Setting; break;
+                case AirConditioner o: db = o.GoalTemperature; break;
+            }
+            return db;
         }
     }
 }
