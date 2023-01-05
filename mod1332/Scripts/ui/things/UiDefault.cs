@@ -122,7 +122,7 @@ please <color=red><b>don't</b></color> play with me";
 
         private GameObject CreateDetailsView(Thing thing, RectTransform parent)
         {
-            var layout = Utils.CreateGameObject<VerticalLayoutGroup>(parent);
+            var layout = lf.RootLayout(parent.gameObject, debug: false);
             var presenter = layout.gameObject.AddComponent<DefaultPresenter>();
 
             {
@@ -136,7 +136,7 @@ please <color=red><b>don't</b></color> play with me";
         private GameObject CreateAnnotationView(Thing thing, RectTransform parent)
         {
             parent.gameObject.TryGetComponent(out ColorSchemeComponent colorScheme);
-            var layout = lf3d.RootLayout(parent.gameObject);
+            var layout = lf3d.RootLayout(parent.gameObject, debug: false);
             var presenter = layout.gameObject.AddComponent<DefaultPresenter>();
 
             // When want to change parent resize behaviour:

@@ -19,6 +19,7 @@ namespace cynofield.mods.ui.presenter
         {
             var layout = Utils.CreateGameObject<VerticalLayoutGroup>(parent);
             {
+                layout.GetOrAddComponent<RectTransform>().sizeDelta = Vector2.zero;
                 layout.childAlignment = TextAnchor.UpperLeft;
                 layout.childControlWidth = true;
                 layout.childControlHeight = true;

@@ -169,11 +169,11 @@ namespace cynofield.mods.ui
             layout3.padding = new RectOffset(1, 1, 1, 1);
             layout3.spacing = 1;
             layout3.childAlignment = TextAnchor.UpperLeft;
-            layout3.childControlWidth = false;
-            layout3.childForceExpandWidth = false;
-            layout3.childScaleWidth = false;
+            layout3.childControlWidth = true;
             layout3.childControlHeight = false;
+            layout3.childForceExpandWidth = false;
             layout3.childForceExpandHeight = false;
+            layout3.childScaleWidth = false;
             layout3.childScaleHeight = false;
 
             if (demoMode)

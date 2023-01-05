@@ -1,5 +1,9 @@
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using Assets.Scripts.Objects;
+using Assets.Scripts.Objects.Electrical;
+using Assets.Scripts.Objects.Entities;
+using Assets.Scripts.Objects.Pipes;
 using cynofield.mods.ui.styles;
 using cynofield.mods.utils;
 using UnityEngine;
@@ -37,17 +41,17 @@ namespace cynofield.mods.ui
             detailsLayout.padding = new RectOffset(0, 0, 0, 0);
             detailsLayout.spacing = 0;
             detailsLayout.childAlignment = TextAnchor.UpperLeft;
-            detailsLayout.childControlWidth = false;
-            detailsLayout.childForceExpandWidth = false;
-            detailsLayout.childScaleWidth = false;
+            detailsLayout.childControlWidth = true;
             detailsLayout.childControlHeight = false;
+            detailsLayout.childForceExpandWidth = true;
             detailsLayout.childForceExpandHeight = false;
+            detailsLayout.childScaleWidth = false;
             detailsLayout.childScaleHeight = false;
             detailsLayoutRect = rootComponent.gameObject.GetComponent<RectTransform>();
             Utils.Show(detailsLayout);
         }
 
-        public void Display(Thing thing)
+        public void Display(Thing thing, List<Thing> otherThings = null)
         {
             if (thing == currentThing)
                 return; // do nothing if Thing not changed, Update will handle the redraw
@@ -58,14 +62,24 @@ namespace cynofield.mods.ui
             Utils.Hide(detailsLayout);
 
             currentThing = thing;
+            accompThings.Clear();
+            if (otherThings != null)
+                accompThings.AddRange(otherThings);
+            var occupants = FindInternalThings(currentThing);
+            if (occupants is IEnumerable<Thing>) accompThings.AddRange(occupants as IEnumerable<Thing>);
+            else accompThings.Add(occupants as Thing);
+
             rootComponent.gameObject.SetActive(true);
             detailsLayout.gameObject.SetActive(true);
-            RenderThingDetails();
+            RenderThingDetails(currentThing);
+            foreach (var th in accompThings)
+                RenderThingDetails(th);
         }
 
         public void Hide()
         {
             currentThing = null;
+            accompThings.Clear();
             // We are not destroying what ThingsUi rendered,
             //  so there is a pool of objects ThingsUi will reuse.
             Utils.Hide(detailsLayout);
@@ -75,6 +89,7 @@ namespace cynofield.mods.ui
 
         private float periodicUpdateCounter;
         private Thing currentThing = null;
+        private readonly List<Thing> accompThings = new List<Thing>();
         void Update()
         {
             if (WorldManager.IsGamePaused)
@@ -87,18 +102,21 @@ namespace cynofield.mods.ui
             if (currentThing == null)
             {
                 rootComponent.gameObject.SetActive(false);
+                accompThings.Clear();
                 return;
             }
 
-            RenderThingDetails();
+            RenderThingDetails(currentThing);
+            foreach (var th in accompThings)
+                RenderThingDetails(th);
         }
 
         private readonly ConcurrentDictionary<string, GameObject> objectsPool = new ConcurrentDictionary<string, GameObject>();
-        private void RenderThingDetails()
+        private void RenderThingDetails(Thing thing)
         {
-            if (currentThing == null)
+            if (thing == null)
                 return;
-            var maybeCache = thingsUi.RenderDetailView(currentThing, detailsLayout, objectsPool);
+            var maybeCache = thingsUi.RenderDetailView(thing, detailsLayout, objectsPool);
             if (maybeCache != null && maybeCache.name != null)
             {
                 // destroy the old one if a new one was created
@@ -114,6 +132,18 @@ namespace cynofield.mods.ui
             }
 
             LayoutRebuilder.ForceRebuildLayoutImmediate(detailsLayoutRect); // Needed to process possible changes in text heights
+        }
+
+        private object FindInternalThings(Thing parent)
+        {
+            //Log.Debug(() => $"FindInternalThings {parent}");
+            switch (parent)
+            {
+                case DeviceInputOutputCircuit o: return o.ProgrammableChip;
+                case ICircuitHolder o: return parent.Slots[0]?.Occupant;
+            }
+
+            return null;
         }
     }
 }

@@ -14,6 +14,34 @@ namespace cynofield.mods.ui.presenter
             this.skin = skin;
         }
 
+        public VerticalLayoutGroup RootLayout(GameObject parent, bool debug = false)
+        {
+            var layout = Utils.CreateGameObject<VerticalLayoutGroup>(parent);
+            {
+                layout.GetOrAddComponent<RectTransform>().sizeDelta = Vector2.zero;
+                layout.spacing = 10;
+                layout.childAlignment = TextAnchor.UpperLeft;
+                layout.childControlWidth = true;
+                layout.childControlHeight = true;
+                layout.childForceExpandWidth = false;
+                layout.childForceExpandHeight = false;
+                layout.childScaleWidth = false;
+                layout.childScaleHeight = false;
+
+                var fitter = layout.GetOrAddComponent<ContentSizeFitter>();
+                fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+                fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+                if (debug)
+                {
+                    var bkgdDebug = layout.GetOrAddComponent<RawImage>();
+                    bkgdDebug.color = new Color(0, 1, 0, 0.1f);
+                }
+            }
+
+            return layout;
+        }
+
         public ValueView Text1(GameObject parent, string text, int width = 0)
         {
             var tmp = Utils.CreateGameObject<TextMeshProUGUI>(parent);
