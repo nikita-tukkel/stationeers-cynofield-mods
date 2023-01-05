@@ -16,6 +16,16 @@ namespace cynofield.mods
 
         public static AugmentedRealityEntry Instance;
 
+        static AugmentedRealityEntry()
+        {
+            ModInfo.Instance = new ModInfo()
+            {
+                name = "mod1332",
+                longName = "Augmented Reality",
+                version = "1.0"
+            };
+        }
+
         static public void Create()
         {
             CLogger.SetConfig(new Dictionary<string, (LoggerConfig.LogLevel, bool)>
@@ -26,7 +36,7 @@ namespace cynofield.mods
                 ["cynofield.mods.ArStateManager"] = (LoggerConfig.LogLevel.WARN, true),
             });
 
-            var modDirLocator = new ModDirLocator("mod1332");
+            var modDirLocator = new ModDirLocator(ModInfo.Instance.name);
             AssetsLoader.SetConfig(bundleFiles: new List<string>
             {
                 $"{modDirLocator.GetContentDir()}/cynofieldmods.assetbundle",
