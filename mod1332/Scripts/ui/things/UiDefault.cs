@@ -1,17 +1,16 @@
-using Assets.Scripts;
 using Assets.Scripts.Objects;
 using cynofield.mods.ui.presenter;
 using cynofield.mods.ui.styles;
 using cynofield.mods.utils;
 using System;
 using System.Collections.Concurrent;
-using TMPro;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace cynofield.mods.ui.things
 {
-    class UiDefault : IThingCompleteUi
+    class UiDefault : IThingCompleteUi, IThingWatcher, IThingWatcherProvider
     {
         private class Logger_ : CLogger { }
         private static readonly CLogger Log = new Logger_();
@@ -161,6 +160,41 @@ please <color=red><b>don't</b></color> play with me";
 
             LayoutRebuilder.ForceRebuildLayoutImmediate(parent); // Needed to process possible changes in text heights
             return layout.gameObject;
+        }
+
+        public GameObject RenderWatch(Thing thing, RectTransform parent)
+        {
+            return null;
+        }
+
+        public GameObject RenderWatch(Thing thing, RectTransform parentRect, string description)
+        {
+            // var thingId = Utils.GetId(thing);
+            // var view = lf.Text1(parent.gameObject, $"{description}");
+            // //var presenter = layout.gameObject.AddComponent<DefaultPresenter>();
+
+            // return view.value.gameObject;
+
+            var data = dataModel.Snapshot(thing, description);
+            var presenter = parentRect.GetComponentInChildren<DefaultPresenter>();
+
+            if (presenter == null)
+            {
+                var view = lf.Text1(parentRect.gameObject, $"{description}");
+                presenter = view.value.gameObject.AddComponent<DefaultPresenter>();
+                presenter.AddBinding((d) => view.value.text = description + " aaa ");
+
+                Utils.Show(parentRect);
+            }
+
+            presenter.Present(data);
+            return presenter.gameObject;
+        }
+
+        public List<IThingWatcher> GetWatchers()
+        {
+            var result = new List<IThingWatcher> { this };
+            return result;
         }
     }
 }

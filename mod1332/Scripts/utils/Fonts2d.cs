@@ -1,6 +1,5 @@
 using System;
 using Assets.Scripts;
-using cynofield.mods.ui;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -85,10 +84,15 @@ namespace cynofield.mods.utils
 
         public void Demo(Component parent, Vector2 size, Rect clippingRect)
         {
-            var width = (int)(size.x/2);
-            var l0 = Utils.HL(parent);
-            l0.childAlignment = TextAnchor.UpperCenter;
-            l0.gameObject.GetComponent<RectTransform>().sizeDelta = size;
+            var width = (int)(size.x / 2);
+            var l0 = Utils.HL(parent.gameObject);
+            {
+                l0.childAlignment = TextAnchor.UpperCenter;
+                l0.gameObject.GetComponent<RectTransform>().sizeDelta = size;
+                var fitter = l0.GetOrAddComponent<ContentSizeFitter>();
+                fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+                fitter.verticalFit = ContentSizeFitter.FitMode.Unconstrained;
+            }
 
             var spacing = 15;
             var l1 = Utils.VL(l0);

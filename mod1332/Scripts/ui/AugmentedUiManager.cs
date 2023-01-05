@@ -1,9 +1,8 @@
 using Assets.Scripts;
 using Assets.Scripts.Objects;
-using Assets.Scripts.UI;
+using cynofield.mods.ui.presenter;
 using cynofield.mods.ui.styles;
 using cynofield.mods.utils;
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -20,11 +19,15 @@ namespace cynofield.mods.ui
         public static AugmentedUiManager Create(PlayerProvider playerProvider,
             BaseSkin skin, List<ColorScheme> colorSchemes, Fonts2d fonts2d)
         {
-            ThingsUi thingsUi = new ThingsUi(skin, fonts2d);
-            return new AugmentedUiManager(thingsUi, playerProvider, skin, colorSchemes, fonts2d);
+            var lf = new ViewLayoutFactory(skin);
+            var lf3d = new ViewLayoutFactory3d(skin);
+            ThingsUi thingsUi = new ThingsUi(skin, lf, lf3d, fonts2d);
+
+            return new AugmentedUiManager(thingsUi, playerProvider, lf, skin, colorSchemes, fonts2d);
         }
 
         private AugmentedUiManager(ThingsUi thingsUi, PlayerProvider playerProvider,
+            ViewLayoutFactory lf,
             BaseSkin skin, List<ColorScheme> colorSchemes, Fonts2d fonts2d)
         {
             this.thingsUi = thingsUi;
@@ -33,8 +36,10 @@ namespace cynofield.mods.ui
             var mainPanel = CreateMainPanel(skin, fonts2d, demoMode: false);
             components.Add(mainPanel.canvas);
 
-            leftHud = AugmentedDisplayLeft.Create(mainPanel.layoutLeft, thingsUi, fonts2d);
-            components.Add(leftHud);
+            var watchesPanel = AugmentedDisplayWatches.Create(mainPanel.watchPanel, thingsUi, lf, fonts2d);
+            components.Add(watchesPanel);
+            var logsPanel = AugmentedDisplayLog.Create(mainPanel.logPanel, thingsUi, fonts2d);
+            components.Add(logsPanel);
             rightHud = AugmentedDisplayRight.Create(mainPanel.layoutRight, thingsUi, skin, fonts2d);
             components.Add(rightHud);
             inworldUi = AugmentedDisplayInWorld.Create(thingsUi, playerProvider, colorSchemes);
@@ -47,11 +52,18 @@ namespace cynofield.mods.ui
             public VerticalLayoutGroup layoutLeft;
             public VerticalLayoutGroup layoutRight;
 
-            public MainPanelComponents(Canvas canvas, VerticalLayoutGroup layoutLeft, VerticalLayoutGroup layoutRight)
+            public VerticalLayoutGroup watchPanel;
+            public VerticalLayoutGroup logPanel;
+
+            public MainPanelComponents(Canvas canvas,
+                VerticalLayoutGroup layoutLeft, VerticalLayoutGroup layoutRight,
+                VerticalLayoutGroup watchPanel, VerticalLayoutGroup logPanel)
             {
                 this.canvas = canvas;
                 this.layoutLeft = layoutLeft;
                 this.layoutRight = layoutRight;
+                this.watchPanel = watchPanel;
+                this.logPanel = logPanel;
             }
         }
 
@@ -116,25 +128,33 @@ namespace cynofield.mods.ui
             // fitter1.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
             var layout1 = bkgd1.gameObject.AddComponent<VerticalLayoutGroup>();
-            layout1.padding = new RectOffset(1, 1, 1, 1);
-            layout1.spacing = 1;
-            layout1.childAlignment = TextAnchor.UpperLeft;
-            layout1.childControlWidth = false;
-            layout1.childForceExpandWidth = false;
-            layout1.childScaleWidth = false;
-            layout1.childControlHeight = false;
-            layout1.childForceExpandHeight = false;
-            layout1.childScaleHeight = false;
+            {
+                layout1.padding = new RectOffset(1, 1, 1, 1);
+                layout1.spacing = 1;
+                layout1.childAlignment = TextAnchor.UpperLeft;
+                layout1.childControlWidth = true;
+                layout1.childControlHeight = false;
+                layout1.childForceExpandWidth = true;
+                layout1.childForceExpandHeight = false;
+                layout1.childScaleWidth = false;
+                layout1.childScaleHeight = false;
+
+                var fitter = layout1.GetOrAddComponent<ContentSizeFitter>();
+                fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+                fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+            }
 
             //===================
-            // Left panel childs: Text + ContentSizeFitter + CanvasRenderer.
+            // Left panel childs: ContentSizeFitter + CanvasRenderer + 2 Vertical Layouts.
             // ContentSizeFitter allows to dynamically resize text for content.
             // CanvasRenderer clips out childs who don't fit into root layout.
+            var (watchPanel, logPanel) = CreateLeftPanelParts(layout1, hudHeight);
+
             if (demoMode)
             {
-                for (var i = 0; i < 44; i++)
+                for (var i = 0; i < 11; i++)
                 {
-                    var text = Utils.CreateGameObject<TextMeshProUGUI>(layout1);
+                    var text = Utils.CreateGameObject<TextMeshProUGUI>(watchPanel);
                     text.rectTransform.sizeDelta = new Vector2(bkgd1.rectTransform.sizeDelta.x, 0);
                     text.alignment = TextAlignmentOptions.TopLeft;
                     text.margin = new Vector4(2f, 2f, 2f, 2f);
@@ -142,7 +162,27 @@ namespace cynofield.mods.ui
                     text.overflowMode = TextOverflowModes.Truncate;
                     text.enableWordWrapping = true;
                     skin.skin2d.MainFont(text);
-                    text.text = $"Text {i} Text {i} Text {i} Text {i} Text {i}\naaaa\nbbbb";
+                    text.text = $"Watch window {i} Watch window {i} Text {i} Text {i}\naaaa\nbbbb";
+
+                    var textFitter = text.gameObject.AddComponent<ContentSizeFitter>();
+                    textFitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+                    textFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+                    var textRenderer = text.gameObject.GetComponent<CanvasRenderer>();
+                    textRenderer.EnableRectClipping(clippingRect);
+                }
+
+                for (var i = 0; i < 11; i++)
+                {
+                    var text = Utils.CreateGameObject<TextMeshProUGUI>(logPanel);
+                    text.rectTransform.sizeDelta = new Vector2(bkgd1.rectTransform.sizeDelta.x, 0);
+                    text.alignment = TextAlignmentOptions.TopLeft;
+                    text.margin = new Vector4(2f, 2f, 2f, 2f);
+                    text.richText = true;
+                    text.overflowMode = TextOverflowModes.Truncate;
+                    text.enableWordWrapping = true;
+                    skin.skin2d.MainFont(text);
+                    text.text = $"Log window {i} Log window {i} Log window {i} Text {i} Text {i}\naaaa\nbbbb";
 
                     var textFitter = text.gameObject.AddComponent<ContentSizeFitter>();
                     textFitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
@@ -204,7 +244,52 @@ namespace cynofield.mods.ui
 
             //Log.Debug(() => $"Hierarchy of {rootObj}:\n{Utils.PrintHierarchy(rootObj)}");
 
-            return new MainPanelComponents(canvas, layout1, layout3);
+            return new MainPanelComponents(canvas, layout1, layout3, watchPanel, logPanel);
+        }
+
+        private (VerticalLayoutGroup, VerticalLayoutGroup) CreateLeftPanelParts(VerticalLayoutGroup parent,
+            float hudHeight)
+        {
+            var watchPanelHeight = hudHeight * 2 / 3;
+            var logPanelHeight = hudHeight - watchPanelHeight;
+
+            var watchPanel = Utils.CreateGameObject<VerticalLayoutGroup>(parent);
+            {
+                watchPanel.padding = new RectOffset(0, 0, 0, 0);
+                watchPanel.spacing = 1;
+                watchPanel.childAlignment = TextAnchor.UpperLeft;
+                watchPanel.childControlWidth = true;
+                watchPanel.childControlHeight = false;
+                watchPanel.childForceExpandWidth = true;
+                watchPanel.childForceExpandHeight = false;
+                watchPanel.childScaleWidth = false;
+                watchPanel.childScaleHeight = false;
+
+                watchPanel.GetOrAddComponent<RectTransform>().sizeDelta = new Vector2(0, watchPanelHeight);
+
+                // var bkgdDebug = watchPanel.GetOrAddComponent<RawImage>();
+                // bkgdDebug.color = new Color(0, 1, 0, 0.1f);
+            }
+
+            var logPanel = Utils.CreateGameObject<VerticalLayoutGroup>(parent);
+            {
+                logPanel.padding = new RectOffset(0, 0, 0, 0);
+                logPanel.spacing = 1;
+                logPanel.childAlignment = TextAnchor.UpperLeft;
+                logPanel.childControlWidth = true;
+                logPanel.childControlHeight = false;
+                logPanel.childForceExpandWidth = false;
+                logPanel.childForceExpandHeight = false;
+                logPanel.childScaleWidth = false;
+                logPanel.childScaleHeight = false;
+
+                logPanel.GetOrAddComponent<RectTransform>().sizeDelta = new Vector2(0, logPanelHeight);
+
+                var bkgdDebug = logPanel.GetOrAddComponent<RawImage>();
+                bkgdDebug.color = new Color(0, 1, 1, 0.1f);
+            }
+
+            return (watchPanel, logPanel);
         }
 
         private void Demo2d(RectTransform parent, Rect clippingRect, Fonts2d fonts2d)
@@ -217,7 +302,6 @@ namespace cynofield.mods.ui
             fonts2d.Demo(canvas, parent.sizeDelta, clippingRect);
         }
 
-        private readonly AugmentedDisplayLeft leftHud;
         private readonly AugmentedDisplayRight rightHud;
         private readonly AugmentedDisplayInWorld inworldUi;
         private readonly ThingsUi thingsUi;

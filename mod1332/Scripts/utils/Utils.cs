@@ -251,8 +251,8 @@ namespace cynofield.mods.utils
         private static VerticalLayoutGroup VLInit(VerticalLayoutGroup layout)
         {
             layout.childAlignment = TextAnchor.UpperLeft;
-            layout.childControlWidth = false;
-            layout.childControlHeight = false;
+            layout.childControlWidth = true;
+            layout.childControlHeight = true;
             layout.childForceExpandWidth = false;
             layout.childForceExpandHeight = false;
             layout.childScaleWidth = false;
@@ -263,17 +263,7 @@ namespace cynofield.mods.utils
         }
         public static HorizontalLayoutGroup HL(Component parent)
         {
-            HorizontalLayoutGroup layout;
-            if (parent is Canvas)
-            {
-                // Don't create intermediate GameObject when adding into Canvas
-                layout = parent.gameObject.AddComponent<HorizontalLayoutGroup>();
-            }
-            else
-            {
-                layout = HL(parent.gameObject);
-            }
-            return HLInit(layout);
+            return HLInit(HL(parent.gameObject));
         }
         public static HorizontalLayoutGroup HL(GameObject parent)
         {
@@ -283,8 +273,8 @@ namespace cynofield.mods.utils
         private static HorizontalLayoutGroup HLInit(HorizontalLayoutGroup layout)
         {
             layout.childAlignment = TextAnchor.UpperLeft;
-            layout.childControlWidth = false;
-            layout.childControlHeight = false;
+            layout.childControlWidth = true;
+            layout.childControlHeight = true;
             layout.childForceExpandWidth = false;
             layout.childForceExpandHeight = false;
             layout.childScaleWidth = false;

@@ -7,9 +7,7 @@ using Objects.Pipes;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace cynofield.mods.ui
 {
@@ -21,14 +19,13 @@ namespace cynofield.mods.ui
         private readonly BaseSkin skin;
         private readonly Fonts2d fonts2d;
         private readonly UiDefault defaultArUi;
+        private TagParser tagParser = new TagParser();
         private readonly List<IThingDescriber> alluis = new List<IThingDescriber>();
         private readonly Dictionary<Type, IThingDescriber> uis = new Dictionary<Type, IThingDescriber>();
-        public ThingsUi(BaseSkin skin, Fonts2d fonts2d)
+        public ThingsUi(BaseSkin skin, ViewLayoutFactory lf, ViewLayoutFactory3d lf3d, Fonts2d fonts2d)
         {
             this.skin = skin;
             this.fonts2d = fonts2d;
-            var lf = new ViewLayoutFactory(skin);
-            var lf3d = new ViewLayoutFactory3d(skin);
             this.defaultArUi = new UiDefault(lf, lf3d);
 
             alluis.Add(new TransformerUi());
@@ -50,7 +47,7 @@ namespace cynofield.mods.ui
             return (thing is VolumePump);
         }
 
-        private IThingDescriber GetUi(Thing thing)
+        internal IThingDescriber GetUi(Thing thing)
         {
             var type = thing.GetType();
             if (!uis.TryGetValue(type, out IThingDescriber ui)) ui = defaultArUi;
@@ -115,6 +112,18 @@ namespace cynofield.mods.ui
             Utils.Show(gameObject);
             return gameObject;
         }
+
+        public GameObject RenderWatch(Thing thing, GameObject parent, TagParser.Tag tag)
+        {
+            if (thing == null || parent == null || parent.gameObject == null)
+                return null;
+            if (!parent.TryGetComponent<RectTransform>(out var parentRect))
+                return null;
+
+            var ui = GetUi(thing);
+            var gameObject = defaultArUi.RenderWatch(thing, parentRect, ui.Describe(thing));
+            return gameObject;
+        }
     }
 
     interface IThingDescriber
@@ -144,4 +153,15 @@ namespace cynofield.mods.ui
     }
 
     interface IThingCompleteUi : IThingAnnotationRenderer, IThingDetailsRenderer { }
+
+    interface IThingWatcher
+    {
+        Type SupportedType();
+        GameObject RenderWatch(Thing thing, RectTransform parentRect);
+    }
+
+    interface IThingWatcherProvider
+    {
+        List<IThingWatcher> GetWatchers();
+    }
 }
