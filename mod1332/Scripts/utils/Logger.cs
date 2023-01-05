@@ -124,7 +124,6 @@ namespace cynofield.mods.utils
                 {
                     msg = $"{time}\t#E\tError generating log message for {typeName}: {e2}";
                 }
-                return msg;
             }
 
             if (e != null)

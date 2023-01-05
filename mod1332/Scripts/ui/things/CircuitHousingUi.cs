@@ -7,6 +7,7 @@ using cynofield.mods.utils;
 using HarmonyLib;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -116,6 +117,8 @@ namespace cynofield.mods.ui.things
                 if (chip != null)
                 {
                     var registers = GetRegisters(chip);
+                    data.sp.Add(registers[16], now);
+                    data.ra.Add(registers[17], now);
                     for (var i = 0; i < 16; i++)
                     {
                         data.r[i].Add(registers[i], now);
@@ -175,23 +178,32 @@ $@"{obj.DisplayName}
             // When want to change parent resize behaviour:
             var parentFitter = parent.gameObject.GetComponent<ContentSizeFitter>();
             parentFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
-            //parentFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            parentFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
+            float formWidth = 1.15f;
+            float formPadding = 0.02f;
+            float columnWidth = (formWidth - 2 * formPadding) / 2;
+            float nameWidth = 0.18f;
+            float valueWidth = columnWidth - nameWidth;
+
+            layout.spacing = 0.005f;
             {
                 var view = lf3d.Text1(layout.gameObject, thing.DisplayName);
                 presenter.AddBinding((d) => view.value.text = d.name.Current);
-                view.value.margin = new Vector4(0.02f, 0.01f, 0.01f, 0);
+                view.value.margin = new Vector4(formPadding, formPadding, 0.01f, 0);
 
                 if (colorScheme != null)
                     colorScheme.Add(view.value);
             }
             {
-                var view = lf3d.NameValuePair(layout.gameObject, "<color=green>db</color>", "0000");
+                var dbRow = CreateRow(layout.gameObject);
+                var view = lf3d.NameValuePair(dbRow.gameObject, "<color=green>db</color>", "0000",
+                    nameWidth: nameWidth, valueWidth: valueWidth);
                 presenter.AddBinding((d) =>
                 {
                     var v = d.db.Current;
                     view.value.text = skin.MathDisplay(v);
-                    var lastChangeAge = d.db.ChangeAge();
+                    var lastChangeAge = d.db.ChangeAge;
                     var alpha = (10 - Mathf.Clamp(lastChangeAge, 0, 10)) / 20f;
                     view.valueBkgd.color = new Color(0.1f, 0.5f, 0.1f, alpha);
                 });
@@ -199,50 +211,110 @@ $@"{obj.DisplayName}
                 if (colorScheme != null)
                     colorScheme.Add(view.value);
 
-                view.name.margin = new Vector4(0.02f, 0.01f, 0, 0);
+                view.name.margin = new Vector4(formPadding, 0.01f, 0, 0);
                 view.name.color = new Color(0, 0.6f, 0, 0.2f);
                 view.name.fontStyle = FontStyles.UpperCase | FontStyles.Bold;
-                view.value.margin = new Vector4(0.02f, 0.01f, 0.02f, 0);
-            }
 
+                CreateForRegister3d(presenter, dbRow.gameObject, colorScheme, 17,
+                    formPadding: formPadding, nameWidth: nameWidth, valueWidth: valueWidth);
+            }
+            var rowsVisibility = new List<HiddenPoolComponent>();
             for (var i = 0; i < 8; i++)
             {
                 var n = i * 2;
                 var m = n + 1;
 
-                var hl = Utils.CreateGameObject<HorizontalLayoutGroup>(layout.gameObject);
-                hl.padding = new RectOffset(0, 0, 0, 0);
-                hl.spacing = 0.01f;
-                hl.childAlignment = TextAnchor.UpperLeft;
-                hl.childControlWidth = false;
-                hl.childControlHeight = true;
-                hl.childForceExpandWidth = false;
-                hl.childForceExpandHeight = true;
-                hl.childScaleWidth = false;
-                hl.childScaleHeight = false;
-                var hlfitter = hl.gameObject.AddComponent<ContentSizeFitter>();
-                hlfitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
-                hlfitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+                var hl = CreateRow(layout.gameObject);
+                var hpool = hl.GetOrAddComponent<HiddenPoolComponent>();
+                hpool.SetVisible(true);
+                rowsVisibility.Add(hpool);
 
-                CreateForRegister3d(presenter, hl.gameObject, colorScheme, n);
-                CreateForRegister3d(presenter, hl.gameObject, colorScheme, m);
+                CreateForRegister3d(presenter, hl.gameObject, colorScheme, n,
+                    formPadding: formPadding, nameWidth: nameWidth, valueWidth: valueWidth);
+                CreateForRegister3d(presenter, hl.gameObject, colorScheme, m,
+                    formPadding: formPadding, nameWidth: nameWidth, valueWidth: valueWidth);
+            }
+            HiddenPoolComponent bottomPaddingVisibility;
+            {
+                var bottomPadding = lf3d.Text1(layout.gameObject, " ");
+                bottomPadding.value.fontSize = 0.0001f;
+                bottomPadding.value.margin = new Vector4(formWidth, formPadding, 0, 0);
+                bottomPaddingVisibility = bottomPadding.value.GetOrAddComponent<HiddenPoolComponent>();
+                bottomPaddingVisibility.SetVisible(true);
+            }
+            {
+                presenter.AddBinding((d) =>
+                {
+                    foreach (var row in rowsVisibility)
+                    {
+                        row.Hide();
+                    }
+                    bottomPaddingVisibility.Hide();
+                    for (var i = 0; i < 8; i++)
+                    {
+                        var n = i * 2;
+                        var m = n + 1;
+                        if (d.r[n].Current != 0 || d.r[m].Current != 0
+                         || d.r[n].ChangeAge < 10 || d.r[m].ChangeAge < 10)
+                            rowsVisibility[i].Show();
+                    }
+                    // if (d.sp.Current != 0 || d.ra.Current != 0
+                    //      || d.sp.ChangeAge < 10 || d.ra.ChangeAge < 10)
+                    //     rowsVisibility[8].Show();
+                    bottomPaddingVisibility.Show();
+                });
             }
 
             LayoutRebuilder.ForceRebuildLayoutImmediate(parent); // Needed to process possible changes in text heights
             return layout.gameObject;
         }
 
-        private void CreateForRegister3d(ICPresenter presenter, GameObject parent,
-         ColorSchemeComponent colorScheme, int registerNumber)
+        private HorizontalLayoutGroup CreateRow(GameObject parent)
         {
-            var view = lf3d.NameValuePair(parent, $"r{registerNumber}", "0000", visible: false);
+            var hl = Utils.CreateGameObject<HorizontalLayoutGroup>(parent);
+            hl.padding = new RectOffset(0, 0, 0, 0);
+            hl.spacing = 0.01f;
+            hl.childAlignment = TextAnchor.UpperLeft;
+            hl.childControlWidth = false;
+            hl.childControlHeight = false;
+            hl.childForceExpandWidth = false;
+            hl.childForceExpandHeight = false;
+            hl.childScaleWidth = false;
+            hl.childScaleHeight = false;
+            // var hlfitter = hl.gameObject.AddComponent<ContentSizeFitter>();
+            // hlfitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+            // hlfitter.verticalFit = ContentSizeFitter.FitMode.Unconstrained;
+            return hl;
+        }
+
+        private void CreateForRegister3d(ICPresenter presenter, GameObject parent,
+            ColorSchemeComponent colorScheme, int registerNumber,
+            float formPadding,
+            float nameWidth, float valueWidth)
+        {
+            var name = $"r{registerNumber}";
+            switch (registerNumber)
+            {
+                case 16: name = "sp"; break;
+                case 17: name = "ra"; break;
+            }
+
+            var view = lf3d.NameValuePair(parent, name, "0000", visible: false, nameWidth: nameWidth, valueWidth: valueWidth);
             presenter.AddBinding((d) =>
             {
                 view.visiblility.SetVisible(d.hasChip.Current);
-                var regData = d.r[registerNumber];
+                TimeSeriesBuffer<double> regData;
+                switch (registerNumber)
+                {
+                    case 16: regData = d.sp; break;
+                    case 17: regData = d.ra; break;
+                    default: regData = d.r[registerNumber]; break;
+                }
+
                 var v = regData.Current;
+                //view.value.text = "99999,999";
                 view.value.text = skin.MathDisplay(v);
-                var lastChangeAge = regData.ChangeAge();
+                var lastChangeAge = regData.ChangeAge;
                 var alpha = (10 - Mathf.Clamp(lastChangeAge, 0, 10)) / 40f;
                 view.valueBkgd.color = new Color(0.1f, 0.5f, 0.1f, alpha);
             });
@@ -253,9 +325,8 @@ $@"{obj.DisplayName}
                 colorScheme.Add(view.value);
             }
 
-            view.name.margin = new Vector4(0.02f, 0.01f, 0, 0.01f);
+            view.name.margin = new Vector4(formPadding, 0.01f, 0, 0);
             view.name.fontStyle = FontStyles.UpperCase | FontStyles.Bold;
-            view.value.margin = new Vector4(0.02f, 0.01f, 0.02f, 0.01f);
             view.value.fontStyle = FontStyles.Bold;
         }
 
@@ -287,7 +358,7 @@ $@"{obj.DisplayName}
                 {
                     var v = d.db.Current;
                     view.value.text = skin.MathDisplay(v);
-                    var lastChangeAge = d.db.ChangeAge();
+                    var lastChangeAge = d.db.ChangeAge;
                     var alpha = (10 - Mathf.Clamp(lastChangeAge, 0, 10)) / 10f;
                     view.valueBkgd.color = new Color(0, 0.5f, 0, alpha);
                 });
@@ -297,7 +368,7 @@ $@"{obj.DisplayName}
                 presenter.AddBinding((d) => view.visiblility.SetVisible(!d.hasChip.Current));
             }
 
-            for (var i = 0; i < 8; i++)
+            for (var i = 0; i < 9; i++)
             {
                 var n = i * 2;
                 var m = n + 1;
@@ -325,14 +396,26 @@ $@"{obj.DisplayName}
 
         private void CreateForRegister(ICPresenter presenter, GameObject parent, int registerNumber)
         {
-            var view = NameValuePair2(parent, $"r{registerNumber}", "0000", visible: false);
+            var name = $"r{registerNumber}";
+            switch (registerNumber)
+            {
+                case 16: name = "sp"; break;
+                case 17: name = "ra"; break;
+            }
+            var view = NameValuePair2(parent, name, "0000", visible: false);
             presenter.AddBinding((d) =>
             {
                 view.visiblility.SetVisible(d.hasChip.Current);
-                var regData = d.r[registerNumber];
+                TimeSeriesBuffer<double> regData;
+                switch (registerNumber)
+                {
+                    case 16: regData = d.sp; break;
+                    case 17: regData = d.ra; break;
+                    default: regData = d.r[registerNumber]; break;
+                }
                 var v = regData.Current;
                 view.value.text = skin.MathDisplay(v);
-                var lastChangeAge = regData.ChangeAge();
+                var lastChangeAge = regData.ChangeAge;
                 var alpha = (10 - Mathf.Clamp(lastChangeAge, 0, 10)) / 10f;
                 view.valueBkgd.color = new Color(0, 0.5f, 0, alpha);
             });

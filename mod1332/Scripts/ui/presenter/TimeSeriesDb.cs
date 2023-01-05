@@ -174,8 +174,8 @@ namespace cynofield.mods.ui.presenter
             return (meta[i], buffer[i], i);
         }
 
-        public float ChangeAge() => ChangeAge(GetTime());
-        public float ChangeAge(float now)
+        public float ChangeAge { get => GetChangeAge(GetTime()); }
+        public float GetChangeAge(float now)
         {
             var (m, _, _) = GetCurrent();
             if (m == null)

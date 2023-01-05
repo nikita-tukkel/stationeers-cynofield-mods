@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using cynofield.mods.utils;
 using UnityEngine;
@@ -23,7 +24,14 @@ namespace cynofield.mods.ui.presenter
             //  it is the problem on the caller side.
             foreach (var binding in bindings)
             {
-                binding.Present(data);
+                try
+                {
+                    binding.Present(data);
+                }
+                catch (Exception e)
+                {
+                    Log.Error(e, () => $"exception in presenter binding {binding}");
+                }
             }
         }
 

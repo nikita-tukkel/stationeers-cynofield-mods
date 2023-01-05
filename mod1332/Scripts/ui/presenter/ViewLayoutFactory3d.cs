@@ -103,7 +103,9 @@ namespace cynofield.mods.ui.presenter
         }
 
         public NameValuePairView NameValuePair(GameObject parent, string name, string value,
-           Color valueBkgd = default, bool visible = true)
+           Color valueBkgd = default,
+           float nameWidth = 0, float valueWidth = 0,
+           bool visible = true)
         {
             var layout = Utils.CreateGameObject<HorizontalLayoutGroup>(parent);
             layout.padding = new RectOffset(0, 0, 0, 0);
@@ -121,9 +123,9 @@ namespace cynofield.mods.ui.presenter
             var hpool = layout.gameObject.AddComponent<HiddenPoolComponent>();
             hpool.SetVisible(visible);
 
-            var nameView = Text1(layout.gameObject, name, width: 0.18f);
+            var nameView = Text1(layout.gameObject, name, width: nameWidth);
             nameView.value.margin = new Vector4(0.01f, 0.01f, 0.01f, 0.01f);
-            var valueView = Text2(layout.gameObject, value, bkgd: valueBkgd, width: 0.35f);
+            var valueView = Text2(layout.gameObject, value, bkgd: valueBkgd, width: valueWidth);
             valueView.value.margin = new Vector4(0.01f, 0.01f, 0.01f, 0.01f);
 
             return new NameValuePairView(layout, name: nameView.value, value: valueView);

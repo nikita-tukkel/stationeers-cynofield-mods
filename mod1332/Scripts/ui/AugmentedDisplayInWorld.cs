@@ -191,8 +191,8 @@ namespace cynofield.mods.ui
 
         private void OnTrackedAdded(string thingId, Thing thing)
         {
-            //Log.Info(() => $"New tracked {thing.DisplayName}");
             var colorSchemeId = ParseColorSchemeId(thing.DisplayName);
+            //Log.Info(() => $"New tracked {thing.DisplayName}, colorSchemeId={colorSchemeId}");
             var ann = CreateStaticAnnotation(colorSchemeId);
             staticAnnotations.Add(thingId, ann);
         }
