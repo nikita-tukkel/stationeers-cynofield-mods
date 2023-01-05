@@ -1,5 +1,6 @@
 using Assets.Scripts;
 using Assets.Scripts.Objects;
+using Assets.Scripts.UI;
 using cynofield.mods.ui.styles;
 using cynofield.mods.utils;
 using System;
@@ -92,6 +93,12 @@ namespace cynofield.mods.ui
 
             periodicUpdateCounter += Time.deltaTime;
 
+            if (periodicUpdateCounter > 0.5f)
+                PeriodicUpdate();
+
+            if (InputWindow.InputState != InputPanelState.None)
+                return;
+
             bool isCtrlKeyDown = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
             if (isCtrlKeyDown)
             {
@@ -101,9 +108,6 @@ namespace cynofield.mods.ui
                 }
                 return;
             }
-
-            if (periodicUpdateCounter > 0.5f)
-                PeriodicUpdate();
 
             if (CursorManager.Instance == null || CursorManager.CursorThing == null)
                 return;
