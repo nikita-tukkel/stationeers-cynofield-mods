@@ -42,6 +42,24 @@ namespace cynofield.mods.ui.presenter
             return layout;
         }
 
+        public HorizontalLayoutGroup CreateRow(GameObject parent)
+        {
+            var hl = Utils.CreateGameObject<HorizontalLayoutGroup>(parent);
+            hl.padding = new RectOffset(0, 0, 0, 0);
+            hl.spacing = 0;
+            hl.childAlignment = TextAnchor.UpperLeft;
+            hl.childControlWidth = false;
+            hl.childControlHeight = false;
+            hl.childForceExpandWidth = false;
+            hl.childForceExpandHeight = false;
+            hl.childScaleWidth = false;
+            hl.childScaleHeight = false;
+            // var hlfitter = hl.gameObject.AddComponent<ContentSizeFitter>();
+            // hlfitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+            // hlfitter.verticalFit = ContentSizeFitter.FitMode.Unconstrained;
+            return hl;
+        }
+
         public ValueView Text1(GameObject parent, string text, float width = 0)
         {
             var tmp = Utils.CreateGameObject<TextMeshProUGUI>(parent);

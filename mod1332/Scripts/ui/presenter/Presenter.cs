@@ -47,6 +47,8 @@ namespace cynofield.mods.ui.presenter
         }
     }
 
+    public class PresenterDefault : PresenterBase<object> { }
+
     public delegate void PresenterAction<T>(T data);
 
     public interface IPresenterBinding<T>

@@ -179,8 +179,7 @@ namespace cynofield.mods.utils
             {
                 return obj is Tag tag &&
                        name == tag.name &&
-                       EqualityComparer<string[]>.Default.Equals(paramsString, tag.paramsString) &&
-                       EqualityComparer<int[]>.Default.Equals(paramsInt, tag.paramsInt);
+                       joinedParams == tag.joinedParams;
             }
 
             public override int GetHashCode()

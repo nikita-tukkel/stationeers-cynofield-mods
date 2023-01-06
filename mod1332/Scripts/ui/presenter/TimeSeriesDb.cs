@@ -200,12 +200,17 @@ namespace cynofield.mods.ui.presenter
         }
 
         public T Oldest { get => GetOldest().Item2; }
-        public (Meta?, T, int) GetOldest()
+        public (Meta?, T, int) GetOldest() => GetOldest(-1, GetTime());
+        public (Meta?, T, int) GetOldest(float period) => GetOldest(period, GetTime());
+        public (Meta?, T, int) GetOldest(float period, float now)
         {
+            var from = now - period;
             var (meta, v, pos) = GetCurrent();
             var (mr, vr, pr) = (meta, v, pos);
             for (var i = 1; i < buffer.Length && meta != null; i++, (meta, v, pos) = GetPrev(pos))
             {
+                if (period > 0 && ((Meta)meta).timestamp < from)
+                    break;
                 (mr, vr, pr) = (meta, v, pos);
             }
             return (mr, vr, pr);

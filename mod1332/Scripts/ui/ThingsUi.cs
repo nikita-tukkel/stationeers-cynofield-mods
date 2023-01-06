@@ -79,6 +79,7 @@ namespace cynofield.mods.ui
         internal IThingDescriber GetUi(Thing thing)
         {
             // TODO rework from ui.SupportedType() into ui.IsSupported(thing)
+            // TODO rework specificWatchers to support case-insensitive watcher IDs
             var type = thing.GetType();
             if (!uis.TryGetValue(type, out IThingDescriber ui)) ui = defaultArUi;
             return ui;
@@ -168,6 +169,7 @@ namespace cynofield.mods.ui
             }
             else
             {
+                //Log.Debug(()=>$"watcherId={watcherId} tag={tag}");
                 gameObject = watcher.RenderWatch(thing, parentRect, tag);
             }
             return gameObject;

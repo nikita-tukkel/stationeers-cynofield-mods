@@ -35,14 +35,10 @@ namespace cynofield.mods.ui
         }
 
         // Key: Thing ID - Watcher Tag
-        private readonly Dictionary<(string, TagParser.Tag), Thing> activeWatchers =
-            new Dictionary<(string, TagParser.Tag), Thing>(1000);
-        private readonly Dictionary<(string, TagParser.Tag), GameObject> activeViews =
-            new Dictionary<(string, TagParser.Tag), GameObject>(1000);
-        private readonly HashSet<(string, TagParser.Tag)> foundWatchers =
-            new HashSet<(string, TagParser.Tag)>(1000);
-        private readonly HashSet<(string, TagParser.Tag)> removedWatchers =
-            new HashSet<(string, TagParser.Tag)>(1000);
+        private readonly Dictionary<WatcherKey, Thing> activeWatchers = new Dictionary<WatcherKey, Thing>(1000);
+        private readonly Dictionary<WatcherKey, GameObject> activeViews = new Dictionary<WatcherKey, GameObject>(1000);
+        private readonly HashSet<WatcherKey> foundWatchers = new HashSet<WatcherKey>(1000);
+        private readonly HashSet<WatcherKey> removedWatchers = new HashSet<WatcherKey>(1000);
 
         private float periodicUpdateCounter;
         void Update()
@@ -75,13 +71,13 @@ namespace cynofield.mods.ui
                     }
                     else
                     {
-                        // Log.Debug(() => $"Tags for {th.DisplayName}: {string.Join("; ", tags)}");
+                        //Log.Debug(() => $"Tags for {th.DisplayName}: {string.Join("; ", tags)}");
                         foreach (var tag in tags)
                         {
                             if (!tag.name.StartsWith(WATCH_TAG, StringComparison.InvariantCultureIgnoreCase))
                                 continue; // filter out other non-`#w` tags
 
-                            var watcherKey = (id, tag);
+                            var watcherKey = new WatcherKey(id, tag);
                             foundWatchers.Add(watcherKey);
                             if (activeWatchers.TryAdd(watcherKey, th))
                             {
@@ -113,13 +109,14 @@ namespace cynofield.mods.ui
                 var watcherKey = entry.Key;
                 var layout = entry.Value;
                 var thing = activeWatchers[watcherKey];
-                thingsUi.RenderWatch(thing, layout, watcherKey.Item2);
+                thingsUi.RenderWatch(thing, layout, watcherKey.tag);
+                Utils.Show(layout);
             }
         }
 
-        private void OnWatcherAdded((string, TagParser.Tag) watcherKey, Thing thing)
+        private void OnWatcherAdded(WatcherKey watcherKey, Thing thing)
         {
-            Log.Info(() => $"New tracked {watcherKey} {thing.DisplayName}");
+            //Log.Info(() => $"New tracked {watcherKey} {thing.DisplayName}");
             var layout = lf.RootLayout(parent.gameObject, debug: false);
             layout.spacing = -3;
             layout.padding = new RectOffset(5, 5, 0, 0);
@@ -127,12 +124,46 @@ namespace cynofield.mods.ui
             activeViews[watcherKey] = layout.gameObject;
         }
 
-        private void OnTrackedRemoved((string, TagParser.Tag) watcherKey)
+        private void OnTrackedRemoved(WatcherKey watcherKey)
         {
-            Log.Info(() => $"Removed tracked {watcherKey}");
+            //Log.Info(() => $"Removed tracked {watcherKey}");
             if (activeViews.TryGetValue(watcherKey, out GameObject layout))
             {
                 Utils.Destroy(layout);
+            }
+        }
+
+        internal struct WatcherKey
+        {
+            public string thingId;
+            public TagParser.Tag tag;
+
+            public WatcherKey(string thingId, TagParser.Tag tag)
+            {
+                this.thingId = thingId;
+                this.tag = tag;
+            }
+
+            override public bool Equals(object obj)
+            {
+                return obj is WatcherKey key &&
+                       thingId == key.thingId &&
+                       EqualityComparer<TagParser.Tag>.Default.Equals(tag, key.tag);
+            }
+
+            override public int GetHashCode()
+            {
+                int hash = 17;
+                if (thingId != null)
+                    hash = hash * 23 + thingId.GetHashCode();
+                if (tag != null)
+                    hash = hash * 23 + tag.GetHashCode();
+                return hash;
+            }
+
+            override public string ToString()
+            {
+                return $"{thingId};{tag}";
             }
         }
     }
