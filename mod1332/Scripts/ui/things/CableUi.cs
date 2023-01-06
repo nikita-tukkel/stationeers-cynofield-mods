@@ -1,11 +1,18 @@
 using System;
 using Assets.Scripts.Objects;
 using Assets.Scripts.Objects.Electrical;
+using cynofield.mods.ui.styles;
 
 namespace cynofield.mods.ui.things
 {
     class CableUi : IThingDescriber
     {
+        private readonly BaseSkin skin;
+        public CableUi(BaseSkin skin)
+        {
+            this.skin = skin;
+        }
+
         public Type SupportedType() { return typeof(Cable); }
 
         public string Describe(Thing thing)
@@ -14,9 +21,7 @@ namespace cynofield.mods.ui.things
             var net = obj.CableNetwork;
             return
 $@"network: {net.DisplayName}
-{utils.PowerDisplay(net.CurrentLoad)} / {utils.PowerDisplay(net.PotentialLoad)}";
+{skin.PowerDisplay(net.CurrentLoad)} / {skin.PowerDisplay(net.PotentialLoad)}";
         }
-
-        private readonly UiUtils utils = new UiUtils();
     }
 }

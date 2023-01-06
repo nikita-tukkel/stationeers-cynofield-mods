@@ -42,25 +42,67 @@ namespace cynofield.mods.ui.presenter
             return layout;
         }
 
-        public ValueView Text1(GameObject parent, string text, int width = 0)
+        public ValueView Text1(GameObject parent, string text, float width = 0)
         {
             var tmp = Utils.CreateGameObject<TextMeshProUGUI>(parent);
-            tmp.rectTransform.sizeDelta = new Vector2(width, 0);
             tmp.alignment = TextAlignmentOptions.TopLeft;
             tmp.margin = new Vector4(0f, 0f, 0f, 0f);
             tmp.richText = true;
             tmp.overflowMode = TextOverflowModes.Truncate;
-            tmp.enableWordWrapping = false;
+            tmp.enableWordWrapping = true;
             skin.skin2d.MainFont(tmp);
             tmp.color = new Color(1f, 1f, 1f, 1f);
             tmp.text = text;
             var fitter = tmp.gameObject.AddComponent<ContentSizeFitter>();
             if (width <= 0)
+            {
+                tmp.rectTransform.sizeDelta = new Vector2(parent.GetComponent<RectTransform>().sizeDelta.x, 0);
+                fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+            }
+            else
+            {
+                tmp.rectTransform.sizeDelta = new Vector2(width, 0);
+                fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+            }
+            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            return new ValueView(null, tmp, null);
+        }
+
+        public ValueView Text2(GameObject parent, string message,
+           Color bkgd = default, float width = 0, bool visible = true)
+        {
+            var size = new Vector2(width, 0);
+
+            var layout = Utils.CreateGameObject<HorizontalLayoutGroup>(parent);
+            layout.GetOrAddComponent<RectTransform>().sizeDelta = size;
+            layout.padding = new RectOffset(0, 0, 0, 0);
+            layout.spacing = 0;
+            layout.childAlignment = TextAnchor.MiddleLeft;
+            layout.childControlWidth = false;
+            layout.childControlHeight = true;
+            layout.childForceExpandWidth = false;
+            layout.childForceExpandHeight = false;
+            layout.childScaleWidth = false;
+            layout.childScaleHeight = false;
+            var fitter = layout.gameObject.AddComponent<ContentSizeFitter>();
+            if (width <= 0)
                 fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
             else
                 fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
             fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-            return new ValueView(null, tmp, null);
+
+            var hpool = layout.gameObject.AddComponent<HiddenPoolComponent>();
+            hpool.SetVisible(visible);
+
+            var text = Text1(layout.gameObject, message, width);
+            RawImage img = null;
+            if (bkgd != null)
+            {
+                img = layout.gameObject.AddComponent<RawImage>();
+                img.rectTransform.sizeDelta = size;
+                img.color = bkgd;
+            }
+            return new ValueView(layout, text.value, img);
         }
     }
 

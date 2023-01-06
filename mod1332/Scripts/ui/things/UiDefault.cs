@@ -1,3 +1,4 @@
+using System.Globalization;
 using Assets.Scripts.Objects;
 using cynofield.mods.ui.presenter;
 using cynofield.mods.ui.styles;
@@ -87,31 +88,37 @@ please <color=red><b>don't</b></color> play with me";
             {
 #pragma warning disable IDE1006
                 public readonly TimeSeriesBuffer<string> name;
+                public readonly TimeSeriesBuffer<string> description;
+                public readonly string typeName;
 
-                public RecordView(TimeSeriesRecord tsr)
+                public RecordView(TimeSeriesRecord tsr, string typeName)
                 {
                     name = tsr.Add("name", new TimeSeriesBuffer<string>(new string[2], 1));
+                    description = tsr.Add("description", new TimeSeriesBuffer<string>(new string[2], 1));
+                    this.typeName = typeName;
                 }
             }
 
-            public RecordView Get(string thingId)
+            public RecordView Get(Thing thing)
             {
+                var thingId = Utils.GetId(thing);
                 return views.GetOrAdd(thingId, (string _) =>
                 {
                     var hr = db.Get(thingId, () => new TimeSeriesRecord());
-                    return new RecordView(hr);
+                    var typeName = $"{thing.GetType()}".ToLower()
+                           .Replace("assets.scripts.objects.", "")
+                           .Replace("assets.scripts.", "");
+                    return new RecordView(hr, typeName);
                 });
             }
 
             public RecordView Snapshot(Thing thing, string description)
             {
-                var thingId = Utils.GetId(thing);
                 var now = Time.time;
-                var data = Get(thingId);
-                if (description == null)
-                    data.name.Add(thing.DisplayName, now);
-                else
-                    data.name.Add(description, now);
+                var data = Get(thing);
+                data.name.Add(thing.DisplayName, now);
+                if (description != null)
+                    data.description.Add(description, now);
                 return data;
             }
         }
@@ -126,7 +133,7 @@ please <color=red><b>don't</b></color> play with me";
 
             {
                 var view = lf.Text1(layout.gameObject, thing.DisplayName);
-                presenter.AddBinding((d) => view.value.text = d.name.Current);
+                presenter.AddBinding((d) => view.value.text = (d.description.Current ?? d.name.Current) + " " + d.typeName);
             }
 
             return layout.gameObject;
@@ -144,7 +151,7 @@ please <color=red><b>don't</b></color> play with me";
 
             {
                 var view = lf3d.Text1(layout.gameObject, thing.DisplayName);
-                presenter.AddBinding((d) => view.value.text = d.name.Current);
+                presenter.AddBinding((d) => view.value.text = d.description.Current ?? d.name.Current);
 
                 if (colorScheme != null)
                     colorScheme.Add(view.value);
@@ -162,27 +169,23 @@ please <color=red><b>don't</b></color> play with me";
             return layout.gameObject;
         }
 
-        public GameObject RenderWatch(Thing thing, RectTransform parent)
+        public GameObject RenderWatch(Thing thing, RectTransform parent, TagParser.Tag watcherTag)
         {
             return null;
         }
 
-        public GameObject RenderWatch(Thing thing, RectTransform parentRect, string description)
+        public GameObject RenderWatch(Thing thing, RectTransform parentRect, TagParser.Tag watcherTag, string description)
         {
-            // var thingId = Utils.GetId(thing);
-            // var view = lf.Text1(parent.gameObject, $"{description}");
-            // //var presenter = layout.gameObject.AddComponent<DefaultPresenter>();
-
-            // return view.value.gameObject;
-
+            //Log.Debug(() => $"RenderWatch {thing.DisplayName}: {description}");
             var data = dataModel.Snapshot(thing, description);
             var presenter = parentRect.GetComponentInChildren<DefaultPresenter>();
 
             if (presenter == null)
             {
+                //Log.Debug(() => $"Creating new watch for {thing.DisplayName}");
                 var view = lf.Text1(parentRect.gameObject, $"{description}");
                 presenter = view.value.gameObject.AddComponent<DefaultPresenter>();
-                presenter.AddBinding((d) => view.value.text = description + " aaa ");
+                presenter.AddBinding((d) => view.value.text = d.description.Current ?? d.name.Current);
 
                 Utils.Show(parentRect);
             }
@@ -191,10 +194,9 @@ please <color=red><b>don't</b></color> play with me";
             return presenter.gameObject;
         }
 
-        public List<IThingWatcher> GetWatchers()
+        Dictionary<string, IThingWatcher> IThingWatcherProvider.GetWatchers()
         {
-            var result = new List<IThingWatcher> { this };
-            return result;
+            return null;
         }
     }
 }

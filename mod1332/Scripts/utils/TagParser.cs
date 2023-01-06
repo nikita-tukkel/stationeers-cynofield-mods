@@ -24,12 +24,14 @@ namespace cynofield.mods.utils
                     paramz = Tokenize("-" + paramsStr, '-', '_');
 
                 int[] paramsInt = null;
+                string joinedParams = null;
                 if (paramz != null)
                 {
                     paramz = RemovePrefix(paramz);
+                    joinedParams = string.Join(", ", paramz);
                     paramsInt = ParamsToInt(paramz);
                 }
-                result.Add(new Tag { name = name, paramsString = paramz, paramsInt = paramsInt });
+                result.Add(new Tag { name = name, joinedParams = joinedParams, paramsString = paramz, paramsInt = paramsInt });
             }
 
             if (result.Count == 0)
@@ -169,6 +171,7 @@ namespace cynofield.mods.utils
         public class Tag
         {
             public string name;
+            public string joinedParams;
             public string[] paramsString;
             public int[] paramsInt;
 
@@ -185,17 +188,17 @@ namespace cynofield.mods.utils
                 int hash = 17;
                 if (name != null)
                     hash = hash * 23 + name.GetHashCode();
-                if (paramsString != null)
-                    hash = hash * 23 + paramsString.GetHashCode();
+                if (joinedParams != null)
+                    hash = hash * 23 + joinedParams.GetHashCode();
                 return hash;
             }
 
             public override string ToString()
             {
-                if (paramsString == null)
+                if (joinedParams == null)
                     return name;
 
-                return name + $"({string.Join(", ", paramsString)})";
+                return name + $"({joinedParams})";
             }
         }
     }

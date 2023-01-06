@@ -40,7 +40,7 @@ namespace cynofield.mods.ui.things
             var presenter = parentRect.GetComponentInChildren<ICPresenter>();
             if (presenter == null)
             {
-                Log.Debug(() => $"{Utils.GetId(thing)} creating new annotation view");
+                //Log.Debug(() => $"{Utils.GetId(thing)} creating new annotation view");
                 presenter = CreateAnnotationView(thing, parentRect).GetComponent<ICPresenter>();
                 LayoutRebuilder.ForceRebuildLayoutImmediate(parentRect); // Needed to process possible changes in text heights
             }

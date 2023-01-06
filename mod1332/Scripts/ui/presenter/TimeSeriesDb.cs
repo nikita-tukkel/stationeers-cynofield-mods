@@ -199,6 +199,18 @@ namespace cynofield.mods.ui.presenter
             return changes;
         }
 
+        public T Oldest { get => GetOldest().Item2; }
+        public (Meta?, T, int) GetOldest()
+        {
+            var (meta, v, pos) = GetCurrent();
+            var (mr, vr, pr) = (meta, v, pos);
+            for (var i = 1; i < buffer.Length && meta != null; i++, (meta, v, pos) = GetPrev(pos))
+            {
+                (mr, vr, pr) = (meta, v, pos);
+            }
+            return (mr, vr, pr);
+        }
+
         public override string ToString()
         {
             return $"{resolution}s {type}[{buffer.Length}]";

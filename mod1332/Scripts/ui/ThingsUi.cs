@@ -16,25 +16,54 @@ namespace cynofield.mods.ui
         private class Logger_ : CLogger { }
         private static readonly CLogger Log = new Logger_();
 
+        private void InitThings(BaseSkin skin, ViewLayoutFactory lf, ViewLayoutFactory3d lf3d)
+        {
+            alluis.Add(new TransformerUi(skin));
+            alluis.Add(new CableUi(skin));
+            alluis.Add(new ProgrammableChipUi(lf, lf3d, skin));
+            alluis.Add(new WeatherStationUi(lf));
+            alluis.Add(new BatteryUi(lf, skin));
+
+            foreach (var ui in alluis)
+            {
+                var thingType = ui.SupportedType();
+                uis[thingType] = ui;
+                if (ui is IThingWatcher watcher)
+                    defaultWatchers[thingType] = watcher;
+            }
+
+            foreach (var ui in alluis)
+            {
+                var watchers = (ui as IThingWatcherProvider)?.GetWatchers();
+                if (watchers != null)
+                {
+                    foreach (var entry in watchers)
+                    {
+                        var watcherId = entry.Key;
+                        var watcher = entry.Value;
+                        var thingType = watcher.SupportedType();
+                        specificWatchers[(thingType, watcherId)] = watcher;
+                        if (!defaultWatchers.ContainsKey(thingType))
+                            defaultWatchers[thingType] = watcher;
+                    }
+                }
+            }
+        }
+
         private readonly BaseSkin skin;
         private readonly Fonts2d fonts2d;
         private readonly UiDefault defaultArUi;
         private TagParser tagParser = new TagParser();
         private readonly List<IThingDescriber> alluis = new List<IThingDescriber>();
         private readonly Dictionary<Type, IThingDescriber> uis = new Dictionary<Type, IThingDescriber>();
+        private readonly Dictionary<Type, IThingWatcher> defaultWatchers = new Dictionary<Type, IThingWatcher>();
+        private readonly Dictionary<(Type, string), IThingWatcher> specificWatchers = new Dictionary<(Type, string), IThingWatcher>();
         public ThingsUi(BaseSkin skin, ViewLayoutFactory lf, ViewLayoutFactory3d lf3d, Fonts2d fonts2d)
         {
             this.skin = skin;
             this.fonts2d = fonts2d;
             this.defaultArUi = new UiDefault(lf, lf3d);
-
-            alluis.Add(new TransformerUi());
-            alluis.Add(new CableUi());
-            alluis.Add(new ProgrammableChipUi(lf, lf3d, skin));
-            foreach (var ui in alluis)
-            {
-                uis.Add(ui.SupportedType(), ui);
-            }
+            InitThings(skin, lf, lf3d);
         }
 
         public bool Supports(Thing thing)
@@ -49,6 +78,7 @@ namespace cynofield.mods.ui
 
         internal IThingDescriber GetUi(Thing thing)
         {
+            // TODO rework from ui.SupportedType() into ui.IsSupported(thing)
             var type = thing.GetType();
             if (!uis.TryGetValue(type, out IThingDescriber ui)) ui = defaultArUi;
             return ui;
@@ -120,8 +150,26 @@ namespace cynofield.mods.ui
             if (!parent.TryGetComponent<RectTransform>(out var parentRect))
                 return null;
 
-            var ui = GetUi(thing);
-            var gameObject = defaultArUi.RenderWatch(thing, parentRect, ui.Describe(thing));
+            string watcherId = null;
+            if (tag?.paramsString != null && tag.paramsString.Length > 0)
+                watcherId = tag.paramsString[0];
+
+            var thingType = thing.GetType();
+            if (!specificWatchers.TryGetValue((thingType, watcherId), out IThingWatcher watcher))
+            {
+                defaultWatchers.TryGetValue(thingType, out watcher);
+            }
+
+            GameObject gameObject;
+            if (watcher == null)
+            {
+                var ui = GetUi(thing);
+                gameObject = defaultArUi.RenderWatch(thing, parentRect, tag, ui.Describe(thing));
+            }
+            else
+            {
+                gameObject = watcher.RenderWatch(thing, parentRect, tag);
+            }
             return gameObject;
         }
     }
@@ -157,11 +205,11 @@ namespace cynofield.mods.ui
     interface IThingWatcher
     {
         Type SupportedType();
-        GameObject RenderWatch(Thing thing, RectTransform parentRect);
+        GameObject RenderWatch(Thing thing, RectTransform parentRect, TagParser.Tag watcherTag);
     }
 
     interface IThingWatcherProvider
     {
-        List<IThingWatcher> GetWatchers();
+        Dictionary<string, IThingWatcher> GetWatchers();
     }
 }

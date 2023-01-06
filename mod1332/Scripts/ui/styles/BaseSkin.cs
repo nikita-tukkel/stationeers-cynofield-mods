@@ -19,14 +19,25 @@ namespace cynofield.mods.ui.styles
 
         virtual public BaseSkin2d skin2d { get => _skin2d; }
 
-        virtual public string MathDisplay(float v)
+        virtual public string MathDisplay(double v)
         {
             return Math.Round(v, 3).ToString();
         }
 
-        virtual public string MathDisplay(double v)
+        virtual public string PowerDisplay(double power)
         {
-            return Math.Round(v, 3).ToString();
+            if (power > 900_000)
+            {
+                return $"{Math.Round(power / 1_000_000f, 2)}MW";
+            }
+            else if (power > 900)
+            {
+                return $"{Math.Round(power / 1_000f, 2)}kW";
+            }
+            else
+            {
+                return $"{Math.Round(power, 2)}W";
+            }
         }
     }
 

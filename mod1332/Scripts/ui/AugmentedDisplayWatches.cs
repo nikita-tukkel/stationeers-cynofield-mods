@@ -78,6 +78,9 @@ namespace cynofield.mods.ui
                         // Log.Debug(() => $"Tags for {th.DisplayName}: {string.Join("; ", tags)}");
                         foreach (var tag in tags)
                         {
+                            if (!tag.name.StartsWith(WATCH_TAG, StringComparison.InvariantCultureIgnoreCase))
+                                continue; // filter out other non-`#w` tags
+
                             var watcherKey = (id, tag);
                             foundWatchers.Add(watcherKey);
                             if (activeWatchers.TryAdd(watcherKey, th))
@@ -101,6 +104,8 @@ namespace cynofield.mods.ui
             foreach (var watcherKey in removedWatchers)
             {
                 OnTrackedRemoved(watcherKey);
+                activeViews.Remove(watcherKey);
+                activeWatchers.Remove(watcherKey);
             }
 
             foreach (var entry in activeViews)
@@ -115,15 +120,20 @@ namespace cynofield.mods.ui
         private void OnWatcherAdded((string, TagParser.Tag) watcherKey, Thing thing)
         {
             Log.Info(() => $"New tracked {watcherKey} {thing.DisplayName}");
-            var layout = lf.RootLayout(parent.gameObject, debug: true);
+            var layout = lf.RootLayout(parent.gameObject, debug: false);
+            layout.spacing = -3;
+            layout.padding = new RectOffset(5, 5, 0, 0);
+
             activeViews[watcherKey] = layout.gameObject;
         }
 
         private void OnTrackedRemoved((string, TagParser.Tag) watcherKey)
         {
             Log.Info(() => $"Removed tracked {watcherKey}");
-            activeViews.TryGetValue(watcherKey, out GameObject layout);
-            Utils.Destroy(layout);
+            if (activeViews.TryGetValue(watcherKey, out GameObject layout))
+            {
+                Utils.Destroy(layout);
+            }
         }
     }
 }
