@@ -73,8 +73,7 @@ namespace cynofield.mods
                 stateManager.OnShow += OnShowHandler;
 
                 Log.Info(() => "started successfully");
-                uiManager.Log2($"Welcome to <color=red>HEROs v{ModInfo.Instance.version}</color>!");
-                uiManager.Log2($"Welcome to <color=red>HEROs v{ModInfo.Instance.version}</color>!\n\noops");
+                LogToHud($"Welcome to <color=red>HEROs v{ModInfo.Instance.version}</color>!");
             }
             catch (Exception e)
             {
@@ -118,6 +117,11 @@ namespace cynofield.mods
             //Log.Debug(() => $"MouseOn thing={thing}, interactable={interactable}");
 
             uiManager.MouseOn(CursorEventInfo.FromInputMouse(thing, interactable));
+        }
+
+        public void LogToHud(string message)
+        {
+            uiManager.LogToHud(message);
         }
     }
 

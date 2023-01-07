@@ -3,14 +3,11 @@ using Assets.Scripts.Objects;
 using cynofield.mods.ui.presenter;
 using cynofield.mods.ui.styles;
 using cynofield.mods.utils;
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.UIElements;
-using static UnityEngine.UI.ScrollRect;
 
 namespace cynofield.mods.ui
 {
@@ -253,7 +250,7 @@ namespace cynofield.mods.ui
         private (VerticalLayoutGroup, GameObject) CreateLeftPanelParts(VerticalLayoutGroup parent,
             float hudHeight, float logPanelWidth)
         {
-            var watchPanelHeight = hudHeight * 2 / 3;
+            var watchPanelHeight = hudHeight / 3; // log panel will be higher then required, but watches will overflow on them, so ok.
             var logPanelHeight = hudHeight - watchPanelHeight;
 
             var watchPanel = Utils.CreateGameObject<VerticalLayoutGroup>(parent);
@@ -274,55 +271,22 @@ namespace cynofield.mods.ui
                 // bkgdDebug.color = new Color(0, 1, 0, 0.1f);
             }
 
+            // Just can't get ScrollRect + Mask to work.
+            // Documentation is lacking and examples are not working as expected.
+            // In the best result achieved, ScrollRect and logPanel positions are correct, but Mask'ing still doesn't work.
             // https://docs.unity3d.com/Packages/com.unity.ugui@1.0/manual/script-ScrollRect.html
             // https://earlycoffee.games/blog/2021_12_30_navigablescrollrect/
-            var logScroll = Utils.CreateGameObject<ScrollRect>(parent);
-            //var viewport = Utils.CreateGameObject<VerticalLayoutGroup>(logScroll);
-            //var logPanel = Utils.CreateGameObject<VerticalLayoutGroup>(viewport);
-            var logPanel = Utils.CreateGameObject<VerticalLayoutGroup>(logScroll);
 
+            // The same effect may be achieved without suffering with ScrollRect. So screw those rects.
+            // Just create a log panel to be more then half height of the screen.
+            // The log panel will be populated from bottom to top, so the top part of it will not be occupied,
+            //  if very large log messages are not used.
+            // Watches, if there are a lot of them, will overflow to the top part of log panel, which is tolerable.
+
+            var logPanel = Utils.CreateGameObject<VerticalLayoutGroup>(parent);
             {
-                var logScrollRect = logScroll.GetOrAddComponent<RectTransform>();
-                logScrollRect.sizeDelta = new Vector2(logPanelWidth, logPanelHeight);
-                // var viewportRect = viewport.GetOrAddComponent<RectTransform>();
-                // viewportRect.sizeDelta = new Vector2(logPanelWidth, 40);
-
-                var mask = logScroll.GetOrAddComponent<Mask>();
-                
-
                 var logPanelRect = logPanel.GetOrAddComponent<RectTransform>();
-                logPanelRect.sizeDelta = new Vector2(logPanelWidth, 2 * logPanelHeight);
-                logPanelRect.anchoredPosition =  new Vector2(0,400);
-
-                //logScroll.viewport = viewportRect;
-                logScroll.content = logPanelRect;
-                logScroll.horizontal = false;
-                logScroll.vertical = true;
-                logScroll.verticalScrollbarVisibility = ScrollbarVisibility.Permanent;
-                //logScroll.verticalScrollbar.enabled = true;
-
-                //var mask = viewport.GetOrAddComponent<Mask>();
-
-                // var scroll = logScroll.GetOrAddComponent<VerticalLayoutGroup>();
-                // scroll.padding = new RectOffset(0, 0, 0, 0);
-                // scroll.spacing = 1;
-                // scroll.childAlignment = TextAnchor.UpperLeft;
-                // scroll.childControlWidth = false;
-                // scroll.childControlHeight = false;
-                // scroll.childForceExpandWidth = false;
-                // scroll.childForceExpandHeight = false;
-                // scroll.childScaleWidth = false;
-                // scroll.childScaleHeight = false;
-
-                // viewport.padding = new RectOffset(0, 0, 0, 0);
-                // viewport.spacing = 1;
-                // viewport.childAlignment = TextAnchor.UpperLeft;
-                // viewport.childControlWidth = false;
-                // viewport.childControlHeight = false;
-                // viewport.childForceExpandWidth = false;
-                // viewport.childForceExpandHeight = false;
-                // viewport.childScaleWidth = false;
-                // viewport.childScaleHeight = false;
+                logPanelRect.sizeDelta = new Vector2(logPanelWidth, logPanelHeight);
 
                 logPanel.padding = new RectOffset(0, 0, 0, 0);
                 logPanel.spacing = 0;
@@ -334,63 +298,12 @@ namespace cynofield.mods.ui
                 logPanel.childScaleWidth = false;
                 logPanel.childScaleHeight = false;
 
-                var bkgdDebug1 = logScroll.GetOrAddComponent<RawImage>();
-                bkgdDebug1.color = new Color(1, 0, 0, 0.1f);
-                // var bkgdDebug2 = viewport.GetOrAddComponent<RawImage>();
-                // bkgdDebug2.color = new Color(0, 0, 1, 0.1f);
-                var bkgdDebug3 = logPanel.GetOrAddComponent<RawImage>();
-                bkgdDebug3.color = new Color(1, 1, 1, 0.05f);
-                bkgdDebug3.maskable = true;
-                //var ursa = logPanel.GetOrAddComponent<UnityRectSoundsAnal>();
-                //                ursa.SyncSizeIntoAnotherRect(bkgdDebug3.GetComponent<RectTransform>());
-
-                Utils.Show(logScroll);
+                // var bkgdDebug3 = logPanel.GetOrAddComponent<RawImage>();
+                // bkgdDebug3.color = new Color(1, 1, 1, 0.05f);
+                // bkgdDebug3.maskable = true;
             }
 
-            // var viewPort = Utils.CreateGameObject<VerticalLayoutGroup>(parent);
-            // var logPanel = Utils.CreateGameObject<VerticalLayoutGroup>(viewPort);
-            // {
-            //     logPanel.padding = new RectOffset(0, 0, 0, 0);
-            //     logPanel.spacing = 1;
-            //     logPanel.childAlignment = TextAnchor.LowerLeft;
-            //     logPanel.childControlWidth = false;
-            //     logPanel.childControlHeight = false;
-            //     logPanel.childForceExpandWidth = false;
-            //     logPanel.childForceExpandHeight = false;
-            //     logPanel.childScaleWidth = false;
-            //     logPanel.childScaleHeight = false;
-            //     logPanel.GetOrAddComponent<RectTransform>().sizeDelta = new Vector2(logPanelWidth, logPanelHeight);
-
-            //     // var fitter = logPanel.GetOrAddComponent<ContentSizeFitter>();
-            //     // fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
-            //     // fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-
-            //     logScroll.horizontal = false;
-            //     logScroll.vertical = true;
-            //     //logScroll.GetOrAddComponent<RectTransform>().sizeDelta = new Vector2(logPanelWidth, logPanelHeight);
-            //     logScroll.content = logPanel.GetComponent<RectTransform>();
-
-            //     var viewportRect = viewPort.GetComponent<RectTransform>();
-            //     viewportRect.sizeDelta = new Vector2(logPanelWidth, 100);
-            //     logScroll.viewport = viewportRect;
-            //     // logScroll.viewport.sizeDelta = new Vector2(logPanelWidth, logPanelHeight);
-            //     logScroll.movementType = ScrollRect.MovementType.Clamped;
-            //     //logPanel.transform.SetParent(logScroll.viewport.transform, false);
-            //     //scroll.normalizedPosition = new Vector2(0, 0);
-
-            //     //var bkgdDebug = logPanel.GetOrAddComponent<RawImage>();
-            //     // var bkgdDebug1 = logScroll.GetOrAddComponent<RawImage>();
-            //     // bkgdDebug1.color = new Color(1, 0, 0, 0.1f);
-            //     // var bkgdDebug2 = logPanel.GetOrAddComponent<RawImage>();
-            //     // bkgdDebug2.color = new Color(0, 1, 0, 0.1f);
-            //     var bkgdDebug3 = viewPort.GetOrAddComponent<RawImage>();
-            //     bkgdDebug3.color = new Color(0, 0, 1, 0.1f);
-
-            //     Utils.Show(logScroll);
-            // }
-
             return (watchPanel, logPanel.gameObject);
-            //return (watchPanel, logPanel);
         }
 
         private void Demo2d(RectTransform parent, Rect clippingRect, Fonts2d fonts2d)
@@ -446,9 +359,9 @@ namespace cynofield.mods.ui
             }
         }
 
-        public void Log2(string message)
+        public void LogToHud(string message)
         {
-            logsDisplay.NewLogEntry(message);
+            logsDisplay.LogToHud(message);
         }
 
         private readonly List<Component> components = new List<Component>();

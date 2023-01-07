@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Concurrent;
 using cynofield.mods.ui.presenter;
 using cynofield.mods.utils;
@@ -49,9 +50,15 @@ namespace cynofield.mods.ui
                 return;
             periodicUpdateCounter = 0;
 
-            NewLogEntry("here " + Time.time + "\n not \nis money");
-            //parent.gameObject.GetComponent<ScrollRect>().normalizedPosition = new Vector2(0, 0);
+            foreach (var logEntry in activeLogEntries)
+            {
+                if (logEntry.age > 60)
+                {
+                    HideLogEntry(logEntry);
+                }
 
+                logEntry.Render();
+            }
         }
 
         private void HideLogEntry(LogEntryView logEntry)
@@ -59,6 +66,7 @@ namespace cynofield.mods.ui
             if (logEntry == null)
                 return;
             logEntry.visibility.Hide();
+            logEntry.onHide();
             Utils.DestroyChildren(logEntry.clientLayout.transform);
             pooledLogEntries.Enqueue(logEntry);
             //LayoutRebuilder.ForceRebuildLayoutImmediate(parent.GetComponent<RectTransform>());
@@ -70,28 +78,23 @@ namespace cynofield.mods.ui
                 return;
 
             var parentRect = parent.GetComponent<RectTransform>();
-            //var parentRect = parent.GetComponent<ScrollRect>().content;
-
             logEntry.visibility.Show(parentRect);
+            logEntry.onShow();
             activeLogEntries.Enqueue(logEntry);
-            // LayoutRebuilder.ForceRebuildLayoutImmediate(parentRect.transform.parent.GetComponent<RectTransform>());
-            //LayoutRebuilder.ForceRebuildLayoutImmediate(parentRect.transform.parent.transform.parent.GetComponent<RectTransform>());
-            LayoutRebuilder.ForceRebuildLayoutImmediate(parentRect.transform.parent.transform.parent.transform.parent.GetComponent<RectTransform>());
-
-            //parent.gameObject.GetComponent<ScrollRect>().normalizedPosition = new Vector2(0, 0);
+            LayoutRebuilder.ForceRebuildLayoutImmediate(parentRect);
             //Log.Debug(()=>Utils.PrintHierarchy(parent.gameObject));
         }
 
-        public void NewLogEntry(string message)
+        public void LogToHud(string message)
         {
-            NewLogEntry((layout) =>
+            LogToHud((layout) =>
             {
                 var parentSize = parent.GetComponent<RectTransform>().sizeDelta;
                 lf.Text1(layout, message, width: parentSize.x);
             });
         }
 
-        public void NewLogEntry(LogAction logRenderAction)
+        public void LogToHud(LogAction logRenderAction)
         {
             LogEntryView logEntry = null;
             if (pooledLogEntries.Count <= 0)
@@ -128,6 +131,9 @@ namespace cynofield.mods.ui
             private HorizontalLayoutGroup layout;
             public VerticalLayoutGroup clientLayout;
             public HiddenPoolComponent visibility;
+            internal float creationTimestamp;
+            internal float age;
+            private PresenterDefault agePresenter;
             internal void Init(HorizontalLayoutGroup layout, ViewLayoutFactory lf, float width)
             {
                 this.layout = layout;
@@ -142,8 +148,8 @@ namespace cynofield.mods.ui
                     layout.padding = new RectOffset(5, 5, 0, 0);
                     layout.childControlWidth = false;
                     layout.childForceExpandWidth = false;
-                    layout.childControlHeight = false;
-                    layout.childForceExpandHeight = false;
+                    layout.childControlHeight = true;
+                    layout.childForceExpandHeight = true;
 
                     var fitter = layout.gameObject.AddComponent<ContentSizeFitter>();
                     fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
@@ -152,14 +158,37 @@ namespace cynofield.mods.ui
                     visibility = layout.gameObject.AddComponent<HiddenPoolComponent>();
                 }
 
-                var age = lf.Text1(layout.gameObject, "60s", width: ageWidth);
+                var age = lf.Text1(layout.gameObject, "", width: ageWidth);
                 age.value.alignment = TextAlignmentOptions.MidlineJustified;
                 age.value.margin = new Vector4(5, 0, 0, 0);
+                agePresenter = age.value.GetOrAddComponent<PresenterDefault>();
+                agePresenter.AddBinding((e) => age.value.text = $"{Math.Round((e as LogEntryView).age)}s");
 
-                clientLayout = lf.RootLayout(layout.gameObject, debug: true);
+                clientLayout = lf.RootLayout(layout.gameObject, debug: false);
                 clientLayout.GetOrAddComponent<RectTransform>().sizeDelta = new Vector2(logEntryWidth, 0);
                 clientLayout.spacing = 0;
                 clientLayout.padding = new RectOffset(logEntryPaddingLeft, 0, 0, 0);
+            }
+
+            internal void Render()
+            {
+                // Update age and call client presenter if exists
+                age = Time.time - creationTimestamp;
+                agePresenter.Present(this);
+                var presenter = clientLayout.GetComponentInChildren<PresenterDefault>();
+                if (presenter != null)
+                {
+                    presenter.Present(this);
+                }
+            }
+
+            internal void onShow()
+            {
+                creationTimestamp = Time.time;
+            }
+
+            internal void onHide()
+            {
             }
         }
     }

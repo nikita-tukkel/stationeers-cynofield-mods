@@ -239,6 +239,7 @@ namespace cynofield.mods.utils
             text.overflowMode = TextOverflowModes.Truncate;
             text.enableWordWrapping = true;
             text.outlineWidth = 0;
+            text.maskable = true;
 
             //text.lineSpacing = 0;
             text.lineSpacing = 1; // Set to zero and then to 1 to calibrate `Line Height` setting of Text Mesh Pro Font Asset

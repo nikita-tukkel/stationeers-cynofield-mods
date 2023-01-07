@@ -47,7 +47,8 @@ namespace cynofield.mods.ui
             detailsLayout.childForceExpandHeight = false;
             detailsLayout.childScaleWidth = false;
             detailsLayout.childScaleHeight = false;
-            detailsLayoutRect = rootComponent.gameObject.GetComponent<RectTransform>();
+            detailsLayoutRect = detailsLayout.GetOrAddComponent<RectTransform>();
+            detailsLayout.GetOrAddComponent<Mask>();
             Utils.Show(detailsLayout);
         }
 

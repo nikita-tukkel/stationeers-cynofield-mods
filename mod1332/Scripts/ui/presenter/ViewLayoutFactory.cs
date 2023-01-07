@@ -76,6 +76,7 @@ namespace cynofield.mods.ui.presenter
             tmp.enableWordWrapping = true;
             skin.skin2d.MainFont(tmp);
             tmp.color = new Color(1f, 1f, 1f, 1f);
+            tmp.maskable = true;
             tmp.text = text;
             var fitter = tmp.gameObject.AddComponent<ContentSizeFitter>();
             if (width <= 0)
@@ -125,6 +126,7 @@ namespace cynofield.mods.ui.presenter
                 img = layout.gameObject.AddComponent<RawImage>();
                 img.rectTransform.sizeDelta = size;
                 img.color = bkgd;
+                img.maskable = true;
             }
             return new ValueView(layout, text.value, img);
         }
