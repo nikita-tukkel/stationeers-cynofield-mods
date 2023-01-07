@@ -6,7 +6,7 @@ using cynofield.mods.ui.styles;
 using cynofield.mods.utils;
 using System;
 using System.Collections.Generic;
-
+using static cynofield.mods.ui.AugmentedDisplayLog;
 using static cynofield.mods.ui.AugmentedUiManager;
 
 namespace cynofield.mods
@@ -122,6 +122,11 @@ namespace cynofield.mods
         public void LogToHud(string message)
         {
             uiManager.LogToHud(message);
+        }
+
+        public void LogToHud(LogAction logRenderAction)
+        {
+            uiManager.LogToHud(logRenderAction);
         }
     }
 

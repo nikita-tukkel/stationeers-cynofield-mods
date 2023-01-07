@@ -90,7 +90,8 @@ namespace cynofield.mods.ui
             LogToHud((layout) =>
             {
                 var parentSize = parent.GetComponent<RectTransform>().sizeDelta;
-                lf.Text1(layout, message, width: parentSize.x);
+                var view = lf.Text1(layout, message, width: parentSize.x);
+                return view.value.gameObject;
             });
         }
 
@@ -113,7 +114,7 @@ namespace cynofield.mods.ui
             ShowLogEntry(logEntry);
         }
 
-        public delegate void LogAction(GameObject parent);
+        public delegate GameObject LogAction(GameObject parent);
 
         public class LogEntryView : MonoBehaviour
         {
@@ -185,6 +186,7 @@ namespace cynofield.mods.ui
             internal void onShow()
             {
                 creationTimestamp = Time.time;
+                Render();
             }
 
             internal void onHide()

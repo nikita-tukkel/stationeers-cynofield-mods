@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using static cynofield.mods.ui.AugmentedDisplayLog;
 
 namespace cynofield.mods.ui
 {
@@ -362,6 +363,11 @@ namespace cynofield.mods.ui
         public void LogToHud(string message)
         {
             logsDisplay.LogToHud(message);
+        }
+
+        public void LogToHud(LogAction logRenderAction)
+        {
+            logsDisplay.LogToHud(logRenderAction);
         }
 
         private readonly List<Component> components = new List<Component>();

@@ -267,9 +267,12 @@ namespace cynofield.mods.ui.things
                 if (presenter == null)
                 {
                     Log.Debug(() => $"Creating new watch for {thing.DisplayName}");
+
+                    var ratioAlertLogger = new LogWorkflow { minAllowedPeriod = 20 };
+
                     presenter = parentRect.GetOrAddComponent<PresenterDefault>();
                     {
-                        var view = lf.Text1(parentRect.gameObject, $"");
+                        var view = lf.Text1(parentRect.gameObject, "");
                         presenter.AddBinding((th) => view.value.text = (th as Thing).DisplayName);
                     }
                     var hl = lf.CreateRow(parentRect.gameObject);
@@ -288,6 +291,26 @@ namespace cynofield.mods.ui.things
                                     setting.valueBkgd.color = new Color(0.5f, 0, 0, 0.4f);
                                 else
                                     setting.valueBkgd.color = new Color(0, 0, 0, 0f);
+
+                                if (ratio <= 90)
+                                {
+                                    //ratioAlertLogger.LogToHud(ratio);
+                                    ratioAlertLogger.ResetCount();
+                                    ratioAlertLogger.LogToHud("", (parent) =>
+                                    {
+                                        var row = lf.CreateRow(parent);
+                                        var parentSize = parent.GetComponent<RectTransform>().sizeDelta;
+                                        var view = lf.Text1(row.gameObject, "", width: parentSize.x);
+                                        var p = row.GetOrAddComponent<PresenterDefault>();
+                                        p.AddBinding((d) =>
+                                        {
+                                            var r = Math.Round(100 * Device.BatchRead(obj.BatchMethod, obj.LogicType,
+                                                obj.CurrentPrefabHash, obj.InputNetwork1DevicesSorted));
+                                            view.value.text = "Bat " + r + " " + Time.time;
+                                        });
+                                        return row.gameObject;
+                                    });
+                                }
                             }
                             else
                             {
