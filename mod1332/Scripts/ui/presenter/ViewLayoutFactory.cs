@@ -42,7 +42,7 @@ namespace cynofield.mods.ui.presenter
             return layout;
         }
 
-        public HorizontalLayoutGroup CreateRow(GameObject parent)
+        public HorizontalLayoutGroup CreateRow(GameObject parent, bool debug = false)
         {
             var hl = Utils.CreateGameObject<HorizontalLayoutGroup>(parent);
             hl.padding = new RectOffset(0, 0, 0, 0);
@@ -57,6 +57,12 @@ namespace cynofield.mods.ui.presenter
             // var hlfitter = hl.gameObject.AddComponent<ContentSizeFitter>();
             // hlfitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
             // hlfitter.verticalFit = ContentSizeFitter.FitMode.Unconstrained;
+
+            if (debug)
+            {
+                var bkgdDebug = hl.GetOrAddComponent<RawImage>();
+                bkgdDebug.color = new Color(0, 1, 0, 0.1f);
+            }
             return hl;
         }
 

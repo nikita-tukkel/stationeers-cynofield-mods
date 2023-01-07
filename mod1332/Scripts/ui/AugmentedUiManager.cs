@@ -3,11 +3,14 @@ using Assets.Scripts.Objects;
 using cynofield.mods.ui.presenter;
 using cynofield.mods.ui.styles;
 using cynofield.mods.utils;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.UIElements;
+using static UnityEngine.UI.ScrollRect;
 
 namespace cynofield.mods.ui
 {
@@ -38,8 +41,8 @@ namespace cynofield.mods.ui
 
             var watchesPanel = AugmentedDisplayWatches.Create(mainPanel.watchPanel, thingsUi, lf, fonts2d);
             components.Add(watchesPanel);
-            var logsPanel = AugmentedDisplayLog.Create(mainPanel.logPanel, thingsUi, fonts2d);
-            components.Add(logsPanel);
+            logsDisplay = AugmentedDisplayLog.Create(mainPanel.logPanel, lf);
+            components.Add(logsDisplay);
             rightHud = AugmentedDisplayRight.Create(mainPanel.layoutRight, thingsUi, skin, fonts2d);
             components.Add(rightHud);
             inworldUi = AugmentedDisplayInWorld.Create(thingsUi, playerProvider, colorSchemes);
@@ -53,11 +56,11 @@ namespace cynofield.mods.ui
             public VerticalLayoutGroup layoutRight;
 
             public VerticalLayoutGroup watchPanel;
-            public VerticalLayoutGroup logPanel;
+            public GameObject logPanel;
 
             public MainPanelComponents(Canvas canvas,
                 VerticalLayoutGroup layoutLeft, VerticalLayoutGroup layoutRight,
-                VerticalLayoutGroup watchPanel, VerticalLayoutGroup logPanel)
+                VerticalLayoutGroup watchPanel, GameObject logPanel)
             {
                 this.canvas = canvas;
                 this.layoutLeft = layoutLeft;
@@ -148,7 +151,7 @@ namespace cynofield.mods.ui
             // Left panel childs: ContentSizeFitter + CanvasRenderer + 2 Vertical Layouts.
             // ContentSizeFitter allows to dynamically resize text for content.
             // CanvasRenderer clips out childs who don't fit into root layout.
-            var (watchPanel, logPanel) = CreateLeftPanelParts(layout1, hudHeight);
+            var (watchPanel, logPanel) = CreateLeftPanelParts(layout1, hudHeight, leftPanelWidth);
 
             if (demoMode)
             {
@@ -247,8 +250,8 @@ namespace cynofield.mods.ui
             return new MainPanelComponents(canvas, layout1, layout3, watchPanel, logPanel);
         }
 
-        private (VerticalLayoutGroup, VerticalLayoutGroup) CreateLeftPanelParts(VerticalLayoutGroup parent,
-            float hudHeight)
+        private (VerticalLayoutGroup, GameObject) CreateLeftPanelParts(VerticalLayoutGroup parent,
+            float hudHeight, float logPanelWidth)
         {
             var watchPanelHeight = hudHeight * 2 / 3;
             var logPanelHeight = hudHeight - watchPanelHeight;
@@ -271,25 +274,123 @@ namespace cynofield.mods.ui
                 // bkgdDebug.color = new Color(0, 1, 0, 0.1f);
             }
 
-            var logPanel = Utils.CreateGameObject<VerticalLayoutGroup>(parent);
+            // https://docs.unity3d.com/Packages/com.unity.ugui@1.0/manual/script-ScrollRect.html
+            // https://earlycoffee.games/blog/2021_12_30_navigablescrollrect/
+            var logScroll = Utils.CreateGameObject<ScrollRect>(parent);
+            //var viewport = Utils.CreateGameObject<VerticalLayoutGroup>(logScroll);
+            //var logPanel = Utils.CreateGameObject<VerticalLayoutGroup>(viewport);
+            var logPanel = Utils.CreateGameObject<VerticalLayoutGroup>(logScroll);
+
             {
+                var logScrollRect = logScroll.GetOrAddComponent<RectTransform>();
+                logScrollRect.sizeDelta = new Vector2(logPanelWidth, logPanelHeight);
+                // var viewportRect = viewport.GetOrAddComponent<RectTransform>();
+                // viewportRect.sizeDelta = new Vector2(logPanelWidth, 40);
+
+                var mask = logScroll.GetOrAddComponent<Mask>();
+                
+
+                var logPanelRect = logPanel.GetOrAddComponent<RectTransform>();
+                logPanelRect.sizeDelta = new Vector2(logPanelWidth, 2 * logPanelHeight);
+                logPanelRect.anchoredPosition =  new Vector2(0,400);
+
+                //logScroll.viewport = viewportRect;
+                logScroll.content = logPanelRect;
+                logScroll.horizontal = false;
+                logScroll.vertical = true;
+                logScroll.verticalScrollbarVisibility = ScrollbarVisibility.Permanent;
+                //logScroll.verticalScrollbar.enabled = true;
+
+                //var mask = viewport.GetOrAddComponent<Mask>();
+
+                // var scroll = logScroll.GetOrAddComponent<VerticalLayoutGroup>();
+                // scroll.padding = new RectOffset(0, 0, 0, 0);
+                // scroll.spacing = 1;
+                // scroll.childAlignment = TextAnchor.UpperLeft;
+                // scroll.childControlWidth = false;
+                // scroll.childControlHeight = false;
+                // scroll.childForceExpandWidth = false;
+                // scroll.childForceExpandHeight = false;
+                // scroll.childScaleWidth = false;
+                // scroll.childScaleHeight = false;
+
+                // viewport.padding = new RectOffset(0, 0, 0, 0);
+                // viewport.spacing = 1;
+                // viewport.childAlignment = TextAnchor.UpperLeft;
+                // viewport.childControlWidth = false;
+                // viewport.childControlHeight = false;
+                // viewport.childForceExpandWidth = false;
+                // viewport.childForceExpandHeight = false;
+                // viewport.childScaleWidth = false;
+                // viewport.childScaleHeight = false;
+
                 logPanel.padding = new RectOffset(0, 0, 0, 0);
-                logPanel.spacing = 1;
-                logPanel.childAlignment = TextAnchor.UpperLeft;
-                logPanel.childControlWidth = true;
+                logPanel.spacing = 0;
+                logPanel.childAlignment = TextAnchor.LowerLeft;
+                logPanel.childControlWidth = false;
                 logPanel.childControlHeight = false;
                 logPanel.childForceExpandWidth = false;
                 logPanel.childForceExpandHeight = false;
                 logPanel.childScaleWidth = false;
                 logPanel.childScaleHeight = false;
 
-                logPanel.GetOrAddComponent<RectTransform>().sizeDelta = new Vector2(0, logPanelHeight);
+                var bkgdDebug1 = logScroll.GetOrAddComponent<RawImage>();
+                bkgdDebug1.color = new Color(1, 0, 0, 0.1f);
+                // var bkgdDebug2 = viewport.GetOrAddComponent<RawImage>();
+                // bkgdDebug2.color = new Color(0, 0, 1, 0.1f);
+                var bkgdDebug3 = logPanel.GetOrAddComponent<RawImage>();
+                bkgdDebug3.color = new Color(1, 1, 1, 0.05f);
+                bkgdDebug3.maskable = true;
+                //var ursa = logPanel.GetOrAddComponent<UnityRectSoundsAnal>();
+                //                ursa.SyncSizeIntoAnotherRect(bkgdDebug3.GetComponent<RectTransform>());
 
-                var bkgdDebug = logPanel.GetOrAddComponent<RawImage>();
-                bkgdDebug.color = new Color(0, 1, 1, 0.1f);
+                Utils.Show(logScroll);
             }
 
-            return (watchPanel, logPanel);
+            // var viewPort = Utils.CreateGameObject<VerticalLayoutGroup>(parent);
+            // var logPanel = Utils.CreateGameObject<VerticalLayoutGroup>(viewPort);
+            // {
+            //     logPanel.padding = new RectOffset(0, 0, 0, 0);
+            //     logPanel.spacing = 1;
+            //     logPanel.childAlignment = TextAnchor.LowerLeft;
+            //     logPanel.childControlWidth = false;
+            //     logPanel.childControlHeight = false;
+            //     logPanel.childForceExpandWidth = false;
+            //     logPanel.childForceExpandHeight = false;
+            //     logPanel.childScaleWidth = false;
+            //     logPanel.childScaleHeight = false;
+            //     logPanel.GetOrAddComponent<RectTransform>().sizeDelta = new Vector2(logPanelWidth, logPanelHeight);
+
+            //     // var fitter = logPanel.GetOrAddComponent<ContentSizeFitter>();
+            //     // fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+            //     // fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            //     logScroll.horizontal = false;
+            //     logScroll.vertical = true;
+            //     //logScroll.GetOrAddComponent<RectTransform>().sizeDelta = new Vector2(logPanelWidth, logPanelHeight);
+            //     logScroll.content = logPanel.GetComponent<RectTransform>();
+
+            //     var viewportRect = viewPort.GetComponent<RectTransform>();
+            //     viewportRect.sizeDelta = new Vector2(logPanelWidth, 100);
+            //     logScroll.viewport = viewportRect;
+            //     // logScroll.viewport.sizeDelta = new Vector2(logPanelWidth, logPanelHeight);
+            //     logScroll.movementType = ScrollRect.MovementType.Clamped;
+            //     //logPanel.transform.SetParent(logScroll.viewport.transform, false);
+            //     //scroll.normalizedPosition = new Vector2(0, 0);
+
+            //     //var bkgdDebug = logPanel.GetOrAddComponent<RawImage>();
+            //     // var bkgdDebug1 = logScroll.GetOrAddComponent<RawImage>();
+            //     // bkgdDebug1.color = new Color(1, 0, 0, 0.1f);
+            //     // var bkgdDebug2 = logPanel.GetOrAddComponent<RawImage>();
+            //     // bkgdDebug2.color = new Color(0, 1, 0, 0.1f);
+            //     var bkgdDebug3 = viewPort.GetOrAddComponent<RawImage>();
+            //     bkgdDebug3.color = new Color(0, 0, 1, 0.1f);
+
+            //     Utils.Show(logScroll);
+            // }
+
+            return (watchPanel, logPanel.gameObject);
+            //return (watchPanel, logPanel);
         }
 
         private void Demo2d(RectTransform parent, Rect clippingRect, Fonts2d fonts2d)
@@ -304,6 +405,7 @@ namespace cynofield.mods.ui
 
         private readonly AugmentedDisplayRight rightHud;
         private readonly AugmentedDisplayInWorld inworldUi;
+        private readonly AugmentedDisplayLog logsDisplay;
         private readonly ThingsUi thingsUi;
         private readonly BaseSkin skin;
         private Thing lookingAt = null;
@@ -342,6 +444,11 @@ namespace cynofield.mods.ui
                     rightHud.Hide();
                 }
             }
+        }
+
+        public void Log2(string message)
+        {
+            logsDisplay.NewLogEntry(message);
         }
 
         private readonly List<Component> components = new List<Component>();

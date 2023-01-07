@@ -82,14 +82,15 @@ namespace cynofield.mods.ui
             Utils.Hide(gameObject);
         }
 
-        public void Show()
+        public void Show() => Show(originalParent);
+        public void Show(Transform parent)
         {
             if (state == VisibilityState.VISIBLE)
                 return;
 
-            if (originalParent != null)
+            if (parent != null)
             {
-                gameObject.transform.SetParent(originalParent, false);
+                gameObject.transform.SetParent(parent, false);
                 originalParent = null;
             }
 

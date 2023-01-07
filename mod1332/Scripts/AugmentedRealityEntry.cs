@@ -73,6 +73,8 @@ namespace cynofield.mods
                 stateManager.OnShow += OnShowHandler;
 
                 Log.Info(() => "started successfully");
+                uiManager.Log2($"Welcome to <color=red>HEROs v{ModInfo.Instance.version}</color>!");
+                uiManager.Log2($"Welcome to <color=red>HEROs v{ModInfo.Instance.version}</color>!\n\noops");
             }
             catch (Exception e)
             {

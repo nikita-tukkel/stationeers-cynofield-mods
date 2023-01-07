@@ -210,6 +210,17 @@ namespace cynofield.mods.utils
                 UnityEngine.Object.Destroy(obj);
         }
 
+        public static void DestroyChildren(Transform transform)
+        {
+            if (transform == null)
+                return;
+            for (var i = 0; i < transform.childCount; i++)
+            {
+                var child = transform.GetChild(i).gameObject;
+                Destroy(child);
+            }
+        }
+
 #pragma warning disable CS0618
         public static void Show(Component obj) => Show(obj ? obj.gameObject : null);
         public static void Show(GameObject obj)
