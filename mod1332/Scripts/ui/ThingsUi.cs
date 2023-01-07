@@ -23,6 +23,7 @@ namespace cynofield.mods.ui
             alluis.Add(new ProgrammableChipUi(lf, lf3d, skin));
             alluis.Add(new WeatherStationUi(lf));
             alluis.Add(new BatteryUi(lf, skin));
+            alluis.Add(new LogicUnitBaseUi(lf, skin));
 
             foreach (var ui in alluis)
             {
@@ -30,8 +31,12 @@ namespace cynofield.mods.ui
                 uis[thingType] = ui;
                 if (ui is IThingWatcher watcher)
                     defaultWatchers[thingType] = watcher;
+
+                if (ui is IThingExtendedSupport)
+                    multisupporters.Add(ui);
             }
 
+            // TODO rework specificWatchers to support case-insensitive watcher IDs
             foreach (var ui in alluis)
             {
                 var watchers = (ui as IThingWatcherProvider)?.GetWatchers();
@@ -55,6 +60,7 @@ namespace cynofield.mods.ui
         private readonly UiDefault defaultArUi;
         private TagParser tagParser = new TagParser();
         private readonly List<IThingDescriber> alluis = new List<IThingDescriber>();
+        private readonly List<IThingDescriber> multisupporters = new List<IThingDescriber>();
         private readonly Dictionary<Type, IThingDescriber> uis = new Dictionary<Type, IThingDescriber>();
         private readonly Dictionary<Type, IThingWatcher> defaultWatchers = new Dictionary<Type, IThingWatcher>();
         private readonly Dictionary<(Type, string), IThingWatcher> specificWatchers = new Dictionary<(Type, string), IThingWatcher>();
@@ -66,6 +72,9 @@ namespace cynofield.mods.ui
             InitThings(skin, lf, lf3d);
         }
 
+        // TODO remove this method and reconsider the code that using it.
+        //  At least, make this method compatible with GetUi logic.
+        //  Or make it more specific, like SupportsInWorldAnnotation
         public bool Supports(Thing thing)
         {
             var type = thing.GetType();
@@ -78,11 +87,20 @@ namespace cynofield.mods.ui
 
         internal IThingDescriber GetUi(Thing thing)
         {
-            // TODO rework from ui.SupportedType() into ui.IsSupported(thing)
-            // TODO rework specificWatchers to support case-insensitive watcher IDs
             var type = thing.GetType();
-            if (!uis.TryGetValue(type, out IThingDescriber ui)) ui = defaultArUi;
-            return ui;
+
+            // First try to find UI that directly supports provided Thing type.
+            if (uis.TryGetValue(type, out IThingDescriber ui))
+                return ui;
+
+            // Then look through UIs that declared a more complicated supporting condition.
+            foreach (var candidate in multisupporters)
+            {
+                if ((candidate as IThingExtendedSupport)?.IsSupported(thing) == true)
+                    return candidate;
+            }
+
+            return defaultArUi;
         }
 
         public void RenderArAnnotation(Thing thing, Component parent)
@@ -156,9 +174,26 @@ namespace cynofield.mods.ui
                 watcherId = tag.paramsString[0];
 
             var thingType = thing.GetType();
+            // When finding a suitable watcher, first try direct matches, 
+            //  then look through multisupporters for non-specific watchers (those who has no watcher ID in Tag),
+            //  then take default watcher.
             if (!specificWatchers.TryGetValue((thingType, watcherId), out IThingWatcher watcher))
             {
-                defaultWatchers.TryGetValue(thingType, out watcher);
+                if (watcherId == null)
+                {
+                    foreach (var multisupporter in multisupporters)
+                    {
+                        if (multisupporter is IThingWatcher asWatcher
+                            && (multisupporter as IThingExtendedSupport)?.IsSupported(thing) == true)
+                        {
+                            watcher = asWatcher;
+                        }
+                    }
+                }
+                if (watcher == null)
+                {
+                    defaultWatchers.TryGetValue(thingType, out watcher);
+                }
             }
 
             GameObject gameObject;
@@ -190,6 +225,16 @@ namespace cynofield.mods.ui
         /// This is a fallback method and it is not used when corresponding Render* method is available.
         /// </summary>
         string Describe(Thing thing);
+    }
+
+    interface IThingExtendedSupport
+    {
+        /// <summary>
+        /// Additional way to specify that some UI supports specified Thing.
+        /// Mostly needed to create a single UI for several subtypes.
+        /// Implementation could be much simpler, but Stationeers.Addons blacklists methods of System.Type.
+        /// </summary>
+        bool IsSupported(Thing thing);
     }
 
     interface IThingAnnotationRenderer : IThingDescriber

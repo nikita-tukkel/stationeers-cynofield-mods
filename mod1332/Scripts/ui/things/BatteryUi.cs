@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using Assets.Scripts.Objects;
 using Assets.Scripts.Objects.Electrical;
 using Assets.Scripts.Objects.Motherboards;
@@ -8,6 +5,9 @@ using Assets.Scripts.Objects.Pipes;
 using cynofield.mods.ui.presenter;
 using cynofield.mods.ui.styles;
 using cynofield.mods.utils;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -15,6 +15,9 @@ namespace cynofield.mods.ui.things
 {
     class BatteryUi : IThingDescriber, IThingDetailsRenderer, IThingWatcher, IThingWatcherProvider
     {
+        private class Logger_ : CLogger { }
+        private static readonly CLogger Log = new Logger_();
+
         private readonly BatteryDataModel dataModel = new BatteryDataModel();
         private readonly ViewLayoutFactory lf;
         private readonly BaseSkin skin;
@@ -102,6 +105,7 @@ namespace cynofield.mods.ui.things
 
             if (presenter == null)
             {
+                Log.Debug(() => $"Creating new watch for {thing.DisplayName}");
                 presenter = parentRect.GetOrAddComponent<BatteryPresenter>();
                 {
                     var view = lf.Text1(parentRect.gameObject, $"{description}");
@@ -262,35 +266,51 @@ namespace cynofield.mods.ui.things
 
                 if (presenter == null)
                 {
+                    Log.Debug(() => $"Creating new watch for {thing.DisplayName}");
                     presenter = parentRect.GetOrAddComponent<PresenterDefault>();
                     {
-                        var view = lf.Text1(parentRect.gameObject, $" abba ");
+                        var view = lf.Text1(parentRect.gameObject, $"");
                         presenter.AddBinding((th) => view.value.text = (th as Thing).DisplayName);
                     }
                     var hl = lf.CreateRow(parentRect.gameObject);
                     {
-                        var setting = lf.Text2(hl.gameObject, "0000", width: 60);
+                        var setting = lf.Text2(hl.gameObject, "", width: 60);
                         setting.value.margin = new Vector4(5, 0, 5, 0);
-                        //presenter.AddBinding((th) => setting.value.text = skin.MathDisplay((th as LogicBatchReader).Setting));
                         presenter.AddBinding((th) =>
                         {
                             var obj = th as LogicBatchReader;
-                            var ratio = Math.Round(100 * Device.BatchRead(obj.BatchMethod, obj.LogicType,
-                                obj.CurrentPrefabHash, obj.InputNetwork1DevicesSorted));
-                            setting.value.text = ratio + "%";
+                            if (obj.Powered && obj.Error == 0)
+                            {
+                                var ratio = Math.Round(100 * Device.BatchRead(obj.BatchMethod, obj.LogicType,
+                                    obj.CurrentPrefabHash, obj.InputNetwork1DevicesSorted));
+                                setting.value.text = ratio + "%";
+                                if (ratio <= 20)
+                                    setting.valueBkgd.color = new Color(0.5f, 0, 0, 0.4f);
+                                else
+                                    setting.valueBkgd.color = new Color(0, 0, 0, 0f);
+                            }
+                            else
+                            {
+                                setting.value.text = "OFF";
+                            }
                         });
-                        // BindingStorage(presenter, stor);
 
-                        var sum = lf.Text2(hl.gameObject, "0000", width: 100);
+                        var sum = lf.Text2(hl.gameObject, "", width: 100);
                         sum.value.margin = new Vector4(5, 0, 0, 0);
                         presenter.AddBinding((th) =>
                         {
                             var obj = th as LogicBatchReader;
-                            sum.value.text = skin.PowerDisplay(
-                                Device.BatchRead(LogicBatchMethod.Sum, LogicType.Charge,
-                                obj.CurrentPrefabHash, obj.InputNetwork1DevicesSorted));
+                            if (obj.Powered && obj.Error == 0)
+                            {
+                                sum.value.text = skin.PowerDisplay(
+                                    Device.BatchRead(LogicBatchMethod.Sum, LogicType.Charge,
+                                    obj.CurrentPrefabHash, obj.InputNetwork1DevicesSorted));
+                            }
+                            else
+                            {
+                                sum.value.text = "";
+                            }
                         });
-                        // BindingStorageDelta(presenter, delta);
                     }
                 }
 

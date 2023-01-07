@@ -19,6 +19,10 @@ namespace cynofield.mods.ui.presenter
 
         virtual public void Present(T data)
         {
+            // Not checking data for null. Let the binding throw NPE, 
+            //  then the exception must be catched by `Present` caller, e.g. by ThingsUi,
+            //  and this must produce better exception reporting.
+
             // Presenter relies on external state control.
             // If `Present` is called for non-existent, hidden or otherwise inconsistent objects,
             //  it is the problem on the caller side.

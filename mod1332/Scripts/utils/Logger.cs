@@ -78,7 +78,10 @@ namespace cynofield.mods.utils
         public void Debug(Exception e, MsgProvider msgProvider)
         {
             if (LoggerConfig.LogLevel.DEBUG < logLevel)
+            {
+                //LogInternals($"typeName={typeName}, logLevel={logLevel}");
                 return;
+            }
 
             var msg = FormatMessage("D", msgProvider, e);
             UnityEngine.Debug.Log(msg);

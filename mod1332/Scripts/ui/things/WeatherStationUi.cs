@@ -11,6 +11,8 @@ namespace cynofield.mods.ui.things
 {
     class WeatherStationUi : IThingDescriber, IThingWatcher
     {
+        private class Logger_ : CLogger { }
+        private static readonly CLogger Log = new Logger_();
 
         private readonly WeatherStationDataModel dataModel = new WeatherStationDataModel();
         private readonly ViewLayoutFactory lf;
@@ -106,6 +108,7 @@ namespace cynofield.mods.ui.things
 
             if (presenter == null)
             {
+                Log.Debug(() => $"Creating new watch for {thing.DisplayName}");
                 presenter = parentRect.GetOrAddComponent<WeatherStationPresenter>();
                 {
                     var view = lf.Text1(parentRect.gameObject, $"{description}");

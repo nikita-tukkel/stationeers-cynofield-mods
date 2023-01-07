@@ -55,8 +55,31 @@ namespace cynofield.mods.ui
             UpdateTrackedObjects();
         }
 
+        private int allThingsRescanCounter = 1000;
         private void UpdateTrackedObjects()
         {
+            // Visual update preformed once 0.5s, but AllThings scan period is 2s
+            allThingsRescanCounter++;
+            if (allThingsRescanCounter >= 3)
+            {
+                allThingsRescanCounter = 0;
+                ScanForWatches();
+            }
+
+            foreach (var entry in activeViews)
+            {
+                var watcherKey = entry.Key;
+                var layout = entry.Value;
+                var thing = activeWatchers[watcherKey];
+                thingsUi.RenderWatch(thing, layout, watcherKey.tag);
+                Utils.Show(layout);
+            }
+        }
+
+        private void ScanForWatches()
+        {
+            // TODO maybe look into making AllThings scanning a coroutine
+            // TODO also make a hook to Rename action, and for #AR tags as well
             foundWatchers.Clear();
             removedWatchers.Clear();
             foreach (var th in Thing.AllThings)
@@ -102,15 +125,6 @@ namespace cynofield.mods.ui
                 OnTrackedRemoved(watcherKey);
                 activeViews.Remove(watcherKey);
                 activeWatchers.Remove(watcherKey);
-            }
-
-            foreach (var entry in activeViews)
-            {
-                var watcherKey = entry.Key;
-                var layout = entry.Value;
-                var thing = activeWatchers[watcherKey];
-                thingsUi.RenderWatch(thing, layout, watcherKey.tag);
-                Utils.Show(layout);
             }
         }
 

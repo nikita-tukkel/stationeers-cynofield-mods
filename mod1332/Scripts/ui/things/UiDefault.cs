@@ -169,11 +169,7 @@ please <color=red><b>don't</b></color> play with me";
             return layout.gameObject;
         }
 
-        public GameObject RenderWatch(Thing thing, RectTransform parent, TagParser.Tag watcherTag)
-        {
-            return null;
-        }
-
+        public GameObject RenderWatch(Thing thing, RectTransform parent, TagParser.Tag watcherTag) => RenderWatch(thing, parent, watcherTag, null);
         public GameObject RenderWatch(Thing thing, RectTransform parentRect, TagParser.Tag watcherTag, string description)
         {
             //Log.Debug(() => $"RenderWatch {thing.DisplayName}: {description}");
@@ -182,7 +178,7 @@ please <color=red><b>don't</b></color> play with me";
 
             if (presenter == null)
             {
-                //Log.Debug(() => $"Creating new watch for {thing.DisplayName}");
+                Log.Debug(() => $"Creating new watch for {thing.DisplayName}");
                 var view = lf.Text1(parentRect.gameObject, $"{description}");
                 presenter = view.value.gameObject.AddComponent<DefaultPresenter>();
                 presenter.AddBinding((d) => view.value.text = d.description.Current ?? d.name.Current);
