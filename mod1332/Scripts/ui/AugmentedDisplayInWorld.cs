@@ -1,5 +1,6 @@
 using Assets.Scripts;
 using Assets.Scripts.Objects;
+using Assets.Scripts.Objects.Entities;
 using Assets.Scripts.UI;
 using cynofield.mods.ui.styles;
 using cynofield.mods.utils;
@@ -86,12 +87,21 @@ namespace cynofield.mods.ui
             if (WorldManager.IsGamePaused)
                 return;
 
+            // TODO replace with ArStateManager; list and prevent possible corner cases again
+            // TODO probably Physics.OverlapSphereNonAlloc is bugged or not worked as intended.
+            //  replace it with AllThings iteration with filter by distance
             if (nearbyObjects == null)
             {
                 // late init in case Human object was not available on early calls to Update.
                 var human = playerProvider.GetPlayerAvatar();
-                if (human)
+                if (human != null && human.transform != null && !(human.State != EntityState.Alive))
                     nearbyObjects = NearbyObjects.Create(human.transform);
+            }
+            else
+            {
+                var human = playerProvider.GetPlayerAvatar();
+                if (human != null && human.transform != null)
+                    nearbyObjects.transform.SetParent(human.transform);
             }
 
             periodicUpdateCounter += Time.deltaTime;

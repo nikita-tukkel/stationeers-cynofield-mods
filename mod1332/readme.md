@@ -13,7 +13,7 @@ Unzip into local mods folder (`%Documents%\my games\Stationeers\mods`).
 
 If you are not familiar with typical locations on your PC, see [this guide](Docs/folders.md).
 
-Mod requires `Stationeers.Addons` to work. To install, unzip it into `%steam%\steamapps\common\Stationeers\AddonManager`.
+Mod requires [Stationeers.Addons](https://github.com/Erdroy/Stationeers.Addons) to work. To install `Stationeers.Addons`, unzip it into `%steam%\steamapps\common\Stationeers\AddonManager`.
 
 When updating `Stationeers.Addons`, first delete the whole `%steam%\steamapps\common\Stationeers\AddonManager` folder.
 

@@ -67,6 +67,6 @@ Where `%Documents%` is standard Windows Documents folder and `%steam%` is where 
 
 The Game version is taken from this file: 'steam\steamapps\common\Stationeers\rocketstation_Data\StreamingAssets\version.ini`
 
-| Mod    | Stationeers.Addons | The Stationeers Game | Manifest ID |
-| :---   | :---               | :---                 | :--- |
-| v1.0.0 | v0.4.2             | 0.2.3719.18087       | 5085088832022169075 |
+| Mod    | Stationeers.Addons | The Game | Manifest ID | Date |
+| :---   | :---               | :---                 | :--- |  :--- |
+| v1.0.0 | v0.4.2             | 0.2.3719.18087       | 5085088832022169075 | 02-Dec-2022 |

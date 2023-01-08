@@ -11,3 +11,4 @@ I published in on nexusmods.com, and of course it is available on my Github.
 
 https://github.com/nikita-tukkel/stationeers-cynofield-mods/tree/master/mod1332
 
+https://www.nexusmods.com/stationeers/mods/8
