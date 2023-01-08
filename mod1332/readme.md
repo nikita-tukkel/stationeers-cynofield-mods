@@ -9,6 +9,8 @@ The mod adds Augmented Reality into the game when your character wears Sensor Le
 
 # Installation
 
+Download the release from here: https://github.com/nikita-tukkel/stationeers-cynofield-mods/releases
+
 Unzip into local mods folder (`%Documents%\my games\Stationeers\mods`).
 
 If you are not familiar with typical locations on your PC, see [this guide](Docs/folders.md).
