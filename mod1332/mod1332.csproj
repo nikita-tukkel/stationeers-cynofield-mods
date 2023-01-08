@@ -1,5 +1,4 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <AssemblyName>mod1332</AssemblyName>
     <OutputType>Library</OutputType>
@@ -28,4 +27,24 @@
     <Reference Include="$(AddonManagerDllDir)\*.dll" />
   </ItemGroup>
 
+  <!-- To create release archive execute: dotnet build -target:ReleaseZip -->
+  <Target Name="ReleaseZip">
+    <PropertyGroup>
+      <StringDate>$([System.DateTime]::Now.ToString('yyyy-MM-dd-HH-mm-ss'))</StringDate>
+      <ReleaseOutdir>$(BaseOutputPath)$(AssemblyName)-$(StringDate)</ReleaseOutdir>
+    </PropertyGroup>
+
+    <Exec Command="rmdir /s /q $(BaseOutputPath)" />
+    <Exec Command="mkdir $(BaseOutputPath)$(AssemblyName)" />
+    <Exec Command="rmdir /s /q $(BaseOutputPath)$(AssemblyName)" />
+    <Exec Command="mkdir $(BaseOutputPath)$(AssemblyName)" />
+    <Exec
+      Command="xcopy /y /e /q ..\..\stationeers-cynofield-mods-binaries\$(AssemblyName)\Content $(ReleaseOutdir)\Content\" />
+    <Exec Command="xcopy /y /e /q ModTemplate\$(AssemblyName) $(ReleaseOutdir)" />
+    <Exec Command="xcopy /y /e /q Scripts\ $(ReleaseOutdir)\Scripts\" />
+
+    <Exec Command="xcopy /y /e /q $(ReleaseOutdir) $(BaseOutputPath)$(AssemblyName)" />
+    <Exec WorkingDirectory="$(BaseOutputPath)"
+      Command="7z a -mx9 -tzip $(AssemblyName).zip $(AssemblyName)" />
+  </Target>
 </Project>

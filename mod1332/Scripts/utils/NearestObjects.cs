@@ -8,6 +8,9 @@ namespace cynofield.mods.utils
 {
     public class NearbyObjects : MonoBehaviour
     {
+        private class Logger_ : CLogger { }
+        private static readonly CLogger Log = new Logger_();
+
         public static NearbyObjects Create(Transform parent)
         {
             var instance = Utils.CreateGameObject<NearbyObjects>(parent);
@@ -15,7 +18,6 @@ namespace cynofield.mods.utils
             return instance;
         }
 
-        private readonly Utils utils = new Utils();
         private readonly Collider[] nearbyColliders = new Collider[1000];
         private readonly Dictionary<string, Thing> nearbyThings = new Dictionary<string, Thing>(1000);
 
@@ -31,8 +33,11 @@ namespace cynofield.mods.utils
                 return;
             periodicUpdateCounter = 0;
 
+            //Log.Debug(() => $"Update({this.GetHashCode()}), time={Time.time}");
             int collidersCount = Physics.OverlapSphereNonAlloc(
                 transform.parent.position, 20f, nearbyColliders);
+            //Log.Debug(() => $"Update({this.GetHashCode()}), found {collidersCount}");
+
             nearbyThings.Clear();
             for (int i = 0; i < collidersCount; i++)
             {
@@ -40,10 +45,12 @@ namespace cynofield.mods.utils
                 // limit to descendands of Structure, but maybe need to look through all Thing's.
                 if (c.TryGetComponent<Structure>(out var thing))
                 {
-                    if (thing.isActiveAndEnabled && thing.DisplayName.Contains(AugmentedDisplayInWorld.AR_TAG,
-                    StringComparison.InvariantCultureIgnoreCase))
+                    //Log.Debug(() => $"Update {thing.DisplayName}");
+                    if (thing.DisplayName.Contains(AugmentedDisplayInWorld.AR_TAG, StringComparison.InvariantCultureIgnoreCase))
                     {
-                        nearbyThings[Utils.GetId(thing)] = thing;
+                        var id = Utils.GetId(thing);
+                        //Log.Debug(() => $"Update({this.GetHashCode()}) {thing.DisplayName}, id={id}");
+                        nearbyThings[id] = thing;
                     }
                 }
             }

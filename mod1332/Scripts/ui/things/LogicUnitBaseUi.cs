@@ -32,7 +32,7 @@ namespace cynofield.mods.ui.things
                 LogicUnitBase check = (LogicUnitBase)thing;
                 return true;
             }
-            catch (Exception _)
+            catch (Exception)
             {
                 return false;
             }

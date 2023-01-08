@@ -40,6 +40,8 @@ namespace cynofield.mods.ui
 
         void OnDestroy()
         {
+            Utils.Destroy(nearbyObjects);
+            nearbyObjects = null;
             IterateAll((ann) => Utils.Destroy(ann));
             annotations.Clear();
             staticAnnotations.Clear();
@@ -160,6 +162,7 @@ namespace cynofield.mods.ui
             {
                 var id = entry.Key;
                 var th = entry.Value;
+                //Log.Debug(() => $"UpdateTrackedObjects {th.DisplayName}, id={id}");
                 if (trackedThings.TryAdd(id, th))
                 {
                     OnTrackedAdded(id, th);
