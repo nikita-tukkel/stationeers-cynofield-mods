@@ -12,22 +12,24 @@ namespace cynofield.mods.ui.presenter
     /// </summary>
     public class LogWorkflow
     {
-        // TODO remove DestroyChildren in AugmentedDisplayLog, and implement log entry layout pooling here.
+        // TODO maybe remove DestroyChildren in AugmentedDisplayLog, and implement log entry layout reuse here.
         public float minAllowedPeriod = 60;
         private float lastSend;
         public int maxConsecutive = 1;
         private int count;
+        public LogAction logRenderAction;
 
         public void LogToHud(object data)
         {
             if (LoggingDisabled()) return;
 
-            AugmentedRealityEntry.Instance?.LogToHud("aaa " + data);
+            AugmentedRealityEntry.Instance?.LogToHud("" + data);
         }
 
-        public void LogToHud(object data, LogAction logRenderAction)
+        public void LogToHud()
         {
             if (LoggingDisabled()) return;
+            if (logRenderAction == null) return;
 
             AugmentedRealityEntry.Instance?.LogToHud((p) =>
             {

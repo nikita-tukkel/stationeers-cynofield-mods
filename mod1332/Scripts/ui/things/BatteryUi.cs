@@ -268,7 +268,7 @@ namespace cynofield.mods.ui.things
                 {
                     Log.Debug(() => $"Creating new watch for {thing.DisplayName}");
 
-                    var ratioAlertLogger = new LogWorkflow { minAllowedPeriod = 20 };
+                    var ratioAlertLogger = InitRatioAlertLogger(new LogWorkflow(), thing as LogicBatchReader);
 
                     presenter = parentRect.GetOrAddComponent<PresenterDefault>();
                     {
@@ -292,25 +292,10 @@ namespace cynofield.mods.ui.things
                                 else
                                     setting.valueBkgd.color = new Color(0, 0, 0, 0f);
 
-                                if (ratio <= 90)
-                                {
-                                    //ratioAlertLogger.LogToHud(ratio);
+                                if (ratio <= 20)
+                                    ratioAlertLogger.LogToHud();
+                                else if (ratio > 21)
                                     ratioAlertLogger.ResetCount();
-                                    ratioAlertLogger.LogToHud("", (parent) =>
-                                    {
-                                        var row = lf.CreateRow(parent);
-                                        var parentSize = parent.GetComponent<RectTransform>().sizeDelta;
-                                        var view = lf.Text1(row.gameObject, "", width: parentSize.x);
-                                        var p = row.GetOrAddComponent<PresenterDefault>();
-                                        p.AddBinding((d) =>
-                                        {
-                                            var r = Math.Round(100 * Device.BatchRead(obj.BatchMethod, obj.LogicType,
-                                                obj.CurrentPrefabHash, obj.InputNetwork1DevicesSorted));
-                                            view.value.text = "Bat " + r + " " + Time.time;
-                                        });
-                                        return row.gameObject;
-                                    });
-                                }
                             }
                             else
                             {
@@ -339,6 +324,29 @@ namespace cynofield.mods.ui.things
 
                 presenter.Present(thing as LogicBatchReader);
                 return presenter.gameObject;
+            }
+
+            private LogWorkflow InitRatioAlertLogger(LogWorkflow logWorkflow, LogicBatchReader thing)
+            {
+                logWorkflow.logRenderAction = (parent) =>
+                {
+                    var hl = lf.CreateRow(parent);
+                    var parentSize = parent.GetComponent<RectTransform>().sizeDelta;
+                    var view = lf.Text1(hl.gameObject, "", width: parentSize.x);
+                    var presenter = hl.GetOrAddComponent<PresenterDefault>();
+                    presenter.AddBinding((d) =>
+                    {
+                        var ratio = Math.Round(100 * Device.BatchRead(thing.BatchMethod, thing.LogicType,
+                            thing.CurrentPrefabHash, thing.InputNetwork1DevicesSorted));
+                        var charge = skin.PowerDisplay(
+                                Device.BatchRead(LogicBatchMethod.Sum, LogicType.Charge,
+                                thing.CurrentPrefabHash, thing.InputNetwork1DevicesSorted));
+                        view.value.text = $"{thing.DisplayName}\ncharge low {ratio}%, {charge}";
+                    });
+                    return hl.gameObject;
+                };
+
+                return logWorkflow;
             }
         }
     }
