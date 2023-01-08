@@ -47,7 +47,6 @@ namespace cynofield.mods.ui
                 return;
 
             periodicUpdateCounter += Time.deltaTime;
-
             if (periodicUpdateCounter <= 0.5f)
                 return;
             periodicUpdateCounter = 0;

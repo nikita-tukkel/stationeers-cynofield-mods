@@ -2,12 +2,13 @@ using Assets.Scripts.Objects;
 using Assets.Scripts.Objects.Entities;
 using Assets.Scripts.Objects.Items;
 using cynofield.mods.ui;
+using cynofield.mods.ui.presenter;
 using cynofield.mods.ui.styles;
 using cynofield.mods.utils;
-using System;
-using System.Collections.Generic;
 using static cynofield.mods.ui.AugmentedDisplayLog;
 using static cynofield.mods.ui.AugmentedUiManager;
+using System;
+using System.Collections.Generic;
 
 namespace cynofield.mods
 {
@@ -68,12 +69,11 @@ namespace cynofield.mods
                 //PlayerProvider.DebugInfo();
                 stateManager = new ArStateManager(playerProvider);
                 HiddenPool.Create();
-                uiManager = AugmentedUiManager.Create(playerProvider, skin, colorSchemes, fonts2d);
+                uiManager = AugmentedUiManager.Create(playerProvider, stateManager, skin, colorSchemes, fonts2d);
                 stateManager.OnHide += OnHideHandler;
                 stateManager.OnShow += OnShowHandler;
 
                 Log.Info(() => "started successfully");
-                LogToHud($"Welcome to <color=red>HEROs v{ModInfo.Instance.version}</color>!");
             }
             catch (Exception e)
             {
@@ -96,9 +96,12 @@ namespace cynofield.mods
             uiManager.Hide();
         }
 
+        private AnnouncementWorkflow welcomeAnnouncement = new AnnouncementWorkflow();
         void OnShowHandler()
         {
             uiManager.Show();
+            welcomeAnnouncement.Reset();
+            welcomeAnnouncement.ShowAnnouncement($"Welcome to <color=red>HEROs v{ModInfo.Instance.version}</color>!");
         }
 
         public void EyesOn(Thing thing)
@@ -127,6 +130,11 @@ namespace cynofield.mods
         public void LogToHud(LogAction logRenderAction)
         {
             uiManager.LogToHud(logRenderAction);
+        }
+
+        public AugmentedDisplayBanner GetBanner()
+        {
+            return uiManager.banner;
         }
     }
 

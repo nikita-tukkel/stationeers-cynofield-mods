@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using Assets.Scripts.Objects;
 using Assets.Scripts.Objects.Motherboards;
 using cynofield.mods.ui.presenter;
+using cynofield.mods.ui.styles;
 using cynofield.mods.utils;
 using UnityEngine;
 using UnityEngine.UI;
@@ -16,9 +17,11 @@ namespace cynofield.mods.ui.things
 
         private readonly WeatherStationDataModel dataModel = new WeatherStationDataModel();
         private readonly ViewLayoutFactory lf;
-        public WeatherStationUi(ViewLayoutFactory lf)
+        private readonly BaseSkin skin;
+        public WeatherStationUi(ViewLayoutFactory lf, BaseSkin skin)
         {
             this.lf = lf;
+            this.skin = skin;
         }
 
         public Type SupportedType() { return typeof(WeatherStation); }
@@ -87,18 +90,36 @@ namespace cynofield.mods.ui.things
                 var thingId = Utils.GetId(thing);
                 var now = Time.time;
                 var data = Get(thingId);
-                data.name.Add(thing.DisplayName, now);
+                data.name.Add(Utils.GetName(thing), now);
                 if (description != null)
                     data.description.Add(description, now);
                 data.powered.Add(obj.Powered, now);
-                data.mode.Add(obj.GetLogicValue(LogicType.Mode), now);
-                data.stormEta.Add(obj.GetLogicValue(LogicType.NextWeatherEventTime), now);
+
+                var testing = false;
+                if (testing)
+                {
+                    var rnd = new System.Random();
+                    if (rnd.NextDouble() > 0.7)
+                    {
+                        var testMode = rnd.Next(0, 3);
+                        data.mode.Add(testMode, now);
+                    }
+                    var testEta = Time.time;
+                    data.stormEta.Add(testEta, now);
+                }
+                else
+                {
+                    data.mode.Add(obj.GetLogicValue(LogicType.Mode), now);
+                    data.stormEta.Add(obj.GetLogicValue(LogicType.NextWeatherEventTime), now);
+                }
                 return data;
             }
         }
 
         public class WeatherStationPresenter : PresenterBase<WeatherStationDataModel.RecordView>
-        { }
+        {
+            public double lastMode;
+        }
 
         public GameObject RenderWatch(Thing thing, RectTransform parentRect, TagParser.Tag watcherTag)
         {
@@ -108,7 +129,10 @@ namespace cynofield.mods.ui.things
 
             if (presenter == null)
             {
-                Log.Debug(() => $"Creating new watch for {thing.DisplayName}");
+                //Log.Debug(() => $"Creating new watch for {thing.DisplayName}");
+
+                var stormAnnouncement = new AnnouncementWorkflow();
+
                 presenter = parentRect.GetOrAddComponent<WeatherStationPresenter>();
                 {
                     var view = lf.Text1(parentRect.gameObject, $"{description}");
@@ -116,13 +140,12 @@ namespace cynofield.mods.ui.things
                 }
                 var hl = CreateRow(parentRect.gameObject);
                 {
-                    var modeName = lf.Text2(hl.gameObject, "0000", width: 60);
+                    var modeName = lf.Text2(hl.gameObject, "0000", width: 80);
                     modeName.value.margin = new Vector4(5, 0, 5, 0);
-                    var eta = lf.Text2(hl.gameObject, "0000", visible: false);
+                    var eta = lf.Text2(hl.gameObject, "0000", visible: false, width: 80);
                     eta.value.margin = new Vector4(5, 0, 0, 0);
                     presenter.AddBinding((d) =>
                     {
-                        // TODO show log message and announcement on state change
                         eta.value.text = "";
                         eta.visiblility.Hide();
                         if (d.powered.Current)
@@ -142,7 +165,12 @@ namespace cynofield.mods.ui.things
                                         modeName.valueBkgd.color = new Color(1f, 0, 0, 0.4f);
 
                                         eta.visiblility.Show();
-                                        eta.value.text = d.stormEta.Current + "s";
+                                        eta.value.text = skin.MathDisplay(d.stormEta.Current) + "s";
+
+                                        if (presenter.lastMode != mode)
+                                            stormAnnouncement.ShowAnnouncement("Storm incoming");
+                                        else
+                                            stormAnnouncement.Reset();
                                     }
                                     break;
                                 case 2:
@@ -152,6 +180,7 @@ namespace cynofield.mods.ui.things
                                     }
                                     break;
                             }
+                            presenter.lastMode = mode;
                         }
                         else
                         {

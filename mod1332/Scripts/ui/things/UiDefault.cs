@@ -116,7 +116,7 @@ please <color=red><b>don't</b></color> play with me";
             {
                 var now = Time.time;
                 var data = Get(thing);
-                data.name.Add(thing.DisplayName, now);
+                data.name.Add(Utils.GetName(thing), now);
                 if (description != null)
                     data.description.Add(description, now);
                 return data;
@@ -150,7 +150,7 @@ please <color=red><b>don't</b></color> play with me";
             // parentFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
             {
-                var view = lf3d.Text1(layout.gameObject, thing.DisplayName);
+                var view = lf3d.Text1(layout.gameObject, "");
                 presenter.AddBinding((d) => view.value.text = d.description.Current ?? d.name.Current);
 
                 if (colorScheme != null)
@@ -178,7 +178,7 @@ please <color=red><b>don't</b></color> play with me";
 
             if (presenter == null)
             {
-                Log.Debug(() => $"Creating new watch for {thing.DisplayName}");
+                //Log.Debug(() => $"Creating new watch for {thing.DisplayName}");
                 var view = lf.Text1(parentRect.gameObject, $"{description}");
                 presenter = view.value.gameObject.AddComponent<DefaultPresenter>();
                 presenter.AddBinding((d) => view.value.text = d.description.Current ?? d.name.Current);

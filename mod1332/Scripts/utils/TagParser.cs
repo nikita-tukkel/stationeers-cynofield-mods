@@ -4,6 +4,19 @@ namespace cynofield.mods.utils
 {
     public class TagParser
     {
+        public string WithoutTokens(string str)
+        {
+            string[] tokens = Tokenize(str, '#');
+            if (tokens == null)
+                return str;
+
+            foreach (var token in tokens)
+            {
+                str = str.Replace(token, "");
+            }
+            return str.Trim();
+        }
+
         public List<Tag> Parse(string str)
         {
             if (str == null)

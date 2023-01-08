@@ -240,6 +240,23 @@ namespace cynofield.mods.utils
 
         public static string GetId(Thing thing) { return thing == null ? "" : thing.ReferenceId.ToString(); }
 
+        private static readonly TagParser tagParser = new TagParser();
+        public static string GetName(object obj)
+        {
+            if (obj == null)
+                return null;
+
+            if (obj is Thing th)
+                return GetName(th);
+
+            return obj.ToString();
+        }
+        public static string GetName(Thing thing) => GetName(thing.DisplayName);
+        public static string GetName(String str)
+        {
+            return tagParser.WithoutTokens(str);
+        }
+
         public static VerticalLayoutGroup VL(Component parent)
         {
             VerticalLayoutGroup layout;

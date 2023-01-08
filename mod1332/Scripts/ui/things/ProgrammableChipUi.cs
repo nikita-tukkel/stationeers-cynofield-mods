@@ -107,7 +107,7 @@ namespace cynofield.mods.ui.things
                 //Log.Debug(() => $"thingId={thingId}");
                 var now = Time.time;
                 var data = Get(thingId);
-                data.name.Add(chip.DisplayName, now);
+                data.name.Add(Utils.GetName(chip), now);
                 data.db.Add(GetSetting(chip), now);
                 if (chip != null)
                 {
@@ -172,7 +172,7 @@ $@"{chip.DisplayName}
 
             layout.spacing = 0.005f;
             {
-                var view = lf3d.Text1(layout.gameObject, thing.DisplayName);
+                var view = lf3d.Text1(layout.gameObject, "");
                 presenter.AddBinding((d) => view.value.text = d.name.Current);
                 view.value.margin = new Vector4(formPadding, formPadding, 0.01f, 0);
 
@@ -332,7 +332,7 @@ $@"{chip.DisplayName}
             fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
             {
-                var view = lf.Text1(layout.gameObject, thing.DisplayName);
+                var view = lf.Text1(layout.gameObject, "");
                 presenter.AddBinding((d) => view.value.text = d.name.Current);
             }
             {

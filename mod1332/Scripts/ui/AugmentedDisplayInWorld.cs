@@ -204,6 +204,7 @@ namespace cynofield.mods.ui
             staticAnnotations.Add(thingId, ann);
         }
 
+        // TODO replace with TagParser
         private int ParseColorSchemeId(string str)
         {
             string[] tokens = str.Split(' ');

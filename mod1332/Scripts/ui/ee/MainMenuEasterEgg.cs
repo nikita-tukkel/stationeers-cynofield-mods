@@ -21,7 +21,7 @@ namespace cynofield.mods.ee
 
             if (GameManager.Instance.MenuCutscene.isActiveAndEnabled)
             {
-                Instance.gameObject.SetActive(true);
+                Show();
             }
         }
 
@@ -75,7 +75,7 @@ namespace cynofield.mods.ee
         private float periodicUpdateCounter;
         private readonly string textHello = "Welcome to <color=red>HEROs v1.0</color>!\nYou have new mail.";
         private readonly string textWait = "/\u2014\\|"; // \u2014=em dash (long hypen)
-        private int textIndex = -1;
+        private TextAnimator textAnimator;
         private int textWaitIndex;
         private int animationState;
         private readonly int framesHidden = 15;
@@ -93,7 +93,11 @@ namespace cynofield.mods.ee
         private void AnimationInit()
         {
             animationState = 0;
-            textIndex = -1;
+            if (textAnimator == null)
+                textAnimator = new TextAnimator(textHello);
+            else
+                textAnimator.Reset();
+
             textWaitIndex = 0;
             text.text = "";
         }
@@ -111,19 +115,9 @@ namespace cynofield.mods.ee
 
             if (animationState > framesHidden)
             {
-                if (textIndex < textHello.Length - 1)
+                if (textAnimator != null && textAnimator.MoveNext())
                 {
-                    textIndex++;
-                    while (textIndex < textHello.Length && textHello[textIndex] == ' ') textIndex++;
-                    var c = textHello[textIndex];
-                    if (c == '<')
-                    {
-                        while (textIndex < textHello.Length && textHello[textIndex] != '>') textIndex++;
-                        textIndex = Math.Clamp(textIndex + 1, 0, textHello.Length - 1); // also take next char after tag
-                    }
-                    while (textIndex < textHello.Length && textHello[textIndex] == ' ') textIndex++;
-
-                    text.text = textHello.Substring(0, textIndex + 1);
+                    text.text = textAnimator.Current;
                 }
                 else
                 {

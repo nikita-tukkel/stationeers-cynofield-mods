@@ -84,7 +84,7 @@ namespace cynofield.mods.ui.things
 
                 var now = Time.time;
                 var data = Get(obj);
-                data.name.Add(thing.DisplayName, now);
+                data.name.Add(Utils.GetName(thing), now);
                 if (description != null)
                     data.description.Add(description, now);
                 data.stored.Add(obj.GetLogicValue(LogicType.Charge), now);
@@ -105,7 +105,7 @@ namespace cynofield.mods.ui.things
 
             if (presenter == null)
             {
-                Log.Debug(() => $"Creating new watch for {thing.DisplayName}");
+                //Log.Debug(() => $"Creating new watch for {thing.DisplayName}");
                 presenter = parentRect.GetOrAddComponent<BatteryPresenter>();
                 {
                     var view = lf.Text1(parentRect.gameObject, $"{description}");
@@ -266,14 +266,15 @@ namespace cynofield.mods.ui.things
 
                 if (presenter == null)
                 {
-                    Log.Debug(() => $"Creating new watch for {thing.DisplayName}");
+                    //Log.Debug(() => $"Creating new watch for {thing.DisplayName}");
 
                     var ratioAlertLogger = InitRatioAlertLogger(new LogWorkflow(), thing as LogicBatchReader);
+                    var ratioAlerAnnouncement = new AnnouncementWorkflow();
 
                     presenter = parentRect.GetOrAddComponent<PresenterDefault>();
                     {
                         var view = lf.Text1(parentRect.gameObject, "");
-                        presenter.AddBinding((th) => view.value.text = (th as Thing).DisplayName);
+                        presenter.AddBinding((th) => view.value.text = Utils.GetName(th));
                     }
                     var hl = lf.CreateRow(parentRect.gameObject);
                     {
@@ -296,6 +297,11 @@ namespace cynofield.mods.ui.things
                                     ratioAlertLogger.LogToHud();
                                 else if (ratio > 21)
                                     ratioAlertLogger.ResetCount();
+
+                                if (ratio <= 10)
+                                    ratioAlerAnnouncement.ShowAnnouncement($"{Utils.GetName(obj)} critical");
+                                else if (ratio > 11)
+                                    ratioAlerAnnouncement.Reset();
                             }
                             else
                             {
@@ -330,6 +336,7 @@ namespace cynofield.mods.ui.things
             {
                 logWorkflow.logRenderAction = (parent) =>
                 {
+                    var tagParser = new TagParser();
                     var hl = lf.CreateRow(parent);
                     var parentSize = parent.GetComponent<RectTransform>().sizeDelta;
                     var view = lf.Text1(hl.gameObject, "", width: parentSize.x);
@@ -341,7 +348,7 @@ namespace cynofield.mods.ui.things
                         var charge = skin.PowerDisplay(
                                 Device.BatchRead(LogicBatchMethod.Sum, LogicType.Charge,
                                 thing.CurrentPrefabHash, thing.InputNetwork1DevicesSorted));
-                        view.value.text = $"{thing.DisplayName}\ncharge low {ratio}%, {charge}";
+                        view.value.text = $"{tagParser.WithoutTokens(thing.DisplayName)}\ncharge low {ratio}%, {charge}";
                     });
                     return hl.gameObject;
                 };

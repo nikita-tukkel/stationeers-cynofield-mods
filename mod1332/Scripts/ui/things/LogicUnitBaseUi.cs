@@ -53,11 +53,11 @@ namespace cynofield.mods.ui.things
 
             if (presenter == null)
             {
-                Log.Debug(() => $"Creating new watch for {thing.DisplayName}");
+                //Log.Debug(() => $"Creating new watch for {thing.DisplayName}");
                 presenter = parentRect.GetOrAddComponent<PresenterDefault>();
                 {
                     var view = lf.Text1(parentRect.gameObject, $"");
-                    presenter.AddBinding((th) => view.value.text = (th as Thing).DisplayName);
+                    presenter.AddBinding((th) => view.value.text = Utils.GetName(th));
                 }
                 var hl = lf.CreateRow(parentRect.gameObject);
                 {

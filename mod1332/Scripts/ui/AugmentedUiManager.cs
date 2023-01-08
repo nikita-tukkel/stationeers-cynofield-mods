@@ -18,16 +18,16 @@ namespace cynofield.mods.ui
         private static readonly CLogger Log = new Logger_();
 
         public static AugmentedUiManager Create(PlayerProvider playerProvider,
-            BaseSkin skin, List<ColorScheme> colorSchemes, Fonts2d fonts2d)
+            ArStateManager stateManager, BaseSkin skin, List<ColorScheme> colorSchemes, Fonts2d fonts2d)
         {
             var lf = new ViewLayoutFactory(skin);
             var lf3d = new ViewLayoutFactory3d(skin);
             ThingsUi thingsUi = new ThingsUi(skin, lf, lf3d, fonts2d);
 
-            return new AugmentedUiManager(thingsUi, playerProvider, lf, skin, colorSchemes, fonts2d);
+            return new AugmentedUiManager(thingsUi, playerProvider, stateManager, lf, skin, colorSchemes, fonts2d);
         }
 
-        private AugmentedUiManager(ThingsUi thingsUi, PlayerProvider playerProvider,
+        private AugmentedUiManager(ThingsUi thingsUi, PlayerProvider playerProvider, ArStateManager stateManager,
             ViewLayoutFactory lf,
             BaseSkin skin, List<ColorScheme> colorSchemes, Fonts2d fonts2d)
         {
@@ -45,6 +45,8 @@ namespace cynofield.mods.ui
             components.Add(rightHud);
             inworldUi = AugmentedDisplayInWorld.Create(thingsUi, playerProvider, colorSchemes);
             components.Add(inworldUi);
+            banner = AugmentedDisplayBanner.Create(playerProvider, stateManager);
+            components.Add(banner);
         }
 
         private class MainPanelComponents
@@ -320,6 +322,7 @@ namespace cynofield.mods.ui
         private readonly AugmentedDisplayRight rightHud;
         private readonly AugmentedDisplayInWorld inworldUi;
         private readonly AugmentedDisplayLog logsDisplay;
+        internal readonly AugmentedDisplayBanner banner;
         private readonly ThingsUi thingsUi;
         private readonly BaseSkin skin;
         private Thing lookingAt = null;

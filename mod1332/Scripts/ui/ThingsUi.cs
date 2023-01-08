@@ -21,7 +21,7 @@ namespace cynofield.mods.ui
             alluis.Add(new TransformerUi(skin));
             alluis.Add(new CableUi(skin));
             alluis.Add(new ProgrammableChipUi(lf, lf3d, skin));
-            alluis.Add(new WeatherStationUi(lf));
+            alluis.Add(new WeatherStationUi(lf, skin));
             alluis.Add(new BatteryUi(lf, skin));
             alluis.Add(new LogicUnitBaseUi(lf, skin));
 

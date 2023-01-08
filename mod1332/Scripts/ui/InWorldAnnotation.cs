@@ -80,9 +80,7 @@ namespace cynofield.mods.ui
                 bkgdBack.transform.Rotate(Vector3.up, 180);
             }
 
-            //layout = canvas.gameObject.AddComponent<VerticalLayoutGroup>();
             layout = Utils.CreateGameObject<VerticalLayoutGroup>(canvas);
-            //layout = bkgd.gameObject.AddComponent<VerticalLayoutGroup>();
             {
                 var rect = layout.GetComponent<RectTransform>();
                 rect.sizeDelta = size;
