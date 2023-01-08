@@ -3,7 +3,7 @@
 
 It is expected that:
 - you already know how to create at least a simple hello-worldish console C# application;
-- you read the `Stationeers.Addons` documentation and know how to create your own mod with custom C# scripts;
+- you read the [Stationeers.Addons](https://github.com/Erdroy/Stationeers.Addons) documentation and know how to create your own mod with custom C# scripts;
 
 1. Open [Env.props](Env.props) and set correct paths (`StationeersDir` and maybe others).
 
@@ -17,7 +17,7 @@ It is expected that:
 | mod1332  | Augmented Reality Mod |
 | test  | Unit tests |
 
-4. There is a second repository with binary files (e.g., Unity assets bundles), `stationeers-cynofield-mods-binaries`. You may need to download it as well.
+4. There is a second Git repository with binary files (e.g., Unity assets bundles), `stationeers-cynofield-mods-binaries`. You may need to download it as well.
 
 
 # Development environment setup
@@ -25,7 +25,7 @@ It is expected that:
 ## C# SDK
 
 The version of .Net your project using must be compatible with the one used inside Unity.
-Currenly it is `.NET Framework 4.8` aka `TargetFramework=net48`.
+Currently, it is `.NET Framework 4.8` aka `TargetFramework=net48`.
 
 If you are setting up a development environment for the first time, start with `mod25243`.
 This is the tiny project you may use to check that everything is fine with your development setup.
@@ -64,7 +64,7 @@ Sometimes soft restart is enough - `Ctrl-Shift-P` - `Developer: Reload Window`.
 
 ### Extensions
 
-First of all you need `ms-dotnettools.csharp`.
+First of all, you need `ms-dotnettools.csharp`.
 
 See the full list of recommended extensions:
 ```
@@ -100,7 +100,7 @@ by clicking [Download package](https://www.nuget.org/api/v2/package/Microsoft.Un
 Then unzip the downloaded .nupkg file, so the LocationPaths in omnisharp.json will match directories on disk.
 
 
-### Global settings
+### Global VSCode settings
 
 Global VSCode settings file is located here `%USERPROFILE%\AppData\Roaming\Code\User\settings.json`.
 
@@ -117,6 +117,12 @@ Make sure it contains the following options:
 }
 ```
 
+## dnSpy
+
+This will allow you to view Stationeers internal classes: https://github.com/dnSpy/dnSpy
+
+Once installed, open `%steam%\steamapps\common\Stationeers\rocketstation_Data\Managed\Assembly-CSharp.dll` with it.
+
 ### Other important things to know
 
 For correct support of net48 (and other older .Net frameworks) debug, 
@@ -125,7 +131,7 @@ launch configuration types must be `clr`, not `coreclr` as VSCode usually sets b
 It applies to `csharp.unitTestDebuggingOptions` (above), and to launch configurations
 in `.code-workspace` and `.vscode/launch.json` files.
 
-You will not be able to debug Unity process from VSCode because omnisharp doesn't support
+You cannot debug Unity process from VSCode because omnisharp doesn't support
 `Mono` debug. `Mono` is the version of .net execution environment used inside Unity.
 
 But you will be able to debug unit tests if you use them.

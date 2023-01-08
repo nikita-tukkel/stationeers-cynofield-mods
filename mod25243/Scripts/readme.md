@@ -12,5 +12,5 @@ Documents\my games\Stationeers\mods
     Scripts
 ```
 
-If the mod logs something using UnityEngine.Debug.Log(), it will goes into the file
+If the mod logs something using UnityEngine.Debug.Log(), it goes into the file
 `%USERPROFILE%\AppData\LocalLow\Rocketwerkz\rocketstation\Player.log`.

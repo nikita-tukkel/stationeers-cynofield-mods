@@ -1,5 +1,21 @@
 
+# Goal
+
 Goal: solve the problem of blurred 2D text in your Unity game.
+
+## TL;DR
+
+The result of the described technique, as well as the presentation of fonts included into the mod,
+are on [this screenshot](screenshots/fonts2d.png).
+
+Open it with an image editor, not with an image viewer that will make everything blurry.
+
+Zoom in to see every pixel and enjoy the perfect rendering.
+
+Compare pixel perfect fonts with the game standard fonts below and with the game interface to see the difference.
+
+
+# Links
 
 Best article about 2D pixel perfect font rendering in Unity:
 https://medium.com/@dan.liberatore/pixel-perfect-text-and-ui-in-unity-2021-56d60ba9370f
@@ -8,26 +24,26 @@ Others:
 https://forum.unity.com/threads/pixel-art-font-sizing-issues.635422/#post-5693926
 https://pavcreations.com/pixel-perfect-fonts-in-unity-the-practical-guide/
 
-Good collection of free fonts from Style-7:
+Excellent collection of free fonts from Style-7:
 https://www.dafont.com/chess-7-chess-7.d1833
 
 
-# Finding right font part
+# Finding the right font
 
 Fonts could be bitmap aka raster aka pixel fonts or vector aka outline.
-To achieve the pixel perfect rendering we need the first type.
+To achieve the pixel perfect rendering, we need the first type.
 Download **bitmap** font from, e.g. dafont.com. 
 Write down font size, it is very important. 
 The size is written among the other font information on dafont.com.
 The other option is to open the font in the editor and count pixels height of the largest character.
 Also, ensure upfront that font contains all characters you need.
 
-E.g., Font SGK100 by NewMoleFont, height = 16px.
+E.g., Font SGK100 by NewMoleFont, height = 16px, https://www.dafont.com/sgk100.font
 
-# Unity Editor part
+# Unity Editor
 
 You will need Unity Editor compatible with the game. 
-Very different versions probably will generate incompatible asset bundle.
+Very different versions probably will generate an incompatible asset bundle.
 
 1. Unity Editor, Project, Assets - create Resources/Fonts folder.
 
@@ -50,7 +66,7 @@ Press `Apply` in Inspector window
 - Packing Method - Fast (not important?);
 - Atlas Resolution - size of generated bitmap, depends on the amount of characters in the font and font size, 
 e.g. 512x512 or 1024x256 are probably ok;
-- Character Set - Unicode Range (Hex), set `000-4ff,500-52f`, this contains ASCII, cyrillic and other usual characters;
+- Character Set - Unicode Range (Hex), set `000-4ff,500-52f`, this contains ASCII, Cyrillic and other usual characters;
 - Render Mode - `RASTER`;
 - Get Kerning Pairs - on;
 
@@ -58,8 +74,8 @@ Press `Generate Font Atlas`, then `Save` inside Font Asset Creator window.
 Choose `.asset` file location inside Project/Assets.
 
 5. Inspector, TMP_FontAsset asset file from previous step, set:
-- Line Height - small value like 10, otherwise rendered text will have too big linespacing;
-- AssetBundle (chekbox at the bottom of Inspector) - set the name of Asset Bundle, it will be the file name on the following step;
+- Line Height - small value like 10, otherwise rendered text will have too big line spacing;
+- AssetBundle (checkbox at the bottom of Inspector) - set the name of Asset Bundle, it will be the filename on the following step;
 
 6. (Needed once) Create Project, Assets, Editor folder.
 In the project window press Create -> C# Script.
@@ -99,11 +115,11 @@ If everything is ok, the asset bundle file Project/Assets/AssetBundles/`name fro
 
 Copy it into the folder, known by the game. Any other folder will be ok, because you may use absolute file names in the game. The main point is to copy it somewhere, otherwise the game and Unity Editor may conflict over this file lock (typical problem on MS Windows filesystem).
 
-# Game scripts part
+# Game scripts
 
 1. Loading font from asset.
 
-Load bundle and review it contents (`file` may be an absolute path):
+Load bundle and review its contents (`file` may be an absolute path):
 ```
 UnityEngine.AssetBundle bundle = UnityEngine.AssetBundle.LoadFromFile(file);
 UnityEngine.Debug.Log(string.Join("\n", bundle.GetAllAssetNames()));
@@ -118,7 +134,7 @@ UnityEngine.AssetBundle.Unload(true);
 
 Font size **must be** divisible to font natural height you know from previous steps. 
 So the good `fontSize` values are 16, 32, 48, etc. Otherwise text will be blurry.
-Font name may be just a file name, full path inside asset bundle is not required.
+Font name may be just a filename, full path inside asset bundle is not required.
 
 ```
 TMP_FontAsset font = bundle.LoadAsset<TMP_FontAsset>("sgk100.asset");

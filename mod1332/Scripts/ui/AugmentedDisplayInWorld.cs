@@ -208,6 +208,7 @@ namespace cynofield.mods.ui
         }
 
         // TODO replace with TagParser
+        // TODO check if it is still possible to use "#ar1" instead of "#ar-1", fix TagParser otherwise
         private int ParseColorSchemeId(string str)
         {
             string[] tokens = str.Split(' ');
