@@ -21,10 +21,13 @@ Best article about 2D pixel perfect font rendering in Unity:
 https://medium.com/@dan.liberatore/pixel-perfect-text-and-ui-in-unity-2021-56d60ba9370f
 
 Others:
+
 https://forum.unity.com/threads/pixel-art-font-sizing-issues.635422/#post-5693926
+
 https://pavcreations.com/pixel-perfect-fonts-in-unity-the-practical-guide/
 
 Excellent collection of free fonts from Style-7:
+
 https://www.dafont.com/chess-7-chess-7.d1833
 
 
@@ -104,6 +107,7 @@ public class CreateAssetBundles
 Exact parameters values are important:
 - `BuildAssetBundleOptions.UncompressedAssetBundle`;
 - `BuildTarget.StandaloneWindows`;
+
 If everything is ok, new menu `Assets - Build AssetBundles2` will appear.
 Be carefull with this script text, Unity Editor will not help you with error diagnostics, 
 it will just don't work if incorrect.

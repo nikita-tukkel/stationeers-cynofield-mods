@@ -1,4 +1,10 @@
 
+If you came here for a specific mod, jump to the section you need:
+
+- [Download releases](https://github.com/nikita-tukkel/stationeers-cynofield-mods/releases);
+- [Augmented Reality Mod Guide](mod1332/readme.md)
+
+
 ## Project setup
 
 It is expected that:
